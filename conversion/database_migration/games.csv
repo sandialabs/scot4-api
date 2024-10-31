@@ -1,0 +1,8 @@
+'game_id'	'game_name'	'tooltip'	'results'	'created_date'	'modified_date'
+'1'	'Alarmist'	'Most Alerts Promoted'	'{"data": {"p0_type": "alert"}, "type": "promotion", "what": "create"}'	'2023-08-28 16:55:47'	'2023-08-28 16:55:47'
+'2'	'Closer'	'Most Closed Things'	'{"data": {"status": "closed"}, "what": "update"}'	'2023-08-28 16:59:11'	'2023-08-28 16:59:11'
+'3'	'Cleaner'	'Most Deleted Things'	'{"what": "delete"}'	'2023-08-28 16:59:33'	'2023-08-28 16:59:33'
+'4'	'Fixer'	'Most Edited Entries'	'{"type": "entry", "what": "update"}'	'2023-08-28 19:27:48'	'2023-08-28 19:27:48'
+'5'	'Operative'	'Most Intel Entries'	'{"data": {"target_type": "intel"}, "type": "entry", "what": "create"}'	'2023-08-28 19:29:15'	'2023-08-28 19:29:15'
+'6'	'Tattler'	'Most Incidents Promoted'	'{"data": {"p1_type": "incident"}, "type": "promotion", "what": "create"}'	'2023-08-28 19:30:58'	'2023-08-28 19:30:58'
+'7'	'Teacher'	'Most Guide Entries Authored'	'{"data": {"target_type": "guide"}, "type": "entry", "what": "create"}'	'2023-08-28 19:32:06'	'2023-08-28 19:32:06'

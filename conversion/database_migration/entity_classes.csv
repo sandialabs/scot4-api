@@ -1,0 +1,265 @@
+entity_class_id	entity_class_name	entity_class_display_name	entity_class_description	entity_icon	entity_class_data	created_date	modified_date
+1	ad_flag	Andorra	Denotes that this entity is associated geographically to the country: Andorra	$vuetify.icons.ad_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+2	ae_flag	United Arab Emirates	Denotes that this entity is associated geographically to the country: United Arab Emirates	$vuetify.icons.ae_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+3	af_flag	Afghanistan	Denotes that this entity is associated geographically to the country: Afghanistan	$vuetify.icons.af_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+4	ag_flag	Antigua and Barbuda	Denotes that this entity is associated geographically to the country: Antigua and Barbuda	$vuetify.icons.ag_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+5	ai_flag	Anguilla	Denotes that this entity is associated geographically to the country: Anguilla	$vuetify.icons.ai_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+6	al_flag	Albania	Denotes that this entity is associated geographically to the country: Albania	$vuetify.icons.al_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+7	am_flag	Armenia	Denotes that this entity is associated geographically to the country: Armenia	$vuetify.icons.am_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+8	ao_flag	Angola	Denotes that this entity is associated geographically to the country: Angola	$vuetify.icons.ao_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+9	aq_flag	Antarctica	Denotes that this entity is associated geographically to the country: Antarctica	$vuetify.icons.aq_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+10	ar_flag	Argentina	Denotes that this entity is associated geographically to the country: Argentina	$vuetify.icons.ar_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+11	as_flag	American Samoa	Denotes that this entity is associated geographically to the country: American Samoa	$vuetify.icons.as_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+12	at_flag	Austria	Denotes that this entity is associated geographically to the country: Austria	$vuetify.icons.at_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+13	au_flag	Australia	Denotes that this entity is associated geographically to the country: Australia	$vuetify.icons.au_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+14	aw_flag	Aruba	Denotes that this entity is associated geographically to the country: Aruba	$vuetify.icons.aw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+15	ax_flag	Aland Islands	Denotes that this entity is associated geographically to the country: Aland Islands	$vuetify.icons.ax_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+16	az_flag	Azerbaijan	Denotes that this entity is associated geographically to the country: Azerbaijan	$vuetify.icons.az_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+17	ba_flag	Bosnia and Herzegovina	Denotes that this entity is associated geographically to the country: Bosnia and Herzegovina	$vuetify.icons.ba_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+18	bb_flag	Barbados	Denotes that this entity is associated geographically to the country: Barbados	$vuetify.icons.bb_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+19	bd_flag	Bangladesh	Denotes that this entity is associated geographically to the country: Bangladesh	$vuetify.icons.bd_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+20	be_flag	Belgium	Denotes that this entity is associated geographically to the country: Belgium	$vuetify.icons.be_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+21	bf_flag	Burkina Faso	Denotes that this entity is associated geographically to the country: Burkina Faso	$vuetify.icons.bf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+22	bg_flag	Bulgaria	Denotes that this entity is associated geographically to the country: Bulgaria	$vuetify.icons.bg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+23	bh_flag	Bahrain	Denotes that this entity is associated geographically to the country: Bahrain	$vuetify.icons.bh_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+24	bi_flag	Burundi	Denotes that this entity is associated geographically to the country: Burundi	$vuetify.icons.bi_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+25	bj_flag	Benin	Denotes that this entity is associated geographically to the country: Benin	$vuetify.icons.bj_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+26	bl_flag	Saint Barthélemy	Denotes that this entity is associated geographically to the country: Saint Barthélemy	$vuetify.icons.bl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+27	bm_flag	Bermuda	Denotes that this entity is associated geographically to the country: Bermuda	$vuetify.icons.bm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+28	bn_flag	Brunei Darussalam	Denotes that this entity is associated geographically to the country: Brunei Darussalam	$vuetify.icons.bn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+29	bo_flag	Bolivia (Plurinational State of)	Denotes that this entity is associated geographically to the country: Bolivia (Plurinational State of)	$vuetify.icons.bo_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+30	bq_flag	Bonaire, Sint Eustatius and Saba	Denotes that this entity is associated geographically to the country: Bonaire, Sint Eustatius and Saba	$vuetify.icons.bq_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+31	br_flag	Brazil	Denotes that this entity is associated geographically to the country: Brazil	$vuetify.icons.br_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+32	bs_flag	Bahamas	Denotes that this entity is associated geographically to the country: Bahamas	$vuetify.icons.bs_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+33	bt_flag	Bhutan	Denotes that this entity is associated geographically to the country: Bhutan	$vuetify.icons.bt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+34	bv_flag	Bouvet Island	Denotes that this entity is associated geographically to the country: Bouvet Island	$vuetify.icons.bv_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+35	bw_flag	Botswana	Denotes that this entity is associated geographically to the country: Botswana	$vuetify.icons.bw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+36	by_flag	Belarus	Denotes that this entity is associated geographically to the country: Belarus	$vuetify.icons.by_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+37	bz_flag	Belize	Denotes that this entity is associated geographically to the country: Belize	$vuetify.icons.bz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+38	ca_flag	Canada	Denotes that this entity is associated geographically to the country: Canada	$vuetify.icons.ca_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+39	cc_flag	Cocos (Keeling) Islands	Denotes that this entity is associated geographically to the country: Cocos (Keeling) Islands	$vuetify.icons.cc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+40	cd_flag	Democratic Republic of the Congo	Denotes that this entity is associated geographically to the country: Democratic Republic of the Congo	$vuetify.icons.cd_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+41	cf_flag	Central African Republic	Denotes that this entity is associated geographically to the country: Central African Republic	$vuetify.icons.cf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+42	cg_flag	Republic of the Congo	Denotes that this entity is associated geographically to the country: Republic of the Congo	$vuetify.icons.cg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+43	ch_flag	Switzerland	Denotes that this entity is associated geographically to the country: Switzerland	$vuetify.icons.ch_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+44	ci_flag	Côte d'Ivoire	Denotes that this entity is associated geographically to the country: Côte d'Ivoire	$vuetify.icons.ci_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+45	ck_flag	Cook Islands	Denotes that this entity is associated geographically to the country: Cook Islands	$vuetify.icons.ck_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+46	cl_flag	Chile	Denotes that this entity is associated geographically to the country: Chile	$vuetify.icons.cl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+47	cm_flag	Cameroon	Denotes that this entity is associated geographically to the country: Cameroon	$vuetify.icons.cm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+48	cn_flag	China	Denotes that this entity is associated geographically to the country: China	$vuetify.icons.cn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+49	co_flag	Colombia	Denotes that this entity is associated geographically to the country: Colombia	$vuetify.icons.co_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+50	cr_flag	Costa Rica	Denotes that this entity is associated geographically to the country: Costa Rica	$vuetify.icons.cr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+51	cu_flag	Cuba	Denotes that this entity is associated geographically to the country: Cuba	$vuetify.icons.cu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+52	cv_flag	Cabo Verde	Denotes that this entity is associated geographically to the country: Cabo Verde	$vuetify.icons.cv_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+53	cw_flag	Curaçao	Denotes that this entity is associated geographically to the country: Curaçao	$vuetify.icons.cw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+54	cx_flag	Christmas Island	Denotes that this entity is associated geographically to the country: Christmas Island	$vuetify.icons.cx_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+55	cy_flag	Cyprus	Denotes that this entity is associated geographically to the country: Cyprus	$vuetify.icons.cy_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+56	cz_flag	Czech Republic	Denotes that this entity is associated geographically to the country: Czech Republic	$vuetify.icons.cz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+57	de_flag	Germany	Denotes that this entity is associated geographically to the country: Germany	$vuetify.icons.de_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+58	dj_flag	Djibouti	Denotes that this entity is associated geographically to the country: Djibouti	$vuetify.icons.dj_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+59	dk_flag	Denmark	Denotes that this entity is associated geographically to the country: Denmark	$vuetify.icons.dk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+60	dm_flag	Dominica	Denotes that this entity is associated geographically to the country: Dominica	$vuetify.icons.dm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+61	do_flag	Dominican Republic	Denotes that this entity is associated geographically to the country: Dominican Republic	$vuetify.icons.do_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+62	dz_flag	Algeria	Denotes that this entity is associated geographically to the country: Algeria	$vuetify.icons.dz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+63	ec_flag	Ecuador	Denotes that this entity is associated geographically to the country: Ecuador	$vuetify.icons.ec_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+64	ee_flag	Estonia	Denotes that this entity is associated geographically to the country: Estonia	$vuetify.icons.ee_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+65	eg_flag	Egypt	Denotes that this entity is associated geographically to the country: Egypt	$vuetify.icons.eg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+66	eh_flag	Western Sahara	Denotes that this entity is associated geographically to the country: Western Sahara	$vuetify.icons.eh_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+67	er_flag	Eritrea	Denotes that this entity is associated geographically to the country: Eritrea	$vuetify.icons.er_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+68	es_flag	Spain	Denotes that this entity is associated geographically to the country: Spain	$vuetify.icons.es_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+69	et_flag	Ethiopia	Denotes that this entity is associated geographically to the country: Ethiopia	$vuetify.icons.et_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+70	fi_flag	Finland	Denotes that this entity is associated geographically to the country: Finland	$vuetify.icons.fi_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+71	fj_flag	Fiji	Denotes that this entity is associated geographically to the country: Fiji	$vuetify.icons.fj_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+72	fk_flag	Falkland Islands	Denotes that this entity is associated geographically to the country: Falkland Islands	$vuetify.icons.fk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+73	fm_flag	Federated States of Micronesia	Denotes that this entity is associated geographically to the country: Federated States of Micronesia	$vuetify.icons.fm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+74	fo_flag	Faroe Islands	Denotes that this entity is associated geographically to the country: Faroe Islands	$vuetify.icons.fo_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+75	fr_flag	France	Denotes that this entity is associated geographically to the country: France	$vuetify.icons.fr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+76	ga_flag	Gabon	Denotes that this entity is associated geographically to the country: Gabon	$vuetify.icons.ga_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+77	gb_flag	United Kingdom	Denotes that this entity is associated geographically to the country: United Kingdom	$vuetify.icons.gb_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+78	gd_flag	Grenada	Denotes that this entity is associated geographically to the country: Grenada	$vuetify.icons.gd_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+79	ge_flag	Georgia	Denotes that this entity is associated geographically to the country: Georgia	$vuetify.icons.ge_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+80	gf_flag	French Guiana	Denotes that this entity is associated geographically to the country: French Guiana	$vuetify.icons.gf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+81	gg_flag	Guernsey	Denotes that this entity is associated geographically to the country: Guernsey	$vuetify.icons.gg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+82	gh_flag	Ghana	Denotes that this entity is associated geographically to the country: Ghana	$vuetify.icons.gh_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+83	gi_flag	Gibraltar	Denotes that this entity is associated geographically to the country: Gibraltar	$vuetify.icons.gi_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+84	gl_flag	Greenland	Denotes that this entity is associated geographically to the country: Greenland	$vuetify.icons.gl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+85	gm_flag	Gambia	Denotes that this entity is associated geographically to the country: Gambia	$vuetify.icons.gm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+86	gn_flag	Guinea	Denotes that this entity is associated geographically to the country: Guinea	$vuetify.icons.gn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+87	gp_flag	Guadeloupe	Denotes that this entity is associated geographically to the country: Guadeloupe	$vuetify.icons.gp_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+88	gq_flag	Equatorial Guinea	Denotes that this entity is associated geographically to the country: Equatorial Guinea	$vuetify.icons.gq_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+89	gr_flag	Greece	Denotes that this entity is associated geographically to the country: Greece	$vuetify.icons.gr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+90	gs_flag	South Georgia and the South Sandwich Islands	Denotes that this entity is associated geographically to the country: South Georgia and the South Sandwich Islands	$vuetify.icons.gs_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+91	gt_flag	Guatemala	Denotes that this entity is associated geographically to the country: Guatemala	$vuetify.icons.gt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+92	gu_flag	Guam	Denotes that this entity is associated geographically to the country: Guam	$vuetify.icons.gu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+93	gw_flag	Guinea-Bissau	Denotes that this entity is associated geographically to the country: Guinea-Bissau	$vuetify.icons.gw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+94	gy_flag	Guyana	Denotes that this entity is associated geographically to the country: Guyana	$vuetify.icons.gy_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+95	hk_flag	Hong Kong	Denotes that this entity is associated geographically to the country: Hong Kong	$vuetify.icons.hk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+96	hm_flag	Heard Island and McDonald Islands	Denotes that this entity is associated geographically to the country: Heard Island and McDonald Islands	$vuetify.icons.hm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+97	hn_flag	Honduras	Denotes that this entity is associated geographically to the country: Honduras	$vuetify.icons.hn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+98	hr_flag	Croatia	Denotes that this entity is associated geographically to the country: Croatia	$vuetify.icons.hr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+99	ht_flag	Haiti	Denotes that this entity is associated geographically to the country: Haiti	$vuetify.icons.ht_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+100	hu_flag	Hungary	Denotes that this entity is associated geographically to the country: Hungary	$vuetify.icons.hu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+101	id_flag	Indonesia	Denotes that this entity is associated geographically to the country: Indonesia	$vuetify.icons.id_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+102	ie_flag	Ireland	Denotes that this entity is associated geographically to the country: Ireland	$vuetify.icons.ie_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+103	il_flag	Israel	Denotes that this entity is associated geographically to the country: Israel	$vuetify.icons.il_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+104	im_flag	Isle of Man	Denotes that this entity is associated geographically to the country: Isle of Man	$vuetify.icons.im_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+105	in_flag	India	Denotes that this entity is associated geographically to the country: India	$vuetify.icons.in_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+106	io_flag	British Indian Ocean Territory	Denotes that this entity is associated geographically to the country: British Indian Ocean Territory	$vuetify.icons.io_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+107	iq_flag	Iraq	Denotes that this entity is associated geographically to the country: Iraq	$vuetify.icons.iq_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+108	ir_flag	Iran (Islamic Republic of)	Denotes that this entity is associated geographically to the country: Iran (Islamic Republic of)	$vuetify.icons.ir_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+109	is_flag	Iceland	Denotes that this entity is associated geographically to the country: Iceland	$vuetify.icons.is_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+110	it_flag	Italy	Denotes that this entity is associated geographically to the country: Italy	$vuetify.icons.it_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+111	je_flag	Jersey	Denotes that this entity is associated geographically to the country: Jersey	$vuetify.icons.je_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+112	jm_flag	Jamaica	Denotes that this entity is associated geographically to the country: Jamaica	$vuetify.icons.jm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+113	jo_flag	Jordan	Denotes that this entity is associated geographically to the country: Jordan	$vuetify.icons.jo_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+114	jp_flag	Japan	Denotes that this entity is associated geographically to the country: Japan	$vuetify.icons.jp_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+115	ke_flag	Kenya	Denotes that this entity is associated geographically to the country: Kenya	$vuetify.icons.ke_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+116	kg_flag	Kyrgyzstan	Denotes that this entity is associated geographically to the country: Kyrgyzstan	$vuetify.icons.kg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+117	kh_flag	Cambodia	Denotes that this entity is associated geographically to the country: Cambodia	$vuetify.icons.kh_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+118	ki_flag	Kiribati	Denotes that this entity is associated geographically to the country: Kiribati	$vuetify.icons.ki_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+119	km_flag	Comoros	Denotes that this entity is associated geographically to the country: Comoros	$vuetify.icons.km_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+120	kn_flag	Saint Kitts and Nevis	Denotes that this entity is associated geographically to the country: Saint Kitts and Nevis	$vuetify.icons.kn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+121	kp_flag	North Korea	Denotes that this entity is associated geographically to the country: North Korea	$vuetify.icons.kp_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+122	kr_flag	South Korea	Denotes that this entity is associated geographically to the country: South Korea	$vuetify.icons.kr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+123	kw_flag	Kuwait	Denotes that this entity is associated geographically to the country: Kuwait	$vuetify.icons.kw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+124	ky_flag	Cayman Islands	Denotes that this entity is associated geographically to the country: Cayman Islands	$vuetify.icons.ky_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+125	kz_flag	Kazakhstan	Denotes that this entity is associated geographically to the country: Kazakhstan	$vuetify.icons.kz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+126	la_flag	Laos	Denotes that this entity is associated geographically to the country: Laos	$vuetify.icons.la_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+127	lb_flag	Lebanon	Denotes that this entity is associated geographically to the country: Lebanon	$vuetify.icons.lb_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+128	lc_flag	Saint Lucia	Denotes that this entity is associated geographically to the country: Saint Lucia	$vuetify.icons.lc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+129	li_flag	Liechtenstein	Denotes that this entity is associated geographically to the country: Liechtenstein	$vuetify.icons.li_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+130	lk_flag	Sri Lanka	Denotes that this entity is associated geographically to the country: Sri Lanka	$vuetify.icons.lk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+131	lr_flag	Liberia	Denotes that this entity is associated geographically to the country: Liberia	$vuetify.icons.lr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+132	ls_flag	Lesotho	Denotes that this entity is associated geographically to the country: Lesotho	$vuetify.icons.ls_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+133	lt_flag	Lithuania	Denotes that this entity is associated geographically to the country: Lithuania	$vuetify.icons.lt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+134	lu_flag	Luxembourg	Denotes that this entity is associated geographically to the country: Luxembourg	$vuetify.icons.lu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+135	lv_flag	Latvia	Denotes that this entity is associated geographically to the country: Latvia	$vuetify.icons.lv_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+136	ly_flag	Libya	Denotes that this entity is associated geographically to the country: Libya	$vuetify.icons.ly_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+137	ma_flag	Morocco	Denotes that this entity is associated geographically to the country: Morocco	$vuetify.icons.ma_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+138	mc_flag	Monaco	Denotes that this entity is associated geographically to the country: Monaco	$vuetify.icons.mc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+139	md_flag	Moldova	Denotes that this entity is associated geographically to the country: Moldova	$vuetify.icons.md_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+140	me_flag	Montenegro	Denotes that this entity is associated geographically to the country: Montenegro	$vuetify.icons.me_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+141	mf_flag	Saint Martin	Denotes that this entity is associated geographically to the country: Saint Martin	$vuetify.icons.mf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+142	mg_flag	Madagascar	Denotes that this entity is associated geographically to the country: Madagascar	$vuetify.icons.mg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+143	mh_flag	Marshall Islands	Denotes that this entity is associated geographically to the country: Marshall Islands	$vuetify.icons.mh_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+144	mk_flag	North Macedonia	Denotes that this entity is associated geographically to the country: North Macedonia	$vuetify.icons.mk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+145	ml_flag	Mali	Denotes that this entity is associated geographically to the country: Mali	$vuetify.icons.ml_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+146	mm_flag	Myanmar	Denotes that this entity is associated geographically to the country: Myanmar	$vuetify.icons.mm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+147	mn_flag	Mongolia	Denotes that this entity is associated geographically to the country: Mongolia	$vuetify.icons.mn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+148	mo_flag	Macau	Denotes that this entity is associated geographically to the country: Macau	$vuetify.icons.mo_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+149	mp_flag	Northern Mariana Islands	Denotes that this entity is associated geographically to the country: Northern Mariana Islands	$vuetify.icons.mp_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+150	mq_flag	Martinique	Denotes that this entity is associated geographically to the country: Martinique	$vuetify.icons.mq_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+151	mr_flag	Mauritania	Denotes that this entity is associated geographically to the country: Mauritania	$vuetify.icons.mr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+152	ms_flag	Montserrat	Denotes that this entity is associated geographically to the country: Montserrat	$vuetify.icons.ms_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+153	mt_flag	Malta	Denotes that this entity is associated geographically to the country: Malta	$vuetify.icons.mt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+154	mu_flag	Mauritius	Denotes that this entity is associated geographically to the country: Mauritius	$vuetify.icons.mu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+155	mv_flag	Maldives	Denotes that this entity is associated geographically to the country: Maldives	$vuetify.icons.mv_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+156	mw_flag	Malawi	Denotes that this entity is associated geographically to the country: Malawi	$vuetify.icons.mw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+157	mx_flag	Mexico	Denotes that this entity is associated geographically to the country: Mexico	$vuetify.icons.mx_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+158	my_flag	Malaysia	Denotes that this entity is associated geographically to the country: Malaysia	$vuetify.icons.my_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+159	mz_flag	Mozambique	Denotes that this entity is associated geographically to the country: Mozambique	$vuetify.icons.mz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+160	na_flag	Namibia	Denotes that this entity is associated geographically to the country: Namibia	$vuetify.icons.na_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+161	nc_flag	New Caledonia	Denotes that this entity is associated geographically to the country: New Caledonia	$vuetify.icons.nc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+162	ne_flag	Niger	Denotes that this entity is associated geographically to the country: Niger	$vuetify.icons.ne_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+163	nf_flag	Norfolk Island	Denotes that this entity is associated geographically to the country: Norfolk Island	$vuetify.icons.nf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+164	ng_flag	Nigeria	Denotes that this entity is associated geographically to the country: Nigeria	$vuetify.icons.ng_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+165	ni_flag	Nicaragua	Denotes that this entity is associated geographically to the country: Nicaragua	$vuetify.icons.ni_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+166	nl_flag	Netherlands	Denotes that this entity is associated geographically to the country: Netherlands	$vuetify.icons.nl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+167	no_flag	Norway	Denotes that this entity is associated geographically to the country: Norway	$vuetify.icons.no_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+168	np_flag	Nepal	Denotes that this entity is associated geographically to the country: Nepal	$vuetify.icons.np_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+169	nr_flag	Nauru	Denotes that this entity is associated geographically to the country: Nauru	$vuetify.icons.nr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+170	nu_flag	Niue	Denotes that this entity is associated geographically to the country: Niue	$vuetify.icons.nu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+171	nz_flag	New Zealand	Denotes that this entity is associated geographically to the country: New Zealand	$vuetify.icons.nz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+172	om_flag	Oman	Denotes that this entity is associated geographically to the country: Oman	$vuetify.icons.om_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+173	pa_flag	Panama	Denotes that this entity is associated geographically to the country: Panama	$vuetify.icons.pa_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+174	pe_flag	Peru	Denotes that this entity is associated geographically to the country: Peru	$vuetify.icons.pe_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+175	pf_flag	French Polynesia	Denotes that this entity is associated geographically to the country: French Polynesia	$vuetify.icons.pf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+176	pg_flag	Papua New Guinea	Denotes that this entity is associated geographically to the country: Papua New Guinea	$vuetify.icons.pg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+177	ph_flag	Philippines	Denotes that this entity is associated geographically to the country: Philippines	$vuetify.icons.ph_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+178	pk_flag	Pakistan	Denotes that this entity is associated geographically to the country: Pakistan	$vuetify.icons.pk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+179	pl_flag	Poland	Denotes that this entity is associated geographically to the country: Poland	$vuetify.icons.pl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+180	pm_flag	Saint Pierre and Miquelon	Denotes that this entity is associated geographically to the country: Saint Pierre and Miquelon	$vuetify.icons.pm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+181	pn_flag	Pitcairn	Denotes that this entity is associated geographically to the country: Pitcairn	$vuetify.icons.pn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+182	pr_flag	Puerto Rico	Denotes that this entity is associated geographically to the country: Puerto Rico	$vuetify.icons.pr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+183	ps_flag	State of Palestine	Denotes that this entity is associated geographically to the country: State of Palestine	$vuetify.icons.ps_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+184	pt_flag	Portugal	Denotes that this entity is associated geographically to the country: Portugal	$vuetify.icons.pt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+185	pw_flag	Palau	Denotes that this entity is associated geographically to the country: Palau	$vuetify.icons.pw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+186	py_flag	Paraguay	Denotes that this entity is associated geographically to the country: Paraguay	$vuetify.icons.py_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+187	qa_flag	Qatar	Denotes that this entity is associated geographically to the country: Qatar	$vuetify.icons.qa_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+188	re_flag	Réunion	Denotes that this entity is associated geographically to the country: Réunion	$vuetify.icons.re_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+189	ro_flag	Romania	Denotes that this entity is associated geographically to the country: Romania	$vuetify.icons.ro_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+190	rs_flag	Serbia	Denotes that this entity is associated geographically to the country: Serbia	$vuetify.icons.rs_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+191	ru_flag	Russia	Denotes that this entity is associated geographically to the country: Russia	$vuetify.icons.ru_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+192	rw_flag	Rwanda	Denotes that this entity is associated geographically to the country: Rwanda	$vuetify.icons.rw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+193	sa_flag	Saudi Arabia	Denotes that this entity is associated geographically to the country: Saudi Arabia	$vuetify.icons.sa_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+194	sb_flag	Solomon Islands	Denotes that this entity is associated geographically to the country: Solomon Islands	$vuetify.icons.sb_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+195	sc_flag	Seychelles	Denotes that this entity is associated geographically to the country: Seychelles	$vuetify.icons.sc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+196	sd_flag	Sudan	Denotes that this entity is associated geographically to the country: Sudan	$vuetify.icons.sd_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+197	se_flag	Sweden	Denotes that this entity is associated geographically to the country: Sweden	$vuetify.icons.se_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+198	sg_flag	Singapore	Denotes that this entity is associated geographically to the country: Singapore	$vuetify.icons.sg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+199	sh_flag	Saint Helena, Ascension and Tristan da Cunha	Denotes that this entity is associated geographically to the country: Saint Helena, Ascension and Tristan da Cunha	$vuetify.icons.sh_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+200	si_flag	Slovenia	Denotes that this entity is associated geographically to the country: Slovenia	$vuetify.icons.si_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+201	sj_flag	Svalbard and Jan Mayen	Denotes that this entity is associated geographically to the country: Svalbard and Jan Mayen	$vuetify.icons.sj_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+202	sk_flag	Slovakia	Denotes that this entity is associated geographically to the country: Slovakia	$vuetify.icons.sk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+203	sl_flag	Sierra Leone	Denotes that this entity is associated geographically to the country: Sierra Leone	$vuetify.icons.sl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+204	sm_flag	San Marino	Denotes that this entity is associated geographically to the country: San Marino	$vuetify.icons.sm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+205	sn_flag	Senegal	Denotes that this entity is associated geographically to the country: Senegal	$vuetify.icons.sn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+206	so_flag	Somalia	Denotes that this entity is associated geographically to the country: Somalia	$vuetify.icons.so_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+207	sr_flag	Suriname	Denotes that this entity is associated geographically to the country: Suriname	$vuetify.icons.sr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+208	ss_flag	South Sudan	Denotes that this entity is associated geographically to the country: South Sudan	$vuetify.icons.ss_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+209	st_flag	Sao Tome and Principe	Denotes that this entity is associated geographically to the country: Sao Tome and Principe	$vuetify.icons.st_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+210	sv_flag	El Salvador	Denotes that this entity is associated geographically to the country: El Salvador	$vuetify.icons.sv_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+211	sx_flag	Sint Maarten	Denotes that this entity is associated geographically to the country: Sint Maarten	$vuetify.icons.sx_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+212	sy_flag	Syrian Arab Republic	Denotes that this entity is associated geographically to the country: Syrian Arab Republic	$vuetify.icons.sy_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+213	sz_flag	Swaziland	Denotes that this entity is associated geographically to the country: Swaziland	$vuetify.icons.sz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+214	tc_flag	Turks and Caicos Islands	Denotes that this entity is associated geographically to the country: Turks and Caicos Islands	$vuetify.icons.tc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+215	td_flag	Chad	Denotes that this entity is associated geographically to the country: Chad	$vuetify.icons.td_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+216	tf_flag	French Southern Territories	Denotes that this entity is associated geographically to the country: French Southern Territories	$vuetify.icons.tf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+217	tg_flag	Togo	Denotes that this entity is associated geographically to the country: Togo	$vuetify.icons.tg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+218	th_flag	Thailand	Denotes that this entity is associated geographically to the country: Thailand	$vuetify.icons.th_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+219	tj_flag	Tajikistan	Denotes that this entity is associated geographically to the country: Tajikistan	$vuetify.icons.tj_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+220	tk_flag	Tokelau	Denotes that this entity is associated geographically to the country: Tokelau	$vuetify.icons.tk_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+221	tl_flag	Timor-Leste	Denotes that this entity is associated geographically to the country: Timor-Leste	$vuetify.icons.tl_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+222	tm_flag	Turkmenistan	Denotes that this entity is associated geographically to the country: Turkmenistan	$vuetify.icons.tm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+223	tn_flag	Tunisia	Denotes that this entity is associated geographically to the country: Tunisia	$vuetify.icons.tn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+224	to_flag	Tonga	Denotes that this entity is associated geographically to the country: Tonga	$vuetify.icons.to_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+225	tr_flag	Turkey	Denotes that this entity is associated geographically to the country: Turkey	$vuetify.icons.tr_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+226	tt_flag	Trinidad and Tobago	Denotes that this entity is associated geographically to the country: Trinidad and Tobago	$vuetify.icons.tt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+227	tv_flag	Tuvalu	Denotes that this entity is associated geographically to the country: Tuvalu	$vuetify.icons.tv_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+228	tw_flag	Taiwan	Denotes that this entity is associated geographically to the country: Taiwan	$vuetify.icons.tw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+229	tz_flag	Tanzania	Denotes that this entity is associated geographically to the country: Tanzania	$vuetify.icons.tz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+230	ua_flag	Ukraine	Denotes that this entity is associated geographically to the country: Ukraine	$vuetify.icons.ua_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+231	ug_flag	Uganda	Denotes that this entity is associated geographically to the country: Uganda	$vuetify.icons.ug_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+232	um_flag	United States Minor Outlying Islands	Denotes that this entity is associated geographically to the country: United States Minor Outlying Islands	$vuetify.icons.um_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+233	us_flag	United States of America	Denotes that this entity is associated geographically to the country: United States of America	$vuetify.icons.us_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+234	uy_flag	Uruguay	Denotes that this entity is associated geographically to the country: Uruguay	$vuetify.icons.uy_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+235	uz_flag	Uzbekistan	Denotes that this entity is associated geographically to the country: Uzbekistan	$vuetify.icons.uz_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+236	va_flag	Holy See	Denotes that this entity is associated geographically to the country: Holy See	$vuetify.icons.va_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+237	vc_flag	Saint Vincent and the Grenadines	Denotes that this entity is associated geographically to the country: Saint Vincent and the Grenadines	$vuetify.icons.vc_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+238	ve_flag	Venezuela (Bolivarian Republic of)	Denotes that this entity is associated geographically to the country: Venezuela (Bolivarian Republic of)	$vuetify.icons.ve_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+239	vg_flag	Virgin Islands (British)	Denotes that this entity is associated geographically to the country: Virgin Islands (British)	$vuetify.icons.vg_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+240	vi_flag	Virgin Islands (U.S.)	Denotes that this entity is associated geographically to the country: Virgin Islands (U.S.)	$vuetify.icons.vi_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+241	vn_flag	Vietnam	Denotes that this entity is associated geographically to the country: Vietnam	$vuetify.icons.vn_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+242	vu_flag	Vanuatu	Denotes that this entity is associated geographically to the country: Vanuatu	$vuetify.icons.vu_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+243	wf_flag	Wallis and Futuna	Denotes that this entity is associated geographically to the country: Wallis and Futuna	$vuetify.icons.wf_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+244	ws_flag	Samoa	Denotes that this entity is associated geographically to the country: Samoa	$vuetify.icons.ws_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+245	ye_flag	Yemen	Denotes that this entity is associated geographically to the country: Yemen	$vuetify.icons.ye_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+246	yt_flag	Mayotte	Denotes that this entity is associated geographically to the country: Mayotte	$vuetify.icons.yt_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+247	za_flag	South Africa	Denotes that this entity is associated geographically to the country: South Africa	$vuetify.icons.za_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+248	zm_flag	Zambia	Denotes that this entity is associated geographically to the country: Zambia	$vuetify.icons.zm_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+249	zw_flag	Zimbabwe	Denotes that this entity is associated geographically to the country: Zimbabwe	$vuetify.icons.zw_flag	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+250	scanner	Scanner	This entity class is usually applied to an external IP address that is known or suspected to be guilty of scanning infrastructure.	$vuetify.icons.scanner	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+251	sandia	Sandia National Labs	This entity class is applied to entities beloning to Sandia National Labs.	$vuetify.icons.sandia_thunderbird	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+252	firewall	Firewall Block	This entity class is usually applied to an external IP address that has been blocked by ingress firewalls.	$vuetify.icons.firewall	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+253	anonymous_ip	Anonymous IP	This entity class is usually applied to an external IP address that has been labeled as an anonymous ip address.	$vuetify.icons.anonymous_ip	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+254	anonymous_vpn	Anonymous VPN	This entity class is usually applied to an external IP address that has been labeled as known VPN exit node.	mdi-vpn	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+255	hosting_provider	Hosting Provider	This entity class is usually applied to an external IP address that has been labeled as belonging to a known hosting provider.	mdi-satellite-uplink	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+256	public_proxy	Public Proxy	This entity class is usually applied to an external IP address that has been labeled as belonging to a public proxy.	mdi-cloud-arrow-down-outline	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+257	tor_exit_node	Tor Node	This entity class is usually applied to an external IP address that has been labeled as belonging to a tor exit node.	mdi-vector-triangle	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+258	blackhole	DNS Blackhole	This entity class is usually applied to an external IP  that has been blackholed by our DNS resolvers.	mdi-pi-hole	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+259	proxyblock	Proxy Block	This entity class is usually applied to an external IP that has been blocked by our forward proxies.	mdi-cancel	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+260	watchlist	Watchlist	This entity class is usually applied to an external IP that has been added to our threat intel watchlists.	mdi-binoculars	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+261	whitelist	Allow List	This entity class is usually applied to an external IP that has been added to our ingress firewall allow lists.	mdi-human-greeting	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+262	user_principal	Azure AD User Principal	This entity class is applied to a user principal identity from Active Directory. Entity accounts are technically considered user principals in Active Directory, but are not labeled with this entity class for clarity's sake.	mdi-account-check	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+263	email_alias	Email Alias	This entity class is applied to an SMTP alias for a user principal in Active Directory. NOTE that entity accounts are considered user principals.	mdi-card-account-mail-outline	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
+264	entity_account	Entity Account	This entity class is applied to a user in active directory listed as an 'entity account' or non-human user.	mdi-robot	NULL	2023-06-06 16:53:28	2023-06-06 16:53:28
