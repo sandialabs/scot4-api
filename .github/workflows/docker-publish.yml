@@ -18,8 +18,6 @@ env:
   REGISTRY: ghcr.io
   # github.repository as <account>/<repo>
   IMAGE_NAME: ${{ github.repository }}
-  UTIL_IMAGE_NAME: ${{ github.repository }}
-
 
 jobs:
   build:
@@ -29,9 +27,9 @@ jobs:
       matrix:
         include:
           - dockerfile: ./Dockerfile
-            image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+            image: ghcr.io/sandialabs/scot4-api
           - dockerfile: ./Dockerfile-util
-            image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-util
+            image: ghcr.io/sandialabs/scot4-api-util
     permissions:
       contents: read
       packages: write
