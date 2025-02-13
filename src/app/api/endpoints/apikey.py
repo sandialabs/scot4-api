@@ -19,10 +19,7 @@ def read_apikeys(
     """
     Retrieve all api keys owned by this user (paginated)
     """
-    filter_dict = {"owner": current_user.username}
-    apikeys, count = crud.apikey.query_with_filters(
-        db_session=db, filter_dict=filter_dict, skip=skip, limit=limit
-    )
+    apikeys, count = crud.apikey.query_with_filters(db, None, {"owner": current_user.username}, None, skip, limit)
     return {"totalCount": count, "resultCount": len(apikeys), "result": apikeys}
 
 
@@ -52,8 +49,7 @@ def create_apikey(
             raise HTTPException(422, f"You do not have permission to assign role {role.name} to an api key")
         resolved_roles.append(role)
 
-    new_key = schemas.ApiKey(key=str(uuid.uuid4()).upper(), owner=current_user.username)
-    apikey = crud.apikey.create(db_session=db, obj_in=new_key)
+    apikey = crud.apikey.create(db, obj_in=schemas.ApiKey(key=str(uuid.uuid4()).upper(), owner=current_user.username))
     for role in resolved_roles:
         apikey.roles.append(role)
     db.add(apikey)
@@ -75,10 +71,7 @@ def update_apikey(
     """
     # Search for the api key
     apikey = crud.apikey.get(db_session=db, key=key)
-    if not apikey or (
-        apikey.owner != current_user.username
-        and not crud.user.is_superuser(current_user)
-    ):
+    if not apikey or (apikey.owner != current_user.username and not crud.user.is_superuser(current_user)):
         raise HTTPException(404, "Item not found")
     # Do the actual update
     update_dict = {}
@@ -99,7 +92,7 @@ def update_apikey(
                 raise HTTPException(422, f"You do not have permission to assign role {role.name} to an api key")
             resolved_roles.append(role)
         update_dict["roles"] = resolved_roles
-    updated = crud.apikey.update(db_session=db, db_obj=apikey, obj_in=update_dict)
+    updated = crud.apikey.update(db, db_obj=apikey, obj_in=update_dict)
     return updated
 
 
@@ -113,7 +106,7 @@ def read_apikey(
     """
     Get api key by ID.
     """
-    apikey = crud.apikey.get(db_session=db, key=key)
+    apikey = crud.apikey.get(db, key)
     if not apikey:
         raise HTTPException(404, "Api key not found")
     if not crud.user.is_superuser(current_user) and (apikey.owner != current_user.username):
@@ -131,12 +124,12 @@ def delete_apikey(
     """
     Delete an api key
     """
-    apikey = crud.apikey.get(db_session=db, key=key)
+    apikey = crud.apikey.get(db, key)
     if not apikey:
         raise HTTPException(404, "Api key not found")
     if not crud.user.is_superuser(current_user) and (
         apikey.owner != current_user.username
     ):
         raise HTTPException(404, "Api key not found")
-    apikey = crud.apikey.remove(db_session=db, key=key)
+    apikey = crud.apikey.remove(db, key=key)
     return apikey

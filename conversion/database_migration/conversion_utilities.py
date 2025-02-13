@@ -22,6 +22,6 @@ def write_tag_source_links(thing=None, thing_type=None, tag_lookup=None, source_
         if thing_type == "signature":
             # Check if reference ID exists here
             target_data = thing.get('data').get('target')
-            if target_data is not None:
+            if target_data is not None and target_data.get('type') is not None and target_data.get('id') is not None:
                 new_link = [thing_type, thing.get('id'), target_data['type'], target_data['id']]
                 link_csv_writer.writerow(new_link)

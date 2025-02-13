@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, aliased, Query
 from app.core.config import settings
 from app.db.base_class import Base
 from app.enums import PermissionEnum, TargetTypeEnum
-from app.models import Permission, Role, User, Link, Tag, Source, Audit, Promotion
+from app.models import Permission, Role, User, Link, Tag, Source, Audit, Promotion, Popularity
 from app.utils import escape_sql_like
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -33,9 +33,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if self.model.target_type_enum() != TargetTypeEnum.none:
             self.target_crud_mapping[self.model.target_type_enum()] = self
 
-    def get(
-        self, db_session: Session, _id: Any, audit_logger=None
-    ) -> ModelType | None:
+    def get(self, db_session: Session, _id: Any, audit_logger=None) -> ModelType | None:
         """
         Get a single object from DB
         :param db_session:
@@ -44,6 +42,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         CRUDBase.publish("get", _id)
         obj = db_session.query(self.model).filter(self.model.id == _id).first()
+
         if audit_logger is not None:
             audit_logger.log("read", obj, thing_pk=_id, log_thing=False)
         return obj
@@ -54,7 +53,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         skip: int = 0,
         limit: int | None = None,
-        audit_logger=None
+        audit_logger=None,
     ) -> list[ModelType]:
         """
         Get many objects from DB
@@ -96,7 +95,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         db_obj: ModelType,
         obj_in: Union[UpdateSchemaType, dict[str, Any]],
-        audit_logger=None
+        audit_logger=None,
     ) -> ModelType:
         obj_data_fields = [a.key for a in inspect(db_obj).attrs]
         if isinstance(obj_in, dict):
@@ -170,7 +169,6 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     ):
         # Just normal query if a role is an admin role, or if no roles were given
         from app.crud import permission
-
         # Performs a query while filtering, sorting, and paginating appropriately
         # Query with permissions if set of roles given
         if roles is None or permission.roles_have_admin(db_session, roles):
@@ -190,6 +188,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             limit = None
         if skip and skip > 0:
             query = query.offset(skip)
+
         result = query.limit(limit).all()
         if audit_logger is not None:
             for item in result:
@@ -558,15 +557,15 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         # "everyone" role (usually role id 0)
         # Admin permissions need to be checked elsewhere
         model_primary_key = inspect(self.model).primary_key[0]
-        query = db_session.query(self.model) \
-            .join(Permission, (model_primary_key == Permission.target_id))\
+        query = db_session.query(self.model)
+
+        return query.join(Permission, (model_primary_key == Permission.target_id))\
             .filter(((self.model.target_type_enum() == Permission.target_type)
                      & (required_permission == Permission.permission))
                     )\
             .filter(Permission.role_id.in_([role.id for role in roles]
                                            + [settings.EVERYONE_ROLE_ID]))\
             .distinct()
-        return query
 
     def create_with_owner(
         self,
@@ -579,7 +578,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         # Check for CreateSchemaType (=__orig_bases__[0].__args__[1])
         if (isinstance(obj_in, self.__orig_bases__[0].__args__[1])
                 and hasattr(obj_in, "owner")
-                and "owner" not in obj_in.__fields_set__):
+                and "owner" not in obj_in.model_fields_set):
             obj_in.owner = owner.username
         if (isinstance(obj_in, dict)
                 and "owner" not in obj_in):

@@ -83,7 +83,7 @@ def test_query_with_filters_alert(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     apikeys = []
     for _ in range(5):
-        apikeys.append(create_apikey(db, faker, owner.username))
+        apikeys.append(create_apikey(db, faker, owner))
 
     random_apikey = random.choice(apikeys)
 

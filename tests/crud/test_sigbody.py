@@ -54,7 +54,7 @@ def test_get_multi_sigbody(db: Session, faker: Faker) -> None:
 
 def test_create_sigbody(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = SigbodyCreate(
         revision=faker.pyint(),
         body=faker.sentence(),
@@ -72,7 +72,7 @@ def test_create_sigbody(db: Session, faker: Faker) -> None:
 
 def test_update_sigbody(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
     update = SigbodyUpdate(
         revision=faker.pyint(),
@@ -139,7 +139,7 @@ def test_remove_sigbody(db: Session, faker: Faker) -> None:
 
 def test_get_or_create_sigbody(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = SigbodyCreate(
         revision=faker.pyint(),
         body=faker.sentence(),
@@ -203,7 +203,7 @@ def test_get_with_roles_sigbody(db: Session, faker: Faker) -> None:
     for _ in range(5):
         role = create_random_role(db, faker)
         owner = create_user_with_role(db, [role], faker)
-        signature = create_random_signature(db, faker, owner.username)
+        signature = create_random_signature(db, faker, owner)
         sigbody = SigbodyCreate(
             revision=faker.pyint(),
             body=faker.sentence(),
@@ -226,7 +226,7 @@ def test_query_objects_with_roles_sigbody(db: Session, faker: Faker) -> None:
     for _ in range(5):
         role = create_random_role(db, faker)
         owner = create_user_with_role(db, [role], faker)
-        signature = create_random_signature(db, faker, owner.username)
+        signature = create_random_signature(db, faker, owner)
         sigbody = SigbodyCreate(
             revision=faker.pyint(),
             body=faker.sentence(),
@@ -264,7 +264,7 @@ def test_create_with_owner_sigbody(db: Session, faker: Faker) -> None:
 def test_create_with_permissions_sigbody(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, [role], faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = SigbodyCreate(
         revision=faker.pyint(),
         body=faker.sentence(),
@@ -288,7 +288,7 @@ def test_create_with_permissions_sigbody(db: Session, faker: Faker) -> None:
 
 def test_create_in_object_sigbody(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = SigbodyCreate(
         revision=faker.pyint(),
         body=faker.sentence(),
@@ -313,7 +313,7 @@ def test_create_in_object_sigbody(db: Session, faker: Faker) -> None:
 
 def test_get_history_sigbody(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = SigbodyCreate(
         revision=faker.pyint(),
         body=faker.sentence(),

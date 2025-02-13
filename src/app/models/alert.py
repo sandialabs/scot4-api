@@ -6,13 +6,13 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app.db.base_class import Base
 from app.enums import StatusEnum, TlpEnum
-from app.models.mixins import PromotionToMixin, TimestampMixin
+from app.models.mixins import PromotionToMixin, TimestampMixin, PopularityMixin
 from app.models.permission import Permission
 
 medium_text_length = 16777215
 
 
-class Alert(Base, TimestampMixin, PromotionToMixin):
+class Alert(Base, TimestampMixin, PromotionToMixin, PopularityMixin):
     __tablename__ = "alerts"
 
     id = Column("alert_id", Integer, primary_key=True)

@@ -1,10 +1,10 @@
 from sqlalchemy import Column, Integer, JSON, VARCHAR, Text
 
 from app.db.base_class import Base
-from app.models.mixins import TimestampMixin, SourceMixin, TagMixin
+from app.models.mixins import TimestampMixin, SourceMixin, TagMixin, PopularityMixin
 
 
-class ThreatModelItem(Base, TimestampMixin, SourceMixin, TagMixin):
+class ThreatModelItem(Base, TimestampMixin, SourceMixin, TagMixin, PopularityMixin):
     __tablename__ = "threat_model_items"
 
     id = Column("threat_model_id", Integer, primary_key=True, index=True)

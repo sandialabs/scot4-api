@@ -19,7 +19,7 @@ from tests.utils.promotion import promote_vuln_track_to_incident
 
 def test_get_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username)
+    vuln_track = create_random_vuln_track(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}",
@@ -74,7 +74,7 @@ def test_create_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
 def test_update_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -118,7 +118,7 @@ def test_update_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
 def test_delete_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}",
@@ -146,7 +146,7 @@ def test_delete_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
 def test_undelete_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}",
@@ -182,8 +182,8 @@ def test_undelete_vuln_track(client: TestClient, normal_user_token_headers: dict
 
 def test_entries_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.vuln_track, target_id=vuln_track.id, entry_class=EntryClassEnum.entry)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.vuln_track, target_id=vuln_track.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}/entry",
@@ -219,7 +219,7 @@ def test_entries_vuln_track(client: TestClient, normal_user_token_headers: dict,
 
 def test_tag_untag_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
     tag1 = create_random_tag(db, faker)
 
     r = client.post(
@@ -302,7 +302,7 @@ def test_tag_untag_vuln_track(client: TestClient, normal_user_token_headers: dic
 
 def test_source_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
     source1 = create_random_source(db, faker)
 
     r = client.post(
@@ -386,7 +386,7 @@ def test_source_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
 def test_entities_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.vuln_track, vuln_track.id)
 
     r = client.get(
@@ -422,8 +422,8 @@ def test_entities_vuln_track(client: TestClient, normal_user_token_headers: dict
 
 def test_files_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username)
-    file = create_random_file(db, faker, owner.username, TargetTypeEnum.vuln_track, vuln_track.id)
+    vuln_track = create_random_vuln_track(db, faker, owner)
+    file = create_random_file(db, faker, owner, TargetTypeEnum.vuln_track, vuln_track.id)
 
     r = client.get(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}/files",
@@ -459,7 +459,7 @@ def test_files_vuln_track(client: TestClient, normal_user_token_headers: dict, s
 
 def test_history_vuln_track(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, owner.username, False)
+    vuln_track = create_random_vuln_track(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -504,7 +504,7 @@ def test_search_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
     vuln_tracks = []
     for _ in range(5):
-        vuln_tracks.append(create_random_vuln_track(db, faker, owner.username, False))
+        vuln_tracks.append(create_random_vuln_track(db, faker, owner, False))
     random_vuln_track = random.choice(vuln_tracks)
 
     r = client.get(

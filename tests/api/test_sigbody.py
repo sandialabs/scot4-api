@@ -15,7 +15,7 @@ from tests.utils.source import create_random_source
 
 def test_get_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
 
     r = client.get(
@@ -45,7 +45,7 @@ def test_get_sigbody(client: TestClient, superuser_token_headers: dict, normal_u
 
 def test_create_sigbody(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     data = {
         "revision": faker.pyint(),
@@ -77,7 +77,7 @@ def test_create_sigbody(client: TestClient, normal_user_token_headers: dict, db:
 
 def test_update_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
 
     data = {
@@ -123,7 +123,7 @@ def test_update_sigbody(client: TestClient, superuser_token_headers: dict, norma
 
 def test_delete_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
 
     r = client.delete(
@@ -160,7 +160,7 @@ def test_delete_sigbody(client: TestClient, superuser_token_headers: dict, norma
 
 def test_undelete_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
 
     r = client.delete(
@@ -197,7 +197,7 @@ def test_undelete_sigbody(client: TestClient, superuser_token_headers: dict, nor
 
 def test_tag_untag_sigbody(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
     tag = create_random_tag(db, faker)
 
@@ -270,7 +270,7 @@ def test_tag_untag_sigbody(client: TestClient, normal_user_token_headers: dict, 
 
 def test_source_add_remove_sigbody(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
     source = create_random_source(db, faker)
 
@@ -343,7 +343,7 @@ def test_source_add_remove_sigbody(client: TestClient, normal_user_token_headers
 
 def test_search_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     sigbodies = []
     for _ in range(5):

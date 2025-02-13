@@ -3,7 +3,7 @@ import random
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import crud, schemas
 from app.schemas.signature import SignatureCreate
 
 
@@ -14,7 +14,7 @@ except ImportError:
     from user import create_random_user
 
 
-def create_random_signature(db: Session, faker: Faker, owner: str | None = None, signature_name: str | None = None):
+def create_random_signature(db: Session, faker: Faker, owner: schemas.User | None = None, signature_name: str | None = None):
     sig_type_titles = {
         "splunk": "title",
         "microsoft_sentinel": "displayName",
@@ -75,7 +75,7 @@ def create_random_signature(db: Session, faker: Faker, owner: str | None = None,
     }
 
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
 
     signature_type_to_choose = random.choice(list(data_formats.keys()))
     signature_data = {
@@ -86,7 +86,7 @@ def create_random_signature(db: Session, faker: Faker, owner: str | None = None,
         signature_name = signature_data[sig_type_titles[signature_type_to_choose]]
 
     signature_create = SignatureCreate(
-        owner=owner,
+        owner=owner.username,
         name=signature_name,
         description=faker.text(max_nb_chars=30),
         data=json.dumps(signature_data),

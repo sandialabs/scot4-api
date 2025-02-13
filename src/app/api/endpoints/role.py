@@ -7,8 +7,9 @@ from app.api import deps
 from app.utils import create_schema_details
 
 router = APIRouter()
+
+
 description, examples = create_schema_details(schemas.RoleUpdate)
-description_create, examples_create = create_schema_details(schemas.RoleCreate)
 
 
 @router.put(
@@ -19,39 +20,37 @@ def update_role(
     db: Session = Depends(deps.get_db),
     id: Annotated[int, Path(...)],
     role: Annotated[schemas.RoleUpdate, Body(..., openapi_examples=examples)],
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
     Update a role
     """
-    _role = crud.role.get(db_session=db, _id=id)
+    _role = crud.role.get(db, id)
     if not _role:
         raise HTTPException(404, "Role not found")
-    updated = crud.role.update(
-        db_session=db, db_obj=_role, obj_in=role, audit_logger=audit_logger
-    )
-    return updated
+
+    return crud.role.update(db, db_obj=_role, obj_in=role, audit_logger=audit_logger)
 
 
-@router.post("/", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)], description=description_create)
+description, examples = create_schema_details(schemas.RoleCreate)
+
+
+@router.post("/", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)], description=description)
 def create_role(
     *,
     db: Session = Depends(deps.get_db),
-    role: Annotated[schemas.RoleCreate, Body(..., openapi_examples=examples_create)],
-    current_user: models.User = Depends(deps.get_current_active_user),
+    role: Annotated[schemas.RoleCreate, Body(..., openapi_examples=examples)],
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
     Create new role.
     """
-    _role = crud.role.create(db_session=db, obj_in=role, audit_logger=audit_logger)
-    return _role
+    return crud.role.create(db, obj_in=role, audit_logger=audit_logger)
 
 
-@router.get(
-    "/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)]
-)
+@router.get("/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)])
 def read_role(
     *,
     db: Session = Depends(deps.get_db),
@@ -61,18 +60,14 @@ def read_role(
     """
     Get role by ID.
     """
-    _role = crud.role.get(db_session=db, _id=id, audit_logger=audit_logger)
+    _role = crud.role.get(db, id, audit_logger)
     if not _role:
-        raise HTTPException(status_code=404, detail="Role not found")
+        raise HTTPException(404, "Role not found")
 
     return _role
 
 
-@router.get(
-    "/",
-    response_model=schemas.ListResponse[schemas.Role],
-    dependencies=[Depends(deps.get_current_active_user)],
-)
+@router.get("/", response_model=schemas.ListResponse[schemas.Role], dependencies=[Depends(deps.get_current_active_user)])
 def get_roles(
     *,
     skip: Annotated[int | None, Query(...)] = 0,
@@ -83,35 +78,29 @@ def get_roles(
     """
     Get all roles (paginated)
     """
-    roles, count = crud.role.query_with_filters(
-        db_session=db, skip=skip, limit=limit, sort_string=sort
-    )
+    roles, count = crud.role.query_with_filters(db, None, None, sort, skip, limit)
     return {"totalCount": count, "resultCount": len(roles), "result": roles}
 
 
-@router.delete(
-    "/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)]
-)
+@router.delete("/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)])
 def delete_role(
     *,
     db: Session = Depends(deps.get_db),
     id: Annotated[int, Path(...)],
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
     Delete a role
     """
-    _role = crud.role.get(db_session=db, _id=id, audit_logger=audit_logger)
+    _role = crud.role.get(db, id, audit_logger)
     if not _role:
         raise HTTPException(404, "Role not found")
-    deleted = crud.role.remove(db_session=db, _id=id, audit_logger=audit_logger)
-    return deleted
+
+    return crud.role.remove(db, _id=id, audit_logger=audit_logger)
 
 
-@router.post(
-    "/assign", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)]
-)
+@router.post("/assign", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)])
 async def assign_role(
     username: Annotated[str, Query(...)],
     role_name: Annotated[str | None, Query(...)] = None,
@@ -150,9 +139,7 @@ async def assign_role(
     return {"msg": f"Success: role {role.name} was assigned to {user.username}"}
 
 
-@router.post(
-    "/remove", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)]
-)
+@router.post("/remove", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)])
 async def remove_role(
     username: Annotated[str, Query(...)],
     role_name: Annotated[str | None, Query(...)] = None,

@@ -11,10 +11,12 @@ from app.models.mixins import (
     FileCountMixin,
     PromotionFromMixin,
     PromotionToMixin,
+    PopularityMixin,
+    UserLinksMixin
 )
 
 
-class Incident(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, FileCountMixin, PromotionFromMixin, PromotionToMixin):
+class Incident(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, FileCountMixin, PromotionFromMixin, PromotionToMixin, PopularityMixin, UserLinksMixin):
     __tablename__ = "incidents"
 
     id = Column("incident_id", Integer, primary_key=True)

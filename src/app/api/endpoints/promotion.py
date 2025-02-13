@@ -44,30 +44,16 @@ def promote(
         for s in source:
             target_type = s["type"]
             target_id = s["id"]
-            if not deps.PermissionCheckId(target_type, PermissionEnum.read)(
-                    target_id, db, current_user, current_roles
-            ):
+            if not deps.PermissionCheckId(target_type, PermissionEnum.read)(target_id, db, current_user, current_roles):
                 raise ValueError(f"{target_type} with id {target_id} does not exist or you do not have permission to access it")
     except (IndexError, ValueError) as e:
         raise HTTPException(422, f"Error processing promotion: {e}")
     # User needs modify permissions on the destination if it already exists
     if destination_id is not None:
-        if not deps.PermissionCheckId(destination, PermissionEnum.modify)(
-                destination_id, db, current_user, current_roles
-        ):
+        if not deps.PermissionCheckId(destination, PermissionEnum.modify)(destination_id, db, current_user, current_roles):
             raise HTTPException(422, f"{destination.value} with id {destination_id} does not exist or you do not have permission to modify it")
     # Do the promotion
     try:
-        return crud.promotion.promote(
-            db,
-            source,
-            destination,
-            destination_id=destination_id,
-            tags=tags,
-            owner=current_user,
-            sources=sources,
-            permissions=permissions,
-            audit_logger=audit_logger,
-        )
+        return crud.promotion.promote(db, source, destination, destination_id, tags, current_user, sources, permissions, audit_logger)
     except ValueError as e:
         raise HTTPException(422, f"Error processing promotion: {e}")

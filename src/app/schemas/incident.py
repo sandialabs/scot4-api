@@ -9,6 +9,8 @@ from app.enums import StatusEnum, TlpEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class IncidentBase(BaseModel):
@@ -41,7 +43,7 @@ class IncidentUpdate(IncidentBase):
     reported_date: Annotated[datetime | None, Field(...)] = None
 
 
-class Incident(IncidentBase):
+class Incident(IncidentBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     modified: Annotated[datetime | None, Field(...)] = datetime.now()
     created: Annotated[datetime | None, Field(...)] = datetime.now()

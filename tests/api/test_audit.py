@@ -5,18 +5,20 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-
+from app import crud
 from utils.appearance import create_random_appearance
 from utils.audit import create_audit
 
 
 def test_read_audit(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    normal_user = crud.user.get_by_username(db, username=settings.EMAIL_TEST_USER)
+    super_user = crud.user.get_by_username(db, username=settings.FIRST_SUPERUSER_USERNAME)
     db_obj = create_random_appearance(db, faker)
     # create audit with normal user
     normal_audit = create_audit(
         db,
         faker,
-        settings.EMAIL_TEST_USER,
+        normal_user,
         db_obj,
         client.base_url,
         client.headers.get("user-agent", None),
@@ -24,7 +26,7 @@ def test_read_audit(client: TestClient, normal_user_token_headers: dict, superus
     super_audit = create_audit(
         db,
         faker,
-        settings.FIRST_SUPERUSER_USERNAME,
+        super_user,
         db_obj,
         client.base_url,
         client.headers.get("user-agent", None),
@@ -85,13 +87,14 @@ def test_read_audit(client: TestClient, normal_user_token_headers: dict, superus
 
 def test_search_audit(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     audits = []
+    super_user = crud.user.get_by_username(db, username=settings.FIRST_SUPERUSER_USERNAME)
     for _ in range(5):
         db_obj = create_random_appearance(db, faker)
         audits.append(
             create_audit(
                 db,
                 faker,
-                settings.FIRST_SUPERUSER_USERNAME,
+                super_user,
                 db_obj,
                 client.base_url,
                 client.headers.get("user-agent", None),
@@ -149,11 +152,12 @@ def test_search_audit(client: TestClient, normal_user_token_headers: dict, super
 
 
 def test_delete_audit(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+    super_user = crud.user.get_by_username(db, username=settings.FIRST_SUPERUSER_USERNAME)
     db_obj = create_random_appearance(db, faker)
     super_audit = create_audit(
         db,
         faker,
-        settings.FIRST_SUPERUSER_USERNAME,
+        super_user,
         db_obj,
         client.base_url,
         client.headers.get("user-agent", None)

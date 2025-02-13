@@ -18,8 +18,8 @@ except ImportError:
 def create_random_game(db: Session, faker: Faker, audit: Audit | None = None):
     if audit is None:
         user = create_random_user(db, faker)
-        alert = create_random_alert(db, faker, user.username)
-        audit = create_audit(db, faker, user.username, alert)
+        alert = create_random_alert(db, faker, user)
+        audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),

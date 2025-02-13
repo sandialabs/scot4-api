@@ -10,8 +10,6 @@ from app.core.config import settings
 from app.utils import send_new_account_email, create_schema_details
 
 router = APIRouter()
-extra_description, examples = create_schema_details(schemas.User)
-extra_description_update, examples_update = create_schema_details(schemas.UserUpdate)
 
 # https://www.python-ldap.org/en/python-ldap-3.3.0/reference/ldap.html#example
 # https://github.com/AzureAD/microsoft-authentication-library-for-python
@@ -32,13 +30,7 @@ def read_users(
     """
     Get all users (admin only)
     """
-    users, count = crud.user.query_with_filters(
-        db_session=db,
-        skip=skip,
-        limit=limit,
-        audit_logger=audit_logger,
-        sort_string=sort,
-    )
+    users, count = crud.user.query_with_filters(db, None, None, sort, skip, limit, audit_logger)
     return {"result": users, "resultCount": len(users), "totalCount": count}
 
 
@@ -55,9 +47,7 @@ def read_usernames(
     """
     Read usernames of users (admin not required)
     """
-    users, count = crud.user.query_with_filters(
-        db_session=db, skip=skip, limit=limit, sort_string="username"
-    )
+    users, count = crud.user.query_with_filters(db, None, None, "username", skip, limit)
     usernames = [u.username for u in users]
     return {"result": usernames, "resultCount": len(usernames), "totalCount": count}
 
@@ -76,25 +66,29 @@ def read_activity(
     Read activity of users (admin not required)
     Limited to last 30 minutes of activity
     """
-    MAX_ACTIVITY_TIME = timedelta(minutes=30)
-    filter_dict = {
-        "last_activity": (datetime.utcnow() - MAX_ACTIVITY_TIME,
-                          datetime.utcnow() + timedelta(seconds=30))
-    }
     users, _ = crud.user.query_with_filters(
-        db_session=db, skip=skip, filter_dict=filter_dict, limit=limit,
-        sort_string="last_activity"
+        db,
+        None,
+        {
+            "last_activity": (datetime.utcnow() - timedelta(minutes=30), datetime.utcnow() + timedelta(seconds=30))
+        },
+        "last_activity",
+        skip,
+        limit,
     )
     resultDict = {u.username: u.last_activity.replace(tzinfo=timezone.utc) for u in users}
     return resultDict
 
 
-@router.post("/", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=extra_description)
+description, examples = create_schema_details(schemas.User, "Create a new User")
+
+
+@router.post("/", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=description)
 def create_user(
     *,
     db: Session = Depends(deps.get_db),
     user_in: Annotated[schemas.UserCreate, Body(..., openapi_examples=examples)],
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    _: models.User = Depends(deps.get_current_active_superuser),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
@@ -102,15 +96,10 @@ def create_user(
     """
     user = crud.user.get_by_username(db, username=user_in.username)
     if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this username already exists in the system.",
-        )
+        raise HTTPException(400, "The user with this username already exists in the system.")
     user = crud.user.create(db, obj_in=user_in, audit_logger=audit_logger)
     if settings.EMAILS_ENABLED and user_in.email:
-        send_new_account_email(
-            email_to=user_in.email, username=user_in.email, password=user_in.password
-        )
+        send_new_account_email(user_in.email, user_in.email, user_in.password)
     return user
 
 
@@ -137,15 +126,12 @@ def update_user_me(
         user_in.email = email
     if preferences is not None:
         user_in.preferences = preferences
-    user = crud.user.update(
-        db, db_obj=current_user, obj_in=user_in, audit_logger=audit_logger
-    )
-    return user
+    return crud.user.update(db, db_obj=current_user, obj_in=user_in, audit_logger=audit_logger)
 
 
 @router.get("/whoami", response_model=schemas.User)
 def read_user_who_am_i(
-    db: Session = Depends(deps.get_db),
+    _: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
@@ -167,17 +153,12 @@ def create_user_open(
     Create new user without the need to be logged in
     """
     if not settings.USERS_OPEN_REGISTRATION:
-        raise HTTPException(status_code=403, detail="User registration disabled")
+        raise HTTPException(403, "User registration disabled")
     user = crud.user.get_by_email(db, email=email)
     if user:
-        raise HTTPException(
-            status_code=400,
-            detail="The user with this email already exists in the system",
-        )
+        raise HTTPException(400, "The user with this email already exists in the system")
 
-    user_in = schemas.UserCreate(password=password, email=email, fullname=fullname)
-    user = crud.user.create(db, obj_in=user_in, audit_logger=audit_logger)
-    return user
+    return crud.user.create(db, obj_in=schemas.UserCreate(password=password, email=email, fullname=fullname), audit_logger=audit_logger)
 
 
 @router.get("/{id_or_username}", response_model=schemas.User)
@@ -196,40 +177,37 @@ def read_user(
         user = crud.user.get_by_username(db_session=db, username=id_or_username, audit_logger=audit_logger)
 
     if user is None:
-        raise HTTPException(status_code=404, detail=f"User {id} not found")
+        raise HTTPException(404, f"User {id} not found")
 
     if user == current_user:
         return user
 
     if not crud.user.is_superuser(current_user):
-        raise HTTPException(
-            status_code=400, detail="The user doesn't have enough privileges"
-        )
+        raise HTTPException(400, "The user doesn't have enough privileges")
 
     return user
 
 
-@router.put(
-    "/{id}", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=extra_description_update
-)
+description, examples = create_schema_details(schemas.UserUpdate, "Update one or more fields of a User")
+
+
+@router.put("/{id}", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=description)
 def update_user(
     *,
     db: Session = Depends(deps.get_db),
     id: Annotated[int, Path(...)],
-    user_in: Annotated[schemas.UserUpdate, Body(..., openapi_examples=examples_update)],
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    user_in: Annotated[schemas.UserUpdate, Body(..., openapi_examples=examples)],
+    _: models.User = Depends(deps.get_current_active_superuser),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
     Update a user
     """
-    user = crud.user.get(db, _id=id)
+    user = crud.user.get(db, id)
     if not user:
-        raise HTTPException(
-            status_code=404, detail="The user with this id does not exist in the system"
-        )
-    user = crud.user.update(db, db_obj=user, obj_in=user_in, audit_logger=audit_logger)
-    return user
+        raise HTTPException(404, "The user with this id does not exist in the system")
+
+    return crud.user.update(db, db_obj=user, obj_in=user_in, audit_logger=audit_logger)
 
 
 @router.delete(
@@ -243,15 +221,13 @@ def delete_user(
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
-    Update a user
+    Delete a user
     """
-    user = crud.user.get(db, _id=id)
+    user = crud.user.get(db, id)
     if not user:
-        raise HTTPException(
-            status_code=404, detail="The user with this id does not exist in the system"
-        )
-    user = crud.user.remove(db, _id=id, audit_logger=audit_logger)
-    return user
+        raise HTTPException(404, "The user with this id does not exist in the system")
+
+    return crud.user.remove(db, _id=id, audit_logger=audit_logger)
 
 
 @router.post(
@@ -262,7 +238,7 @@ def delete_user(
 def reset_failed_attempts(
     username: Annotated[str, Path(...)],
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
@@ -270,9 +246,5 @@ def reset_failed_attempts(
     """
     user = crud.user.reset_failed_attempts(db, username)
     if user is None:
-        raise HTTPException(
-            status_code=404, detail="The user with this id does not exist in the system"
-        )
-    return schemas.Msg(
-        msg="Password attempts for user %s reset successfully" % username
-    )
+        raise HTTPException(404, "The user with this id does not exist in the system")
+    return schemas.Msg(msg="Password attempts for user %s reset successfully" % username)

@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.crud.base import CRUDBase
-from app.models import Guide, Role, Permission, Signature, Link
+from app.models import Guide, Role, Permission, Signature, Link, User
 from app.enums import TargetTypeEnum, PermissionEnum
 from app.schemas.guide import GuideCreate, GuideUpdate
 from app.crud.crud_signature import signature
@@ -39,23 +39,17 @@ class CRUDGuide(CRUDBase[Guide, GuideCreate, GuideUpdate]):
         self,
         db_session: Session,
         roles: list[Role],
-        required_permission: PermissionEnum = PermissionEnum.read,
+        required_permission: PermissionEnum = PermissionEnum.read
     ):
         """
         Guides have json fields, and so need a slightly different query
         Note: admin permissions must be checked elsewhere
         """
-        query = (
-            db_session.query(self.model)
-            .join(Permission, (self.model.id == Permission.target_id))
-            .filter(((self.model.target_type_enum() == Permission.target_type)
-                     & (required_permission == Permission.permission))
-                    )
-            .filter(Permission.role_id.in_([role.id for role in roles]
-                                           + [settings.EVERYONE_ROLE_ID]))
+        return db_session.query(self.model)\
+            .join(Permission, (self.model.id == Permission.target_id))\
+            .filter(((self.model.target_type_enum() == Permission.target_type) & (required_permission == Permission.permission)))\
+            .filter(Permission.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
             .group_by(self.model.id)  # We can't use DISTINCT with guides
-        )
-        return query
 
 
 guide = CRUDGuide(Guide)

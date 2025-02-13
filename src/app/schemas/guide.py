@@ -5,6 +5,8 @@ from pydantic import BaseModel, Json, ConfigDict, Field
 from app.core.config import settings
 from app.enums import GuideStatusEnum, TlpEnum
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class GuideBase(BaseModel):
@@ -27,7 +29,7 @@ class GuideUpdate(GuideBase):
 
 
 # pretty
-class Guide(GuideBase):
+class Guide(GuideBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

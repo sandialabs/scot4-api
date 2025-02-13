@@ -10,15 +10,17 @@ from app.schemas import SearchRequest
 from app.utils import create_schema_details
 
 router = APIRouter()
-extra_description, examples = create_schema_details(SearchRequest)
 
 
-@router.post("/", description=extra_description)
+description, examples = create_schema_details(SearchRequest)
+
+
+@router.post("/", description=description)
 def search(
     *,
     search_text: Annotated[SearchRequest, Body(..., openapi_examples=examples)],
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     roles: list[models.Role] = Depends(deps.get_current_roles),
 ) -> Any:
     """
@@ -27,7 +29,17 @@ def search(
 
     client = meilisearch.Client(settings.SEARCH_HOST, settings.SEARCH_API_KEY)
     entries_index = client.index('entries')
-    entries_hits = entries_index.search(search_text.text, {'attributesToHighlight': ['entry_text', 'parent_text'], 'highlightPreTag': '<mark>', 'cropLength': 30, 'highlightPostTag': '</mark>', 'limit': 100, 'attributesToCrop': ['entry_text']})
+    entries_hits = entries_index.search(
+        search_text.text,
+        {
+            'attributesToHighlight': ['entry_text', 'parent_text'],
+            'highlightPreTag': '<mark>',
+            'cropLength': 30,
+            'highlightPostTag': '</mark>',
+            'limit': 100,
+            'attributesToCrop': ['entry_text']
+        }
+    )
     all_hits = {}
     permission_check = []
     for hit in entries_hits['hits']:
@@ -36,7 +48,7 @@ def search(
         else:
             all_hits[f"{hit['target_type']}-{hit['target_id']}"].append(hit)
         permission_check.append({'id': hit['target_id'], 'type': hit['target_type']})
-    filter_list = crud.permission.filter_search_hits(db=db, target_pairs=permission_check, roles=roles)
+    filter_list = crud.permission.filter_search_hits(db, permission_check, roles)
     if filter_list is False:
         filtered_results = []
         for k, v in all_hits.items():

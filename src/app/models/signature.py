@@ -8,11 +8,13 @@ from app.models.mixins import (
     SourceMixin,
     TagMixin,
     TimestampMixin,
+    PopularityMixin,
+    UserLinksMixin
 )
 
 
 class Signature(
-    Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, GuidesForMixin
+    Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, GuidesForMixin, PopularityMixin, UserLinksMixin
 ):
     __tablename__ = "signatures"
 

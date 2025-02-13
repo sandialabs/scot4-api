@@ -177,7 +177,7 @@ def test_query_with_filters_guide(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     guides = []
     for _ in range(5):
-        guides.append(create_random_guide(db, faker, owner.username))
+        guides.append(create_random_guide(db, faker, owner))
 
     random_guide = random.choice(guides)
 
@@ -369,7 +369,7 @@ def test_get_history_guide(db: Session, faker: Faker) -> None:
 
 def test_undelete_guide(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    guide = create_random_guide(db, faker, user.username)
+    guide = create_random_guide(db, faker, user)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.guide.remove(db, _id=guide.id, audit_logger=audit_logger)
@@ -384,8 +384,8 @@ def test_undelete_guide(db: Session, faker: Faker) -> None:
 def test_get_signatures_for_guide(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature, False)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature, False)
     create_random_permission(db, role, guide)
 
     db_obj = crud.guide.get_signatures_for(db, guide.id)

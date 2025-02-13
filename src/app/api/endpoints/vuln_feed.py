@@ -16,7 +16,9 @@ from .generic import (
     generic_undelete,
     generic_history,
     generic_search,
-    generic_export
+    generic_export,
+    generic_upvote_and_downvote,
+    generic_user_links
 )
 
 router = APIRouter()
@@ -24,12 +26,8 @@ router = APIRouter()
 # Create get, post, put, delete, entries, tag, and source endpoints
 generic_export(router, crud.vuln_feed, TargetTypeEnum.vuln_feed)
 generic_get(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed)
-generic_post(
-    router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed, schemas.VulnFeedCreate
-)
-generic_put(
-    router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed, schemas.VulnFeedUpdate
-)
+generic_post(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed, schemas.VulnFeedCreate)
+generic_put(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed, schemas.VulnFeedUpdate)
 generic_delete(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed)
 generic_undelete(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed)
 generic_entries(router, TargetTypeEnum.vuln_feed)
@@ -39,3 +37,5 @@ generic_entities(router, TargetTypeEnum.vuln_feed)
 generic_files(router, TargetTypeEnum.vuln_feed)
 generic_history(router, crud.vuln_feed, TargetTypeEnum.vuln_feed)
 generic_search(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeedSearch, schemas.VulnFeed)
+generic_upvote_and_downvote(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed)
+generic_user_links(router, crud.vuln_feed, TargetTypeEnum.vuln_feed, schemas.VulnFeed)

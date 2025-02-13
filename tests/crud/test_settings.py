@@ -14,7 +14,7 @@ from tests.utils.roles import create_random_role
 from tests.utils.user import create_random_user
 
 
-def test_get_setting(db: Session, faker: Faker) -> None:
+def test_get_setting(db: Session) -> None:
     db_obj = crud.setting.get(db)
 
     assert db_obj.id == 1

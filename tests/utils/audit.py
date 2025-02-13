@@ -13,7 +13,7 @@ from app.db.base_class import Base
 from app.enums import TargetTypeEnum
 
 
-def create_audit(db: Session, faker: Faker, username: str, db_obj: Any, source: Any | None = None, user_agent: str | None = None):
+def create_audit(db: Session, faker: Faker, user: schemas.User, db_obj: Any, source: Any | None = None, user_agent: str | None = None):
     thing_type = TargetTypeEnum.none
     if isinstance(db_obj, Base):
         thing_type = db_obj.target_type_enum()
@@ -34,7 +34,7 @@ def create_audit(db: Session, faker: Faker, username: str, db_obj: Any, source: 
     data = json.dumps(jsonable_encoder(db_obj.as_dict()))
     audit = schemas.AuditCreate(
         when_date=datetime.utcnow(),
-        username=username,
+        username=user.username,
         what=what,
         thing_type=thing_type,
         thing_id=db_obj.id,

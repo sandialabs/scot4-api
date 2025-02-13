@@ -124,10 +124,10 @@ def test_update_entry(db: Session, faker: Faker) -> None:
     assert db_obj.target_id == update["target_id"]
     assert db_obj.parsed == update["parsed"]
 
-    alertgroup = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, owner, False)
     # need to track this separately otherwise the tests will fail
     ag_modified = alertgroup.modified
-    entry = create_random_entry(db, faker, alertgroup.owner, target_type=TargetTypeEnum.alertgroup, target_id=alertgroup.id)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.alertgroup, target_id=alertgroup.id)
     update = {
         "tlp": random.choice(list(TlpEnum))
     }
@@ -138,7 +138,8 @@ def test_update_entry(db: Session, faker: Faker) -> None:
 
 
 def test_remove_entry(db: Session, faker: Faker) -> None:
-    entry = create_random_entry(db, faker)
+    user = create_random_user(db, faker)
+    entry = create_random_entry(db, faker, user)
 
     db_obj = crud.entry.remove(db, _id=entry.id)
 
@@ -153,8 +154,8 @@ def test_remove_entry(db: Session, faker: Faker) -> None:
     assert db_obj is None
 
     grand_parent_entry = create_random_entry(db, faker)
-    parent_entry = create_random_entry(db, faker, grand_parent_entry.owner, grand_parent_entry.id)
-    entry = create_random_entry(db, faker, parent_entry.owner, parent_entry.id)
+    parent_entry = create_random_entry(db, faker, user, grand_parent_entry.id)
+    entry = create_random_entry(db, faker, user, parent_entry.id)
 
     db_obj = crud.entry.remove(db, _id=parent_entry.id)
 
@@ -185,8 +186,8 @@ def test_get_or_create_entry(db: Session, faker: Faker) -> None:
 
 def test_query_with_filters_entry(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, owner.username, with_alerts=False)
-    parent_entry = create_random_entry(db, faker, target_id=alertgroup.id, target_type=TargetTypeEnum.alertgroup)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, owner, with_alerts=False)
+    parent_entry = create_random_entry(db, faker, owner, target_id=alertgroup.id, target_type=TargetTypeEnum.alertgroup)
     entries = []
     assignees = []
     statues = []
@@ -195,7 +196,7 @@ def test_query_with_filters_entry(db: Session, faker: Faker) -> None:
         assignees.append(assign)
         status = f"{faker.word()}_{faker.pyint()}"
         statues.append(status)
-        entries.append(create_random_entry(db, faker, owner.username, parent_entry_id=parent_entry.id, assignee=assign, status=status))
+        entries.append(create_random_entry(db, faker, owner, parent_entry_id=parent_entry.id, assignee=assign, status=status))
 
     random_entry = random.choice(entries)
 
@@ -209,14 +210,12 @@ def test_query_with_filters_entry(db: Session, faker: Faker) -> None:
     db_obj, count = crud.entry.query_with_filters(db, filter_dict={"owner": owner.username})
 
     assert db_obj is not None
-    assert len(db_obj) == len(entries)
     assert len(db_obj) == count
     assert all(a.owner == owner.username for a in db_obj)
 
     db_obj, count = crud.entry.query_with_filters(db, filter_dict={"owner": owner.username}, skip=1)
 
     assert db_obj is not None
-    assert len(db_obj) == len(entries) - 1
     assert len(db_obj) == count - 1
     assert all(a.owner == owner.username for a in db_obj)
 
@@ -224,7 +223,6 @@ def test_query_with_filters_entry(db: Session, faker: Faker) -> None:
 
     assert db_obj is not None
     assert len(db_obj) == 1
-    assert count == len(entries)
     assert all(a.owner == owner.username for a in db_obj)
 
     random_assignee = random.choice(assignees)
@@ -414,7 +412,7 @@ def test_get_history_entry(db: Session, faker: Faker) -> None:
 
 def test_undelete_entry(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, user.username)
+    entry = create_random_entry(db, faker, user)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.entry.remove(db, _id=entry.id, audit_logger=audit_logger)

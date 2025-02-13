@@ -16,8 +16,8 @@ from tests.utils.user import create_random_user
 def test_create_alertgroup_new(db: Session, faker: Faker) -> None:
     alertgroup = create_random_alertgroup_no_sig(db, faker)
     db_obj = crud.alert_group.get(db, _id=alertgroup.id)
-    t1 = AlertGroupDetailed.from_orm(db_obj)
-    t2 = AlertGroupDetailed.from_orm(alertgroup)
+    t1 = AlertGroupDetailed.model_validate(db_obj)
+    t2 = AlertGroupDetailed.model_validate(alertgroup)
     assert t1 == t2
 
 
@@ -196,7 +196,7 @@ def test_query_with_filters_alert(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     alertgroups = []
     for _ in range(5):
-        alertgroups.append(create_random_alertgroup_no_sig(db, faker, owner.username))
+        alertgroups.append(create_random_alertgroup_no_sig(db, faker, owner))
 
     random_alertgroup = random.choice(alertgroups)
 

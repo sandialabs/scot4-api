@@ -19,20 +19,14 @@ router = APIRouter()
 
 # Create get, post, put, and delete endpoints
 generic_get(router, crud.source, TargetTypeEnum.source, schemas.Source)
-generic_post(
-    router, crud.source, TargetTypeEnum.source, schemas.Source, schemas.SourceCreate
-)
-generic_put(
-    router, crud.source, TargetTypeEnum.source, schemas.Source, schemas.SourceUpdate
-)
+generic_post(router, crud.source, TargetTypeEnum.source, schemas.Source, schemas.SourceCreate)
+generic_put(router, crud.source, TargetTypeEnum.source, schemas.Source, schemas.SourceUpdate)
 generic_delete(router, crud.source, TargetTypeEnum.source, schemas.Source)
 generic_undelete(router, crud.source, TargetTypeEnum.source, schemas.Source)
 generic_search(router, crud.source, TargetTypeEnum.source, schemas.SourceSearch, schemas.Source)
 
 
-source_read_dep = Depends(
-    deps.PermissionCheckId(TargetTypeEnum.source, PermissionEnum.read)
-)
+source_read_dep = Depends(deps.PermissionCheckId(TargetTypeEnum.source, PermissionEnum.read))
 
 
 @router.post("/source_by_name", response_model=schemas.Source)
@@ -53,29 +47,15 @@ def add_source(
     # Get effective permissions on target object
     current_source = crud.source.get_by_name(db, source_name)  # Does the tag exist?
     if current_source:
-        if not deps.PermissionCheckId(TargetTypeEnum.tag, PermissionEnum.read)(
-            id=current_source.id, db=db, user=user, roles=roles
-        ):
+        if not deps.PermissionCheckId(TargetTypeEnum.tag, PermissionEnum.read)(current_source.id, db, user, roles):
             raise HTTPException(403, "You do not have permission to access this resource, or it does not exist")
-    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(
-            target_id, db, user, roles
-    ):
+    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(target_id, db, user, roles):
         raise HTTPException(404, f"{target_type.name.capitalize()} with id {target_id} does not exist, or you do not have modify permissions on it")
     # If the user has permission, create a link to the source
-    return crud.source.assign_by_name(
-        db_session=db,
-        source_name=source_name,
-        target_type=target_type,
-        target_id=target_id,
-        create=True,
-        source_description=source_description,
-        audit_logger=audit_logger,
-    )
+    return crud.source.assign_by_name(db, source_name, target_type, target_id, True, source_description, audit_logger)
 
 
-@router.post(
-    "/{id}/assign", response_model=schemas.Source, dependencies=[source_read_dep]
-)
+@router.post("/{id}/assign", response_model=schemas.Source, dependencies=[source_read_dep])
 def apply_source(
     id: Annotated[int, Path(...)],
     target_type: Annotated[TargetTypeEnum, Body(...)],
@@ -90,26 +70,16 @@ def apply_source(
     permissions on the source and modify permissions on the object.
     """
     # Get effective permissions on target object
-    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(
-            target_id, db, user, roles
-    ):
+    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(target_id, db, user, roles):
         raise HTTPException(404, f"{target_type.name.capitalize()} with id {target_id} does not exist, or you do not have modify permissions on it")
     # If the user has permission, create a link to the source
-    _source = crud.source.assign(
-        db_session=db,
-        source_id=id,
-        target_type=target_type,
-        target_id=target_id,
-        audit_logger=audit_logger,
-    )
+    _source = crud.source.assign(db, id, target_type, target_id, audit_logger)
     if not _source:
         raise HTTPException(404, f"{target_type.name.capitalize()} with id {target_id} does not have source {id}")
     return _source
 
 
-@router.post(
-    "/{id}/remove", response_model=schemas.Source, dependencies=[source_read_dep]
-)
+@router.post("/{id}/remove", response_model=schemas.Source, dependencies=[source_read_dep])
 def remove_source(
     id: Annotated[int, Path(...)],
     target_type: Annotated[TargetTypeEnum, Body(...)],
@@ -124,18 +94,10 @@ def remove_source(
     you have read permissions on the source and modify permissions on the object.
     """
     # Get effective permissions on target object
-    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(
-            target_id, db, user, roles
-    ):
+    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(target_id, db, user, roles):
         raise HTTPException(404, f"{target_type.name.capitalize()} with id {target_id} does not exist, or you do not have modify permissions on it")
     # If the user has permission, delete all links to the source
-    source = crud.source.unassign(
-        db,
-        source_id=id,
-        target_type=target_type,
-        target_id=target_id,
-        audit_logger=audit_logger,
-    )
+    source = crud.source.unassign(db, id, target_type, target_id, audit_logger)
     if source:
         return source
     else:
@@ -153,10 +115,7 @@ def source_appearances(
     limit: Annotated[int | None, Query(...)] = 100,
     db: Session = Depends(deps.get_db),
     roles: list[models.Role] = Depends(deps.get_current_roles),
-    audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
+    _: deps.AuditLogger = Depends(deps.get_audit_logger),
 ):
-    filter_dict = {"value_type": TargetTypeEnum.source.value, "value_id": id}
-    _appear, count = crud.appearance.query_with_filters(
-        db_session=db, roles=roles, filter_dict=filter_dict, skip=skip, limit=limit
-    )
+    _appear, count = crud.appearance.query_with_filters(db, roles, {"value_type": TargetTypeEnum.source.value, "value_id": id}, None, skip, limit)
     return {"totalCount": count, "resultCount": len(_appear), "result": _appear}

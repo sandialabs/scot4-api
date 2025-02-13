@@ -181,7 +181,7 @@ def test_query_with_filters_feed(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     feeds = []
     for _ in range(5):
-        feeds.append(create_random_feed(db, faker, owner.username))
+        feeds.append(create_random_feed(db, faker, owner))
 
     random_feed = random.choice(feeds)
 
@@ -382,7 +382,7 @@ def test_get_history_feed(db: Session, faker: Faker) -> None:
 
 def test_undelete_feed(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, user.username)
+    feed = create_random_feed(db, faker, user)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.feed.remove(db, _id=feed.id, audit_logger=audit_logger)

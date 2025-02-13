@@ -164,7 +164,7 @@ def test_query_with_filters_event(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     events = []
     for _ in range(3):
-        events.append(create_random_event(db, faker, owner.username, create_extras=False))
+        events.append(create_random_event(db, faker, owner, create_extras=False))
 
     random_event = random.choice(events)
 
@@ -362,7 +362,7 @@ def test_get_history_event(db: Session, faker: Faker) -> None:
 
 def test_undelete_event(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    event = create_random_event(db, faker, user.username, create_extras=False)
+    event = create_random_event(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.event.remove(db, _id=event.id, audit_logger=audit_logger)

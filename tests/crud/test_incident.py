@@ -207,7 +207,7 @@ def test_query_with_filters_incident(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     incidents = []
     for _ in range(3):
-        incidents.append(create_random_incident(db, faker, owner.username, create_extras=False))
+        incidents.append(create_random_incident(db, faker, owner, create_extras=False))
 
     random_incident = random.choice(incidents)
 
@@ -440,7 +440,7 @@ def test_get_history_incident(db: Session, faker: Faker) -> None:
 
 def test_undelete_incident(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, user.username, create_extras=False)
+    incident = create_random_incident(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.incident.remove(db, _id=incident.id, audit_logger=audit_logger)

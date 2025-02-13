@@ -48,7 +48,7 @@ def test_ack_notifications(client: TestClient, superuser_token_headers: dict, db
     )
 
     assert r.status_code == 200
-    assert r.json() is True
+    assert r.json() == [notification.id]
 
     r = client.post(
         f"{settings.API_V1_STR}/notification/ack/",

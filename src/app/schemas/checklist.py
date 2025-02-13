@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.enums import TlpEnum
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class ChecklistBase(BaseModel):
@@ -27,7 +29,7 @@ class ChecklistUpdate(ChecklistBase):
 
 
 # pretty
-class Checklist(ChecklistBase):
+class Checklist(ChecklistBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

@@ -14,10 +14,12 @@ from app.models.mixins import (
     TagMixin,
     TimestampMixin,
     UTCDateTime,
+    PopularityMixin,
+    UserLinksMixin
 )
 
 
-class AlertGroup(Base, TimestampMixin, SourceMixin, TagMixin, SignatureForMixin):
+class AlertGroup(Base, TimestampMixin, SourceMixin, TagMixin, SignatureForMixin, PopularityMixin, UserLinksMixin):
     __tablename__ = "alertgroups"
 
     id = Column("alertgroup_id", Integer, primary_key=True)

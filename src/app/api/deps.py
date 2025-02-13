@@ -96,6 +96,8 @@ def get_current_active_user(
     if not crud.user.is_active(current_user):
         raise HTTPException(status_code=400, detail="Inactive user")
     crud.user.update_last_activity(db, current_user)
+    # add user id to the session for some queries
+    db.info["user_id"] = current_user.id
     db.commit()  # Done here to prevent race conditions
     return current_user
 

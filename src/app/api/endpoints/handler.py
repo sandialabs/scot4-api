@@ -12,24 +12,10 @@ from .generic import generic_delete, generic_get, generic_post, generic_put
 router = APIRouter()
 
 # Create get, post, put, and delete endpoints
-generic_get(router, crud.handler, TargetTypeEnum.none, schemas.Handler, pretty_name="handler")
-generic_post(
-    router,
-    crud.handler,
-    TargetTypeEnum.none,
-    schemas.Handler,
-    schemas.HandlerCreate,
-    pretty_name="handler",
-)
-generic_put(
-    router,
-    crud.handler,
-    TargetTypeEnum.none,
-    schemas.Handler,
-    schemas.HandlerUpdate,
-    pretty_name="handler",
-)
-generic_delete(router, crud.handler, TargetTypeEnum.none, schemas.Handler, pretty_name="handler")
+generic_get(router, crud.handler, TargetTypeEnum.none, schemas.Handler, "Handler")
+generic_post(router, crud.handler, TargetTypeEnum.none, schemas.Handler, schemas.HandlerCreate, "Handler")
+generic_put(router, crud.handler, TargetTypeEnum.none, schemas.Handler, schemas.HandlerUpdate, "Handler")
+generic_delete(router, crud.handler, TargetTypeEnum.none, schemas.Handler, "Handler")
 
 
 @router.get(
@@ -38,7 +24,7 @@ generic_delete(router, crud.handler, TargetTypeEnum.none, schemas.Handler, prett
     summary="Get handlers in date range",
 )
 def handler_date_range(
-    user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     db: Session = Depends(deps.get_db),
     skip: Annotated[int, Path(...)] = 0,
     limit: Annotated[int, Query(...)] = 100,
@@ -51,7 +37,5 @@ def handler_date_range(
     """
     if end_date < start_date:
         raise HTTPException(422, "start_date must be before end_date")
-    _handlers, count = crud.handler.get_handlers_in_date_range(
-        db_session=db, start_date=start_date, end_date=end_date, skip=skip, limit=limit
-    )
+    _handlers, count = crud.handler.get_handlers_in_date_range(db, start_date, end_date, skip, limit)
     return {"totalCount": count, "resultCount": len(_handlers), "result": _handlers}

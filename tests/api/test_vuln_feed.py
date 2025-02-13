@@ -16,10 +16,9 @@ from tests.utils.entry import create_random_entry
 from tests.utils.file import create_random_file
 
 
-
 def test_get_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username)
+    vuln_feed = create_random_vuln_feed(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}",
@@ -74,7 +73,7 @@ def test_create_vuln_feed(client: TestClient, normal_user_token_headers: dict, f
 
 def test_update_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -118,7 +117,7 @@ def test_update_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
 
 def test_delete_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}",
@@ -146,7 +145,7 @@ def test_delete_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
 
 def test_undelete_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}",
@@ -182,8 +181,8 @@ def test_undelete_vuln_feed(client: TestClient, normal_user_token_headers: dict,
 
 def test_entries_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.vuln_feed, target_id=vuln_feed.id, entry_class=EntryClassEnum.entry)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.vuln_feed, target_id=vuln_feed.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}/entry",
@@ -219,7 +218,7 @@ def test_entries_vuln_feed(client: TestClient, normal_user_token_headers: dict, 
 
 def test_tag_untag_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
     tag1 = create_random_tag(db, faker)
 
     r = client.post(
@@ -302,7 +301,7 @@ def test_tag_untag_vuln_feed(client: TestClient, normal_user_token_headers: dict
 
 def test_source_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
     source1 = create_random_source(db, faker)
 
     r = client.post(
@@ -386,7 +385,7 @@ def test_source_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
 
 def test_entities_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.vuln_feed, vuln_feed.id)
 
     r = client.get(
@@ -422,8 +421,8 @@ def test_entities_vuln_feed(client: TestClient, normal_user_token_headers: dict,
 
 def test_files_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username)
-    file = create_random_file(db, faker, owner.username, TargetTypeEnum.vuln_feed, vuln_feed.id)
+    vuln_feed = create_random_vuln_feed(db, faker, owner)
+    file = create_random_file(db, faker, owner, TargetTypeEnum.vuln_feed, vuln_feed.id)
 
     r = client.get(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}/files",
@@ -459,7 +458,7 @@ def test_files_vuln_feed(client: TestClient, normal_user_token_headers: dict, su
 
 def test_history_vuln_feed(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, owner.username, False)
+    vuln_feed = create_random_vuln_feed(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -504,7 +503,7 @@ def test_search_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
 
     vuln_feeds = []
     for _ in range(5):
-        vuln_feeds.append(create_random_vuln_feed(db, faker, owner.username, False))
+        vuln_feeds.append(create_random_vuln_feed(db, faker, owner, False))
     random_vuln_feed = random.choice(vuln_feeds)
 
     r = client.get(

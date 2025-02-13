@@ -63,6 +63,7 @@ class Settings(BaseSettings):
     USERS_OPEN_REGISTRATION: bool = False
     EMAILS_ENABLED: bool = False
     MAX_FAILED_PASSWORD_ATTEMPTS: int = 5
+    PASSWORD_LOCKOUT_MINUTES: int = 15
     EMAIL_TEMPLATES_DIR: str = "templates"
     # The id of the "everyone" role which includes all users by default
     # Set to None to disable the everyone role

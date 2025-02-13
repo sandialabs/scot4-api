@@ -3,6 +3,7 @@ from typing import Any, Annotated
 
 from pydantic import BaseModel, Json, ConfigDict, Field
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
 
 
 class EntityClassLink(BaseModel):
@@ -29,7 +30,7 @@ class EntityClassUpdate(EntityClassCreate):
 
 
 # pretty
-class EntityClass(EntityClassBase):
+class EntityClass(EntityClassBase, PopularityVoted):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime, Field(...)]
     modified: Annotated[datetime, Field(...)]
@@ -44,7 +45,7 @@ class EntityClassSearch(SearchBase):
     icon: Annotated[str | None, Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
-        if attr == "display_name" or attr == "icon" or attr == "description":
+        if attr == "description" or attr == "display_name" or attr == "name" or attr == "icon":
             return value
 
         return super().type_mapping(attr, value)

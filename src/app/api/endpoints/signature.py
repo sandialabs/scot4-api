@@ -18,7 +18,9 @@ from .generic import (
     generic_undelete,
     generic_history,
     generic_search,
-    generic_export
+    generic_export,
+    generic_upvote_and_downvote,
+    generic_user_links
 )
 
 router = APIRouter()
@@ -26,39 +28,25 @@ router = APIRouter()
 # Create get, post, put, delete, entries, tag, and source endpoints
 generic_export(router, crud.signature, TargetTypeEnum.signature)
 generic_get(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
-generic_post(
-    router,
-    crud.signature,
-    TargetTypeEnum.signature,
-    schemas.Signature,
-    schemas.SignatureCreate,
-)
-generic_put(
-    router,
-    crud.signature,
-    TargetTypeEnum.signature,
-    schemas.Signature,
-    schemas.SignatureUpdate,
-)
+generic_post(router, crud.signature, TargetTypeEnum.signature, schemas.Signature, schemas.SignatureCreate)
+generic_put(router, crud.signature, TargetTypeEnum.signature, schemas.Signature, schemas.SignatureUpdate)
 generic_delete(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_undelete(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_entries(router, TargetTypeEnum.signature)
 generic_tag_untag(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
-generic_source_add_remove(
-    router, crud.signature, TargetTypeEnum.signature, schemas.Signature
-)
+generic_source_add_remove(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_entities(router, TargetTypeEnum.signature)
 generic_history(router, crud.signature, TargetTypeEnum.signature)
 generic_search(router, crud.signature, TargetTypeEnum.signature, schemas.SignatureSearch, schemas.Signature)
+generic_upvote_and_downvote(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
+generic_user_links(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 
 
 @router.get(
     "/{id}/sigbodies",
     response_model=list[schemas.Sigbody],
     summary="Get a signature's signature bodies",
-    dependencies=[
-        Depends(deps.PermissionCheckId(TargetTypeEnum.signature, PermissionEnum.read))
-    ],
+    dependencies=[Depends(deps.PermissionCheckId(TargetTypeEnum.signature, PermissionEnum.read))],
 )
 def get_signature_sigbodies(
     id: Annotated[int, Path(...)],
@@ -71,9 +59,7 @@ def get_signature_sigbodies(
     "/{id}/links",
     response_model=Any,
     summary="Get a signature's links",
-    dependencies=[
-        Depends(deps.PermissionCheckId(TargetTypeEnum.signature, PermissionEnum.read))
-    ],
+    dependencies=[Depends(deps.PermissionCheckId(TargetTypeEnum.signature, PermissionEnum.read))],
 )
 def get_signature_links(
     id: Annotated[int, Path(...)],

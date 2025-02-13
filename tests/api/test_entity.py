@@ -130,7 +130,7 @@ def test_undelete_entity(client: TestClient, superuser_token_headers: dict, norm
 def test_entries_entity(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
     entity = create_random_entity(db, faker)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.entity, target_id=entity.id, entry_class=EntryClassEnum.entry)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.entity, target_id=entity.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/{entity.id}/entry",

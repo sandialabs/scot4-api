@@ -9,6 +9,9 @@ import pprint
 import pathlib
 import re
 import urllib3
+
+from app.db.session import SessionLocal
+from app.models import Entry
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 def rewrite_cached_images(html, flaired_html, entry_id):

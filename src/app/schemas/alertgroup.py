@@ -11,6 +11,8 @@ from app.schemas.alertgroupschema import AlertGroupSchemaColumnCreate
 from app.schemas.response import SearchBase
 from app.schemas.tag import Tag
 from app.schemas.source import Source
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 from app.utils import is_bool
 
 
@@ -51,7 +53,7 @@ class AlertGroupUpdate(AlertGroupBase):
     owner: Annotated[str | None, Field(...)] = None
 
 
-class AlertGroup(AlertGroupBase):
+class AlertGroup(AlertGroupBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     alert_count: Annotated[int | None, Field(...)] = 0
     open_count: Annotated[int | None, Field(...)] = 0

@@ -19,7 +19,7 @@ from tests.utils.promotion import promote_event_to_incident
 
 def test_get_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username)
+    event = create_random_event(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/event/{event.id}",
@@ -74,7 +74,7 @@ def test_create_event(client: TestClient, normal_user_token_headers: dict, faker
 
 def test_update_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -118,7 +118,7 @@ def test_update_event(client: TestClient, normal_user_token_headers: dict, super
 
 def test_delete_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/event/{event.id}",
@@ -146,7 +146,7 @@ def test_delete_event(client: TestClient, normal_user_token_headers: dict, super
 
 def test_undelete_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/event/{event.id}",
@@ -182,8 +182,8 @@ def test_undelete_event(client: TestClient, normal_user_token_headers: dict, sup
 
 def test_entries_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.event, target_id=event.id, entry_class=EntryClassEnum.entry)
+    event = create_random_event(db, faker, owner, False)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.event, target_id=event.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/event/{event.id}/entry",
@@ -219,7 +219,7 @@ def test_entries_event(client: TestClient, normal_user_token_headers: dict, supe
 
 def test_tag_untag_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
     tag1 = create_random_tag(db, faker)
 
     r = client.post(
@@ -302,7 +302,7 @@ def test_tag_untag_event(client: TestClient, normal_user_token_headers: dict, su
 
 def test_source_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
     source1 = create_random_source(db, faker)
 
     r = client.post(
@@ -386,7 +386,7 @@ def test_source_event(client: TestClient, normal_user_token_headers: dict, super
 
 def test_entities_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.event, event.id)
 
     r = client.get(
@@ -422,8 +422,8 @@ def test_entities_event(client: TestClient, normal_user_token_headers: dict, sup
 
 def test_files_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username)
-    file = create_random_file(db, faker, owner.username, TargetTypeEnum.event, event.id)
+    event = create_random_event(db, faker, owner)
+    file = create_random_file(db, faker, owner, TargetTypeEnum.event, event.id)
 
     r = client.get(
         f"{settings.API_V1_STR}/event/{event.id}/files",
@@ -459,7 +459,7 @@ def test_files_event(client: TestClient, normal_user_token_headers: dict, superu
 
 def test_history_event(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    event = create_random_event(db, faker, owner.username, False)
+    event = create_random_event(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -504,7 +504,7 @@ def test_search_event(client: TestClient, normal_user_token_headers: dict, super
 
     events = []
     for _ in range(5):
-        events.append(create_random_event(db, faker, owner.username, False))
+        events.append(create_random_event(db, faker, owner, False))
     random_event = random.choice(events)
 
     r = client.get(

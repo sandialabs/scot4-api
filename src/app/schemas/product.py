@@ -7,6 +7,8 @@ from app.enums import TlpEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class ProductBase(BaseModel):
@@ -24,7 +26,7 @@ class ProductUpdate(ProductBase):
 
 
 # pretty
-class Product(ProductBase):
+class Product(ProductBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

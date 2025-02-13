@@ -9,7 +9,6 @@ from app.api import deps
 from app.utils import create_schema_details
 
 router = APIRouter()
-description, examples = create_schema_details(schemas.MetricCreate)
 
 
 # Reads ALL metrics data
@@ -23,17 +22,19 @@ def read_metrics(
     """
     Get ALL metrics data (no pagination)
     """
-    metrics = crud.metric.get_multi(db_session=db)
-    return metrics
+    return crud.metric.get_multi(db)
 
 
 # Creates a new metric
 # Admin only
+description, examples = create_schema_details(schemas.MetricCreate)
+
+
 @router.post("/", response_model=schemas.Metric, summary="Create a metric", description=description)
 def create_metric(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_superuser),
+    _: models.User = Depends(deps.get_current_active_superuser),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     metric: Annotated[schemas.MetricCreate, Body(..., openapi_examples=examples)],
 ) -> Any:
@@ -52,24 +53,19 @@ def create_metric(
         `{"what": "update", "type": "alert", "data": {"status": "closed"}}`
     would count the number of alert closing events.
     """
-    return crud.metric.create(db_session=db, obj_in=metric, audit_logger=audit_logger)
+    return crud.metric.create(db, obj_in=metric, audit_logger=audit_logger)
 
 
 @router.get("/results", response_model=list[schemas.MetricResult], summary="Get metric results")
 def get_results(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     metric_ids: Annotated[list[int] | None, Query()] = None,
     dates: Annotated[list[datetime] | None, Query(..., min_items=1, max_items=2)] = None,
     exclude_users: Annotated[list[str] | None, Query()] = None,
 ) -> Any:
-    return crud.metric.get_results_for_metrics(
-        db_session=db,
-        metric_ids=metric_ids,
-        date_range=dates,
-        exclude_users=exclude_users
-    )
+    return crud.metric.get_results_for_metrics(db, metric_ids, dates, exclude_users)
 
 
 # Gets single gamification data
@@ -78,13 +74,13 @@ def get_results(
 def read_metric(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     id: Annotated[int, Path(...)]
 ) -> Any:
     """
     Get the data of a metric
     """
-    _metric = crud.metric.get(db_session=db, _id=id)
+    _metric = crud.metric.get(db, id)
     if _metric:
         return _metric
     else:

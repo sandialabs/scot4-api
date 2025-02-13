@@ -46,9 +46,7 @@ def login_password(
         if not token_roles.issubset(user_roles):
             raise HTTPException(403, f"User {user.username} does not possess roles: {list(token_roles - user_roles)}")
         token_roles = list(token_roles)
-    access_token = security.create_access_token(
-        user.username, token_roles, expires_delta=access_token_expires
-    )
+    access_token = security.create_access_token(user.username, token_roles, access_token_expires)
     secure_cookie = settings.SECURE_AUTH_COOKIE
     response.set_cookie(
         key="access_token",
@@ -70,9 +68,7 @@ def login_local(
     """
     Login only with local auth
     """
-    return login_password(
-        response, db, form_data, [AuthTypeEnum.local], audit_logger=audit_logger
-    )
+    return login_password(response, db, form_data, [AuthTypeEnum.local], audit_logger)
 
 
 @router.post("/login/ldap", response_model=schemas.Token)
@@ -85,9 +81,7 @@ def login_ldap(
     """
     Login only with ldap auth
     """
-    return login_password(
-        response, db, form_data, [AuthTypeEnum.ldap], audit_logger=audit_logger
-    )
+    return login_password(response, db, form_data, [AuthTypeEnum.ldap], audit_logger)
 
 
 @router.post("/login/access-token", response_model=schemas.Token)
@@ -101,7 +95,7 @@ def login_access_token(
     Get an access token for future requests
     This endpoint tries all enabled password-based auth methods
     """
-    return login_password(response, db, form_data, audit_logger=audit_logger)
+    return login_password(response, db, form_data, None, audit_logger)
 
 
 @router.get("/login/oauth-url")
@@ -112,16 +106,12 @@ def login_oauth_url(auth_type: Annotated[AuthTypeEnum, Query(...)], db: Session 
     # Get auth handling class
     auth_class = auth_classes.get(auth_type)
     if not auth_class:
-        raise HTTPException(
-            status_code=422, detail="Auth type %s not supported" % auth_type
-        )
+        raise HTTPException(422, "Auth type %s not supported" % auth_type)
     # Get configured auth methods
     auth_methods = crud.auth_setting.get_auth_methods(db)
     auth_methods = [m for m in auth_methods if m.auth == auth_type]
     if not auth_methods:
-        raise HTTPException(
-            status_code=422, detail="Auth type %s not configured" % auth_type
-        )
+        raise HTTPException(422, "Auth type %s not configured" % auth_type)
     # Use first auth method; undefined behavior if multiple configured
     # Get url from configured auth method
     authenticator = get_authenticator(auth_methods[0])
@@ -141,9 +131,7 @@ def login_token(
     `token` should be a dict of the server's callback response parameters
     """
     try:
-        user = crud.user.authenticate(
-            db, token=token, allowed_methods=[auth_type], audit_logger=audit_logger
-        )
+        user = crud.user.authenticate(db, token=token, allowed_methods=[auth_type], audit_logger=audit_logger)
     except ValueError as e:
         raise HTTPException(401, str(e))
     if not user:
@@ -151,9 +139,7 @@ def login_token(
     elif not crud.user.is_active(user):
         raise HTTPException(400, "Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = security.create_access_token(
-        user.username, expires_delta=access_token_expires
-    )
+    access_token = security.create_access_token(user.username, expires_delta=access_token_expires)
     secure_cookie = settings.SECURE_AUTH_COOKIE
     response.set_cookie(
         key="access_token",
@@ -162,10 +148,7 @@ def login_token(
         secure=secure_cookie,
         expires=int(access_token_expires.total_seconds()),
     )  # In production make sure you add secure=True
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+    return {"access_token": access_token, "token_type": "bearer"}
 
 
 @router.get("/login/aad-callback")
@@ -176,8 +159,7 @@ def login_aad_callback(
     db: Session = Depends(deps.get_db),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger)
 ) -> Any:
-    return login_token(db, response, AuthTypeEnum.aad, {"code": code, "state": state},
-                       audit_logger=audit_logger)
+    return login_token(db, response, AuthTypeEnum.aad, {"code": code, "state": state}, audit_logger)
 
 
 @router.get("/login/test-token", response_model=schemas.User)
@@ -193,7 +175,7 @@ def test_token(
 @router.get("/logout")
 def logout(
     *,
-    db: Session = Depends(deps.get_db),
+    _: Session = Depends(deps.get_db),
     response: Response,
     current_user: models.User = Depends(deps.get_current_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),

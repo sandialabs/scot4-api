@@ -28,7 +28,7 @@ def index_search_results():
         if not alerts:
             break
         for alert in alerts:
-            if alert is not None and alert.get('data') is not None:
+            if alert is not None and alert.data is not None:
                 index_for_search(alert.alertgroup_subject, alert=alert)
         
         alert_offset += batch_size
@@ -40,7 +40,7 @@ def index_search_results():
         if not entries:
             break
         for entry in entries:
-            if entry is not None and entry.get('entry_data') is not None and entry.entry_data.get('html') is not None:
+            if entry is not None and entry.entry_data is not None and entry.entry_data.get('html') is not None:
                 if entry.entry_data.get('plain_text') is None: 
                     continue
                 parent_crud = CRUDBase.target_crud_mapping.get(entry.target_type)

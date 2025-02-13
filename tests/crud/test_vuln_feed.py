@@ -165,7 +165,7 @@ def test_query_with_filters_vuln_feed(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     vuln_feeds = []
     for _ in range(3):
-        vuln_feeds.append(create_random_vuln_feed(db, faker, owner.username, create_extras=False))
+        vuln_feeds.append(create_random_vuln_feed(db, faker, owner, create_extras=False))
 
     random_vuln_feed = random.choice(vuln_feeds)
 
@@ -363,7 +363,7 @@ def test_get_history_vuln_feed(db: Session, faker: Faker) -> None:
 
 def test_undelete_vuln_feed(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    vuln_feed = create_random_vuln_feed(db, faker, user.username, create_extras=False)
+    vuln_feed = create_random_vuln_feed(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.vuln_feed.remove(db, _id=vuln_feed.id, audit_logger=audit_logger)

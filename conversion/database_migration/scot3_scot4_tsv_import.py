@@ -74,4 +74,4 @@ if __name__=="__main__":
     util.import_table(f"{staging_directory}/entity_class_associations.csv", {"table": "entity_class_entity_association", "columns": ['entity_id', 'entity_class_id'], "dialect": "tsv", 'fieldsEscapedBy': '\t', 'fieldsEnclosedBy': "'", 'fieldsEscapedBy': '\0', 'linesTerminatedBy': "\n", "skipRows": 1, "showProgress": True})    
 
     if os.path.isfile("./games.csv"):
-        util.import_table("./games.csv", { "table": "games", "columns": [], "dialect": "tsv", 'fieldsEscapedBy': '\t', 'fieldsEnclosedBy': "'", 'fieldsEscapedBy': '\0', 'linesTerminatedBy': "\n", "skipRows": 1, "showProgress": True})
+        util.import_table("./games.csv", { "table": "games", "columns": ["game_id", "game_name", "tooltip", "results", "created_date", "modified_date"], "dialect": "tsv", 'fieldsEscapedBy': '\t', 'fieldsEnclosedBy': "'", 'fieldsEscapedBy': '\0', 'linesTerminatedBy': "\n", "skipRows": 1, "showProgress": True})

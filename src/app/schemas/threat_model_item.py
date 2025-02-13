@@ -5,6 +5,7 @@ from pydantic import BaseModel, Json, ConfigDict, Field
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
 
 
 class ThreatModelItemBase(BaseModel):
@@ -22,7 +23,7 @@ class ThreatModelItemUpdate(ThreatModelItemBase):
     pass
 
 
-class ThreatModelItem(ThreatModelItemBase):
+class ThreatModelItem(ThreatModelItemBase, PopularityVoted):
     id: Annotated[int, Field(...)]
     modified: Annotated[datetime | None, Field(...)] = datetime.now()
     created: Annotated[datetime | None, Field(...)] = datetime.now()

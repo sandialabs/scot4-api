@@ -33,6 +33,7 @@ from .incident import Incident, IncidentCreate, IncidentUpdate, IncidentSearch
 from .intel import Intel, IntelCreate, IntelUpdate, IntelSearch
 from .link import Link, LinkCreate, LinkUpdate, LinkSearch
 from .pivot import Pivot, PivotCreate, PivotUpdate, PivotSearch
+from .popularity import Popularity, PopularityCreate, PopularityUpdate
 from .enrichment import Enrichment, EnrichmentCreate, EnrichmentUpdate, enrichment_class_schema_map
 from .metric import Metric, MetricCreate, MetricUpdate, MetricResult
 from .msg import Msg
@@ -70,8 +71,16 @@ from .threat_model_item import (
     ThreatModelItemUpdate,
     ThreatModelItemSearch
 )
-from .notification import Notification, NotificationCreate, NotificationUpdate
+from .notification import (
+    Notification,
+    NotificationCreate,
+    NotificationUpdate,
+    NotificationAck,
+    NotificationSubscribe,
+    NotificationBroadcast
+)
 from .token import Token, TokenPayload
+from .user_links import UserLinks, UserLinksCreate, UserLinksUpdate
 from .user import User, UserCreate, UserUpdate
 from .search import SearchRequest, SearchResponse
 from .stat import Stat, StatCreate, StatUpdate, StatSearch

@@ -19,12 +19,12 @@ def read_stat(
     *,
     db: Session = Depends(deps.get_db),
     id: Annotated[int, Path(...)],
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
     Get stat by ID
     """
-    _stat = crud.stat.get(db_session=db, _id=id)
+    _stat = crud.stat.get(db, id)
     if not _stat:
         raise HTTPException(404, "Stat object not found")
 

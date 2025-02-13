@@ -8,11 +8,13 @@ from app.models.mixins import (
     TagMixin,
     TimestampMixin,
     FileCountMixin,
-    PromotionFromMixin
+    PromotionFromMixin,
+    PopularityMixin,
+    UserLinksMixin
 )
 
 
-class Product(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, FileCountMixin, PromotionFromMixin):
+class Product(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, FileCountMixin, PromotionFromMixin, PopularityMixin, UserLinksMixin):
     __tablename__ = "products"
 
     id = Column("products_id", Integer, primary_key=True, index=True)

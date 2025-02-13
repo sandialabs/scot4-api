@@ -16,7 +16,7 @@ from tests.utils.flair import create_remote_flair_html, create_random_remote_fla
 
 def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
         headers=normal_user_token_headers,
@@ -65,7 +65,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
     assert flair_data["id"] == alertgroup.id
 
     owner = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, owner.username)
+    entry = create_random_entry(db, faker, owner)
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
         headers=normal_user_token_headers,

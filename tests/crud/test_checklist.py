@@ -148,7 +148,7 @@ def test_query_with_filters_checklist(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     checklists = []
     for _ in range(5):
-        checklists.append(create_random_checklist(db, faker, owner.username))
+        checklists.append(create_random_checklist(db, faker, owner))
 
     random_checklist = random.choice(checklists)
 
@@ -307,7 +307,7 @@ def test_get_history_checklist(db: Session, faker: Faker) -> None:
 
 def test_undelete_checklist(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    checklist = create_random_checklist(db, faker, user.username)
+    checklist = create_random_checklist(db, faker, user)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.checklist.remove(db, _id=checklist.id, audit_logger=audit_logger)

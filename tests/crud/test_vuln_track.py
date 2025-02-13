@@ -165,7 +165,7 @@ def test_query_with_filters_vuln_track(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     vuln_tracks = []
     for _ in range(3):
-        vuln_tracks.append(create_random_vuln_track(db, faker, owner.username, create_extras=False))
+        vuln_tracks.append(create_random_vuln_track(db, faker, owner, create_extras=False))
 
     random_vuln_track = random.choice(vuln_tracks)
 
@@ -363,7 +363,7 @@ def test_get_history_vuln_track(db: Session, faker: Faker) -> None:
 
 def test_undelete_vuln_track(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    vuln_track = create_random_vuln_track(db, faker, user.username, create_extras=False)
+    vuln_track = create_random_vuln_track(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.vuln_track.remove(db, _id=vuln_track.id, audit_logger=audit_logger)

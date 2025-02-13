@@ -17,7 +17,7 @@ from tests.utils.entity import create_random_entity
 
 def test_update_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, user.username)
+    entry = create_random_entry(db, faker, user)
     data_raw, data_flaired, _ = generate_html_entry(faker)
 
     data = {
@@ -65,7 +65,7 @@ def test_update_entry(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_delete_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, user.username)
+    entry = create_random_entry(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/entry/{entry.id}",
@@ -101,7 +101,7 @@ def test_delete_entry(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_undelete_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, user.username)
+    entry = create_random_entry(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/entry/{entry.id}",
@@ -137,7 +137,7 @@ def test_undelete_entry(client: TestClient, superuser_token_headers: dict, norma
 
 def test_tag_untag_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, user.username)
+    entry = create_random_entry(db, faker, user)
     tag = create_random_tag(db, faker)
 
     r = client.post(
@@ -220,7 +220,7 @@ def test_tag_untag_entry(client: TestClient, superuser_token_headers: dict, norm
 
 def test_source_add_remove_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, owner.username)
+    entry = create_random_entry(db, faker, owner)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -304,7 +304,7 @@ def test_source_add_remove_entry(client: TestClient, superuser_token_headers: di
 
 def test_entities_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, owner.username)
+    entry = create_random_entry(db, faker, owner)
     entity = create_random_entity(db, faker, TargetTypeEnum.entry, entry.id)
 
     r = client.get(
@@ -341,7 +341,7 @@ def test_entities_entry(client: TestClient, superuser_token_headers: dict, norma
 
 def test_reflair_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, owner.username)
+    entry = create_random_entry(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/entry/{entry.id}/reflair",
@@ -370,7 +370,7 @@ def test_reflair_entry(client: TestClient, superuser_token_headers: dict, normal
 
 def test_get_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    entry = create_random_entry(db, faker, user.username)
+    entry = create_random_entry(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/entry/{entry.id}",
@@ -399,7 +399,7 @@ def test_get_entry(client: TestClient, superuser_token_headers: dict, normal_use
 
 def test_create_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     data_raw, data_flaired, _ = generate_html_entry(faker)
 
     data = {
@@ -450,7 +450,7 @@ def test_search_entry(client: TestClient, superuser_token_headers: dict, normal_
 
     entries = []
     for _ in range(5):
-        entries.append(create_random_entry(db, faker, owner.username, assignee=faker.word(), status=faker.word()))
+        entries.append(create_random_entry(db, faker, owner, assignee=faker.word(), status=faker.word()))
 
     random_entry = random.choice(entries)
 

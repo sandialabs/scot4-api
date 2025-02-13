@@ -10,6 +10,8 @@ from app.schemas.entity_class import EntityClass
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class EntityAppearancesForFlair(BaseModel):
@@ -49,7 +51,7 @@ class EntityUpdate(EntityBase):
 
 
 # pretty
-class Entity(EntityBase):
+class Entity(EntityBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

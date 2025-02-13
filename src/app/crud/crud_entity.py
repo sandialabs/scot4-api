@@ -11,7 +11,7 @@ from app.core.config import settings
 from app import crud
 from app.enums import TargetTypeEnum, PermissionEnum
 from app.crud.base import CRUDBase
-from app.models import EntityClass, EntityType, Alert, Event, Incident, Dispatch, Product, Intel, Pivot, Enrichment, Entity, Link, Role, Promotion
+from app.models import EntityClass, EntityType, User, Event, Incident, Dispatch, Product, Intel, Pivot, Enrichment, Entity, Link, Role, Promotion
 from app.schemas.appearance import AppearanceCreate
 from app.schemas.entity import EntityCreate, EntityUpdate
 from app.schemas.entity_class import EntityClassCreate
@@ -57,7 +57,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
                 obj_in=EntityCreate(
                     value=entity.entity_value, type_name=entity.entity_type
                 ),
-                audit_logger=audit_logger,
+                audit_logger=audit_logger
             )
             target: FlairedTarget
             for target in flair_results.targets:
@@ -443,12 +443,8 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
         """
         # Delegate to get_or_create if create flag
         if create:
-            new_entity = EntityCreate(
-                value=entity_value, classes=entity_class, type_name=entity_type
-            )
-            entity = self.get_or_create(
-                db_session, obj_in=new_entity, audit_logger=audit_logger
-            )
+            new_entity = EntityCreate(value=entity_value, classes=entity_class, type_name=entity_type)
+            entity = self.get_or_create(db_session, obj_in=new_entity, audit_logger=audit_logger)
         else:
             query = db_session.query(self.model).filter(
                 self.model.value == entity_value

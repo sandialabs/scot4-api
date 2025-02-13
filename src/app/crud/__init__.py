@@ -35,8 +35,10 @@ from .crud_stat import stat
 from .crud_storage_setting import storage_setting
 from .crud_tag import tag
 from .crud_threat_model_item import threat_model_item
+from .crud_user_links import user_links
 from .crud_user import user
 from .crud_pivot import pivot
+from .crud_popularity import popularity
 from .crud_enrichment import enrichment
 from .crud_notification import notification
 from .crud_tag_type import tag_type

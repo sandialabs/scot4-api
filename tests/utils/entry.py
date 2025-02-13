@@ -2,7 +2,7 @@ import random
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import crud, schemas
 from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
 from app.schemas.entry import EntryCreate
 from app.schemas.flair import FlairedEntity, FlairedTarget, FlairResults
@@ -19,7 +19,7 @@ except ImportError:
 def create_random_entry(
     db: Session,
     faker: Faker,
-    owner: str | None = None,
+    owner: schemas.User | None = None,
     parent_entry_id: int | None = None,
     target_type: TargetTypeEnum | None = None,
     target_id: int | None = None,
@@ -29,7 +29,7 @@ def create_random_entry(
 ):
     tlp = random.choice(list(TlpEnum))
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
     if target_type is None:
         target_list = list(TargetTypeEnum)
         target_list.remove(TargetTypeEnum.none)
@@ -61,7 +61,7 @@ def create_random_entry(
         entry_data["assignee"] = faker.word()
 
     entry_create = EntryCreate(
-        owner=owner,
+        owner=owner.username,
         tlp=tlp,
         target_type=target_type,
         parent_entry_id=parent_entry_id,

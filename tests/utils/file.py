@@ -5,7 +5,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app import crud
+from app import crud, schemas
 from app.enums import TargetTypeEnum, TlpEnum
 from app.schemas.file import FileCreate
 
@@ -16,7 +16,7 @@ except ImportError:
     from user import create_random_user
 
 
-def create_random_file(db: Session, faker: Faker, owner: str | None = None, target_enum: TargetTypeEnum | None = None, target_id: int | None = None):
+def create_random_file(db: Session, faker: Faker, owner: schemas.User | None = None, target_enum: TargetTypeEnum | None = None, target_id: int | None = None):
     file_content = f"{faker.paragraph(nb_sentences=faker.pyint(max_value=100))}_{faker.pyint()}"
     file_hash = hashlib.sha256(file_content.encode("utf-8")).hexdigest()
     file_path = os.path.join(settings.FILE_STORAGE_LOCATION, file_hash)
@@ -24,10 +24,10 @@ def create_random_file(db: Session, faker: Faker, owner: str | None = None, targ
         f.write(file_content)
 
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
 
     file_create = FileCreate(
-        owner=owner,
+        owner=owner.username,
         content_type=faker.mime_type(),
         filename=faker.file_name(),
         filesize=len(file_content),

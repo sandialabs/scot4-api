@@ -10,6 +10,7 @@ from app.enums import PermissionEnum, TargetTypeEnum
 from app.models.entry import Entry
 from app.models.permission import Permission
 from app.models.role import Role
+from app.models.user import User
 from app.schemas.entry import EntryCreate, EntryUpdate
 
 
@@ -41,7 +42,7 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
         *,
         db_obj: Entry,
         obj_in: Union[EntryUpdate, dict[str, Any]],
-        audit_logger=None
+        audit_logger=None,
     ) -> Entry:
         # Update parent object's last modified time as well (if it has one)
         if db_obj.target_type in self.target_crud_mapping:
@@ -50,9 +51,7 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
             )
             if parent_obj and hasattr(parent_obj, "modified"):
                 parent_obj.modified = datetime.utcnow()
-        return super().update(
-            db_session, db_obj=db_obj, obj_in=obj_in, audit_logger=audit_logger
-        )
+        return super().update(db_session, db_obj=db_obj, obj_in=obj_in, audit_logger=audit_logger)
 
     def get_by_type(
         self,
@@ -76,14 +75,14 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
             filter_dict=filter_dict,
             skip=skip,
             limit=limit,
-            audit_logger=audit_logger,
+            audit_logger=audit_logger
         )
 
     def query_objects_with_roles(
         self,
         db_session: Session,
         roles: list[Role],
-        required_permission: PermissionEnum = PermissionEnum.read,
+        required_permission: PermissionEnum = PermissionEnum.read
     ):
         """
         Entries are only accessible to users that can also access the parent
@@ -92,30 +91,15 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
         """
 
         permission_alias = aliased(Permission)
-        query = (
-            db_session.query(self.model)
-            .join(Permission, (self.model.id == Permission.target_id))
-            .filter(((self.model.target_type_enum() == Permission.target_type)
-                     & (required_permission == Permission.permission))
-                    )
-            .filter(Permission.role_id.in_([role.id for role in roles]
-                                           + [settings.EVERYONE_ROLE_ID]))
-            # Now check permissions of parent object
-            .join(
-                permission_alias,
-                self.model.target_id == permission_alias.target_id
-            )
-            .filter(((self.model.target_type == permission_alias.target_type)
-                     & (required_permission == permission_alias.permission))
-                    )
-            .filter(
-                permission_alias.role_id.in_(
-                    [role.id for role in roles] + [settings.EVERYONE_ROLE_ID]
-                )
-            )
+
+        return db_session.query(self.model)\
+            .join(Permission, (self.model.id == Permission.target_id))\
+            .filter(((self.model.target_type_enum() == Permission.target_type) & (required_permission == Permission.permission)))\
+            .filter(Permission.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
+            .join(permission_alias, self.model.target_id == permission_alias.target_id)\
+            .filter(((self.model.target_type == permission_alias.target_type) & (required_permission == permission_alias.permission)))\
+            .filter(permission_alias.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
             .group_by(self.model.id)  # We can't use DISTINCT with entries
-        )
-        return query
 
     def flair_update(
         self,
@@ -125,7 +109,7 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
         entities: dict[str, list],
         text: str | None = None,
         text_plain: str | None = None,
-        audit_logger=None,
+        audit_logger=None
     ):
         entry = self.get(db_session, entry_id)
         if entry and entry.entry_data is not None:

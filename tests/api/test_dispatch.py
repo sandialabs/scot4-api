@@ -16,7 +16,7 @@ from tests.utils.promotion import promote_dispatch_to_intel
 
 def test_get_dispatch(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, user.username)
+    dispatch = create_random_dispatch(db, faker, user)
     r = client.get(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}",
         headers=superuser_token_headers,
@@ -85,7 +85,7 @@ def test_create_dispatch(client: TestClient, normal_user_token_headers: dict, su
 
 def test_update_dispatch(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, user.username, False)
+    dispatch = create_random_dispatch(db, faker, user, False)
     data = {
         "tlp": TlpEnum.white.value,
         "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
@@ -120,7 +120,7 @@ def test_update_dispatch(client: TestClient, normal_user_token_headers: dict, su
 
 def test_delete_dispatch(client: TestClient, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, user.username, False)
+    dispatch = create_random_dispatch(db, faker, user, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}",
@@ -149,7 +149,7 @@ def test_delete_dispatch(client: TestClient, superuser_token_headers: dict, fake
 
 def test_undelete_dispatch(client: TestClient, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, user.username, False)
+    dispatch = create_random_dispatch(db, faker, user, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}",
@@ -188,7 +188,7 @@ def test_undelete_dispatch(client: TestClient, superuser_token_headers: dict, fa
 
 def test_tag_untag_dispatch(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, user.username, False)
+    dispatch = create_random_dispatch(db, faker, user, False)
     tag1 = create_random_tag(db, faker)
 
     r = client.post(
@@ -271,7 +271,7 @@ def test_tag_untag_dispatch(client: TestClient, normal_user_token_headers: dict,
 
 def test_source_add_remove_dispatch(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, owner.username, False)
+    dispatch = create_random_dispatch(db, faker, owner, False)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -324,7 +324,7 @@ def test_source_add_remove_dispatch(client: TestClient, superuser_token_headers:
 
 def test_entities_dispatch(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, owner.username, False)
+    dispatch = create_random_dispatch(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.dispatch, dispatch.id)
 
     r = client.get(
@@ -361,7 +361,7 @@ def test_entities_dispatch(client: TestClient, superuser_token_headers: dict, no
 
 def test_history_dispatch(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, owner.username, False)
+    dispatch = create_random_dispatch(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -407,7 +407,7 @@ def test_search_dispatch(client: TestClient, superuser_token_headers: dict, norm
 
     despatches = []
     for _ in range(5):
-        despatches.append(create_random_dispatch(db, faker, owner.username, False))
+        despatches.append(create_random_dispatch(db, faker, owner, False))
 
     random_dispatch = random.choice(despatches)
 

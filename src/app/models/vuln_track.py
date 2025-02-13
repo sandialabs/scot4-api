@@ -10,6 +10,8 @@ from app.models.mixins import (
     SourceMixin,
     TagMixin,
     TimestampMixin,
+    PopularityMixin,
+    UserLinksMixin
 )
 
 
@@ -22,6 +24,8 @@ class VulnTrack(
     SourceMixin,
     PromotionFromMixin,
     PromotionToMixin,
+    PopularityMixin,
+    UserLinksMixin
 ):
     __tablename__ = "vuln_tracks"
 

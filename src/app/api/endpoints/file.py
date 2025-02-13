@@ -7,21 +7,13 @@ from datetime import datetime
 from urllib.parse import quote
 from streaming_form_data import StreamingFormDataParser
 from streaming_form_data.targets import SHA256Target
-from fastapi import (
-    Request,
-    APIRouter,
-    Depends,
-    HTTPException,
-    Query,
-    Body,
-    Path
-)
+from fastapi import Request, APIRouter, Depends, HTTPException, Query, Body, Path
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from app.enums import PermissionEnum, TargetTypeEnum, TlpEnum
+from app.enums import PermissionEnum, TargetTypeEnum
 from app.object_storage.base import FileSizeTarget
 
 from .generic import (
@@ -57,18 +49,15 @@ async def create_file(
     Upload a file; if target_type and target_id are provided, the file will
     be attached to the specified object (and have its same permissions)
     """
-
-    letters = string.ascii_lowercase
-    nonce = "".join(random.choices(letters, k=30))  # nosec
+    nonce = "".join(random.choices(string.ascii_lowercase, k=30))  # nosec
     file_reference_id = hashlib.sha256(f"{current_user.username}:{time.time()}:{nonce}".encode('utf-8')).hexdigest()
     target_id = request.headers.get('target_id')
     target_type = request.headers.get('target_type')
+    description = request.headers.get('description')
     if target_type is not None:
         target_type = target_type.lower()
     if target_id is not None and target_type is not None:
-        if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(
-                target_id, db, current_user, current_roles
-        ):
+        if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(target_id, db, current_user, current_roles):
             raise HTTPException(403, f"You do not have permission to create a file in {target_type} {target_id}")
         if target_type is None:
             raise HTTPException(403, "Must provide target type and id")
@@ -90,19 +79,19 @@ async def create_file(
             filename=sha_256.multipart_filename,
             filesize=filesize.filesize,
             sha256=sha_256._hash.hexdigest(),
-            file_pointer=file_reference_id
+            file_pointer=file_reference_id,
+            description=description
         )
         if target_type is not None and target_id is not None:
-            created_file_obj = crud.file.create_in_object(db,
-                                                          obj_in=obj_in,
-                                                          source_type=target_type,
-                                                          source_id=target_id,
-                                                          audit_logger=audit_logger
-                                                          )
-        else:
-            created_file_obj = crud.file.create(
-                db_session=db, obj_in=obj_in, audit_logger=audit_logger
+            created_file_obj = crud.file.create_in_object(
+                db,
+                obj_in=obj_in,
+                source_type=target_type,
+                source_id=target_id,
+                audit_logger=audit_logger
             )
+        else:
+            created_file_obj = crud.file.create(db, obj_in=obj_in, audit_logger=audit_logger)
         return created_file_obj
     except Exception as e:
         raise HTTPException(422, str(e))
@@ -113,11 +102,11 @@ async def create_file(
 def download_file(
     id: int,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     current_roles: list[models.Role] = Depends(deps.get_current_roles),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ):
-    fileobj = crud.file.get(db, id, audit_logger=audit_logger)
+    fileobj = crud.file.get(db, id, audit_logger)
     if not fileobj:
         raise HTTPException(404, "File not found")
     try:
@@ -148,15 +137,13 @@ def delete_files(
     current_roles: list[models.Role] = Depends(deps.get_current_roles),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ):
-    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(
-            target_id, db, current_user, current_roles
-    ):
+    if not deps.PermissionCheckId(target_type, PermissionEnum.modify)(target_id, db, current_user, current_roles):
         raise HTTPException(403, f"You do not have permission to delete {target_type} {target_id}")
 
     # if we can create a file without a target type then we should be able to delete a file without one
     # if target_type is None:
     #     raise HTTPException(status_code=403, detail="Must provide target type and id")
-    _removed_file = crud.file.remove_file(db, file_id=id, audit_logger=audit_logger)
+    _removed_file = crud.file.remove_file(db, id, audit_logger)
     if not _removed_file:
         raise HTTPException(404, "File not found")
 
@@ -176,7 +163,7 @@ def undelete_file(
     if crud.permission.user_is_admin(db, current_user):
         deleting_username = None
     try:
-        unremoved_file = crud.file.unremove_file(db, file_id=target_id, by_user=deleting_username, keep_ids=keep_ids, audit_logger=audit_logger)
+        unremoved_file = crud.file.unremove_file(db, target_id, deleting_username, keep_ids, audit_logger)
         if not unremoved_file:
             raise HTTPException(404, "File not found")
         return unremoved_file

@@ -2,6 +2,11 @@
 
 This directory contains scripts for migrating data from version 3 of SCOT to version 4. They are grouped into three categories: database migrations, file migrations, and extra (optional) migrations. Three bash shell scripts have been provided for you to run the applicable migrations in each category.
 
+## Necessary tools to run conversion
+You will need the following installed to run conversions:
+- python 3.11 with the contents of requirements-test.txt from this repo installed via pip
+- mysql-shell
+
 ## Database Conversion
 This set of scripts migrates the core database data to the SCOT4 database by pulling data directly from the SCOT3 mongodb database. Almost all SCOT3 installations migrating to SCOT4 will want to do this. The `database_conversion.sh` script will run all of the necessary scripts for you.
 

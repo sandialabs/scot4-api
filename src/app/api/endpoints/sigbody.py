@@ -17,55 +17,11 @@ from .generic import (
 router = APIRouter()
 
 # Create get, post, put, delete, tag, and source endpoints
-generic_get(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    pretty_name="signature body",
-)
-generic_post(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    schemas.SigbodyCreate,
-    pretty_name="signature body",
-)
-generic_put(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    schemas.SigbodyUpdate,
-    pretty_name="signature body",
-)
-generic_delete(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    pretty_name="signature body",
-)
-generic_undelete(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    pretty_name="signature body",
-)
-generic_tag_untag(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    pretty_name="signature body",
-)
-generic_source_add_remove(
-    router,
-    crud.sigbody,
-    TargetTypeEnum.sigbody,
-    schemas.Sigbody,
-    pretty_name="signature body",
-)
-generic_search(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.SigbodySearch, schemas.Sigbody)
+generic_get(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, "Signature Body")
+generic_post(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, schemas.SigbodyCreate, "Signature Body")
+generic_put(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, schemas.SigbodyUpdate, "Signature Body")
+generic_delete(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, "Signature Body")
+generic_undelete(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, "Signature Body")
+generic_tag_untag(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, "Signature Body")
+generic_source_add_remove(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.Sigbody, "Signature Body")
+generic_search(router, crud.sigbody, TargetTypeEnum.sigbody, schemas.SigbodySearch, schemas.Sigbody, "Signature Body")

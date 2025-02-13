@@ -2,7 +2,7 @@ import random
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import crud, schemas
 from app.enums import StatusEnum, TlpEnum
 from app.schemas.alert import AlertAdd, AlertCreate, AlertDataCreate, AlertGroupSchemaColumn
 
@@ -81,39 +81,39 @@ def create_data(schemas: list[AlertGroupSchemaColumn], faker: Faker):
     return alert_data, alert_entities
 
 
-def create_random_alert_object(schema: list, db: Session, faker: Faker, owner: str | None = None, parsed: bool | None = None):
+def create_random_alert_object(schema: list, db: Session, faker: Faker, owner: schemas.User | None = None, parsed: bool | None = None):
     data, entity_ids = create_data(schema, faker)
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
     status = random.choice([StatusEnum.open, StatusEnum.closed])
     if parsed is None:
         parsed = faker.pybool()
     alert_create = AlertCreate(
-        owner=owner, tlp=tlp, status=status, parsed=parsed, data=data
+        owner=owner.username, tlp=tlp, status=status, parsed=parsed, data=data
     )
     return alert_create, entity_ids
 
 
-def create_random_alert(db: Session, faker: Faker, owner: str | None = None, schema: AlertGroupSchemaColumn | None = None, parsed: bool | None = None):
+def create_random_alert(db: Session, faker: Faker, owner: schemas.User | None = None, schema: AlertGroupSchemaColumn | None = None, parsed: bool | None = None):
     if schema is None:
         schema = create_random_schema(faker)
     alert_create, _ = create_random_alert_object(schema, db, faker, owner, parsed)
     return crud.alert.create(db, obj_in=alert_create)
 
 
-def create_random_alert_addition(db: Session, faker: Faker, owner: str | None = None):
+def create_random_alert_addition(db: Session, faker: Faker, owner: schemas.User | None = None):
     schema = create_random_schema(faker)
     data = create_data(schema, faker)[0]
     data = {d.name: d.value for d in data}
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
     location = faker.city()
     status = random.choice(list(StatusEnum))
     parsed = faker.pybool()
     alert_create = AlertAdd(
-        owner=owner, tlp=tlp, location=location, status=status, parsed=parsed, data=data
+        owner=owner.username, tlp=tlp, location=location, status=status, parsed=parsed, data=data
     )
 
     return crud.alert.create(db, obj_in=alert_create)

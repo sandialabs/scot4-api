@@ -18,7 +18,7 @@ from tests.utils.source import create_random_source
 
 def test_get_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
@@ -49,7 +49,7 @@ def test_create_alertgroup(client: TestClient, normal_user_token_headers: dict, 
     user = create_random_user(db, faker)
     alerts = []
     for _ in range(2):
-        alerts.append(create_random_alert(db, faker, user.username))
+        alerts.append(create_random_alert(db, faker, user))
 
     data = {
         "owner": user.username,
@@ -83,7 +83,7 @@ def test_create_alertgroup(client: TestClient, normal_user_token_headers: dict, 
 
 def test_update_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, owner.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, owner)
 
     data = {
         "subject": faker.sentence()
@@ -121,7 +121,7 @@ def test_update_alertgroup(client: TestClient, superuser_token_headers: dict, no
 
 def test_delete_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
@@ -157,7 +157,7 @@ def test_delete_alertgroup(client: TestClient, superuser_token_headers: dict, no
 
 def test_undelete_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
@@ -193,7 +193,7 @@ def test_undelete_alertgroup(client: TestClient, superuser_token_headers: dict, 
 
 def test_entities_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
     entity = create_random_entity(db, faker, TargetTypeEnum.alertgroup, alertgroup.id)
 
     r = client.get(
@@ -229,7 +229,7 @@ def test_entities_alertgroup(client: TestClient, superuser_token_headers: dict, 
 
 def test_history_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     data = {
         "subject": faker.sentence()
@@ -262,7 +262,7 @@ def test_history_alertgroup(client: TestClient, superuser_token_headers: dict, n
 
 def test_reflair_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/reflair",
@@ -293,7 +293,7 @@ def test_search_alertgroups(client: TestClient, superuser_token_headers: dict, n
     user = create_random_user(db, faker)
     alertgroups = []
     for _ in range(5):
-        alertgroups.append(create_random_alertgroup_no_sig(db, faker, user.username))
+        alertgroups.append(create_random_alertgroup_no_sig(db, faker, user))
 
     random_alertgroup = random.choice(alertgroups)
 
@@ -586,7 +586,7 @@ def test_search_alertgroups(client: TestClient, superuser_token_headers: dict, n
 
 def test_read_alert_group_alerts(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/alerts",
@@ -615,7 +615,7 @@ def test_read_alert_group_alerts(client: TestClient, superuser_token_headers: di
 
 def test_add_alertgroup_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user.username)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
 
     data = {
         "owner": user.username,
@@ -648,3 +648,93 @@ def test_add_alertgroup_alert(client: TestClient, superuser_token_headers: dict,
     assert alert_data is not None
     assert alert_data["id"] > 0
     assert alert_data["alertgroup_id"] == alertgroup.id
+
+
+def test_create_alertgroup_with_tags(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alerts = []
+    for _ in range(2):
+        alerts.append(create_random_alert(db, faker, user))
+
+    data = {
+        "owner": user.username,
+        "alerts": [],
+        "tags": [faker.word()]
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["tags"]) != 0
+    assert any(a["name"] == data["tags"][0] for a in r.json()["tags"])
+
+    user = create_random_user(db, faker)
+    tag = create_random_tag(db, faker)
+    alerts = []
+    for _ in range(2):
+        alerts.append(create_random_alert(db, faker, user))
+
+    data = {
+        "owner": user.username,
+        "alerts": [],
+        "tags": [tag.name]
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["tags"]) != 0
+    assert any(a["id"] == tag.id for a in r.json()["tags"])
+
+
+def test_create_alertgroup_with_sources(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alerts = []
+    for _ in range(2):
+        alerts.append(create_random_alert(db, faker, user))
+
+    data = {
+        "owner": user.username,
+        "alerts": [],
+        "sources": [faker.word()]
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["sources"]) != 0
+    assert any(a["name"] == data["sources"][0] for a in r.json()["sources"])
+
+    user = create_random_user(db, faker)
+    source = create_random_source(db, faker)
+    alerts = []
+    for _ in range(2):
+        alerts.append(create_random_alert(db, faker, user))
+
+    data = {
+        "owner": user.username,
+        "alerts": [],
+        "sources": [source.name]
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["sources"]) != 0
+    assert any(a["id"] == source.id for a in r.json()["sources"])

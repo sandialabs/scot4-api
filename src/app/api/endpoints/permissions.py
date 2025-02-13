@@ -10,8 +10,9 @@ from app.schemas import Permission, PermissionCreate, PermissionSetMass, User
 from app.utils import create_schema_details
 
 router = APIRouter()
+
+
 description, examples = create_schema_details(PermissionCreate)
-description_mass, examples_mass = create_schema_details(PermissionSetMass)
 
 
 @router.post("/grant", response_model=Permission, description=description)
@@ -25,9 +26,7 @@ async def grant_permission(
     Grant permission on a resource
     """
     # Get user's effective permissions on this object
-    permissions = crud.permission.get_permissions(
-        db, user.username, permission_grant.target_type, permission_grant.target_id
-    )
+    permissions = crud.permission.get_permissions(db, user.username, permission_grant.target_type, permission_grant.target_id)
     if (
         permission_grant.target_type == TargetTypeEnum.admin
         or permission_grant.permission == PermissionEnum.admin
@@ -42,11 +41,9 @@ async def grant_permission(
         raise HTTPException(404, f"{permission_grant.target_type.value} with id {permission_grant.target_id} does not exist, or you do not have permission to assign access to it")
     try:
         # The user can grant this permission, so add it to the table
-        return crud.permission.grant_permission(
-            db, permission_grant, audit_logger=audit_logger
-        )
+        return crud.permission.grant_permission(db, permission_grant, audit_logger)
     except Exception as e:
-        raise HTTPException(status_code=422, detail=str(e))
+        raise HTTPException(422, str(e))
 
 
 @router.post("/revoke", status_code=204, description=description)
@@ -60,9 +57,7 @@ async def revoke_permission(
     Revoke a particular permission
     """
     # Get user's effective permissions on this object
-    permissions = crud.permission.get_permissions(
-        db, user.username, permission_revoke.target_type, permission_revoke.target_id
-    )
+    permissions = crud.permission.get_permissions(db, user.username, permission_revoke.target_type, permission_revoke.target_id)
     # Only the superuser can revoke admin permissions
     if (
         permission_revoke.target_type == TargetTypeEnum.admin
@@ -80,18 +75,19 @@ async def revoke_permission(
         raise HTTPException(404, f"{permission_revoke.target_type.value} with id {permission_revoke.target_id} does not exist, or you do not have permission to revoke access to it")
 
     # The user has permission to revoke this permission, now find and revoke it
-    result = crud.permission.revoke_permission(
-        db, permission_revoke, audit_logger=audit_logger
-    )
+    result = crud.permission.revoke_permission(db, permission_revoke, audit_logger)
     if result:
         return Response(status_code=204)
     else:
         raise HTTPException(404, "Permission not found")
 
 
-@router.post("/set", description=description_mass)
+description, examples = create_schema_details(PermissionSetMass)
+
+
+@router.post("/set", description=description)
 async def set_permission(
-    mass_permission: Annotated[PermissionSetMass, Body(..., openapi_examples=examples_mass)],
+    mass_permission: Annotated[PermissionSetMass, Body(..., openapi_examples=examples)],
     user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db),
     audit_logger: AuditLogger = Depends(get_audit_logger),
@@ -101,9 +97,7 @@ async def set_permission(
     WARNING: All permissions not in the permissions set will be revoked
     """
     # Get user's effective permissions on this object
-    permissions = crud.permission.get_permissions(
-        db, user.username, mass_permission.target_type, mass_permission.target_id
-    )
+    permissions = crud.permission.get_permissions(db, user.username, mass_permission.target_type, mass_permission.target_id)
     # You can't use this endpoint to set admin permissions
     if mass_permission.target_type == TargetTypeEnum.admin or any(
         [p == PermissionEnum.admin for p in mass_permission.permissions]
@@ -119,9 +113,7 @@ async def set_permission(
     ):
         raise HTTPException(404, f"You do not have permission to set access to {mass_permission.target_type.value} {mass_permission.target_id}")
     # The user has permissions to set permissions, now do it
-    oldPermissions = crud.permission.get_permission_roles(
-        db, mass_permission.target_type, mass_permission.target_id
-    )
+    oldPermissions = crud.permission.get_permission_roles(db, mass_permission.target_type, mass_permission.target_id)
     try:
         for p in [PermissionEnum.read, PermissionEnum.modify, PermissionEnum.delete]:
             newPermIds = set(mass_permission.permissions.get(p, []))
@@ -129,30 +121,30 @@ async def set_permission(
             revoke = oldPermIds - newPermIds
             grant = newPermIds - oldPermIds
             for roleId in revoke:
-                revocation = PermissionCreate(
-                    role_id=roleId,
-                    target_type=mass_permission.target_type,
-                    target_id=mass_permission.target_id,
-                    permission=p,
-                )
                 crud.permission.revoke_permission(
-                    db, revocation, audit_logger=audit_logger
+                    db,
+                    PermissionCreate(
+                        role_id=roleId,
+                        target_type=mass_permission.target_type,
+                        target_id=mass_permission.target_id,
+                        permission=p,
+                    ),
+                    audit_logger
                 )
             for roleId in grant:
-                grantPerm = PermissionCreate(
-                    role_id=roleId,
-                    target_type=mass_permission.target_type,
-                    target_id=mass_permission.target_id,
-                    permission=p,
-                )
                 crud.permission.grant_permission(
-                    db, grantPerm, audit_logger=audit_logger
+                    db,
+                    PermissionCreate(
+                        role_id=roleId,
+                        target_type=mass_permission.target_type,
+                        target_id=mass_permission.target_id,
+                        permission=p,
+                    ),
+                    audit_logger
                 )
     except Exception:
-        raise HTTPException(500, "An error ocurred while assigning permissions, make sure all roles being assigned exist")
-    return crud.permission.get_permission_roles(
-        db, mass_permission.target_type, mass_permission.target_id
-    )
+        raise HTTPException(500, "An error occurred while assigning permissions, make sure all roles being assigned exist")
+    return crud.permission.get_permission_roles(db, mass_permission.target_type, mass_permission.target_id)
 
 
 @router.get("/getroles")
@@ -169,14 +161,12 @@ async def get_permission_roles(
     permission_roles = crud.permission.get_permission_roles(db, target_type, target_id)
     # Get all roles which would have permission to read roles on this object
     read_perms = [PermissionEnum.read]
-    read_role_ids = set(
-        [
-            role.id
-            for r in read_perms
-            if r in permission_roles
-            for role in permission_roles[r]
-        ]
-    )
+    read_role_ids = set([
+        role.id
+        for r in read_perms
+        if r in permission_roles
+        for role in permission_roles[r]
+    ])
     if (
         not any(user_role.id in read_role_ids for user_role in user.roles)
         and not (settings.EVERYONE_ROLE_ID in read_role_ids)

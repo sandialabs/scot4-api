@@ -28,9 +28,9 @@ def main(mongo_db=None):
         for count, role in enumerate(tqdm.tqdm(unique_roles)):
             if role == '':
                 continue
-            role_row = [count+2, role, 'migrated from SCOT3', datetime.fromtimestamp(0).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(0).astimezone(timezone.utc).replace(tzinfo=None)] #Using an offset of 3 since we have two default groups: admin and everyone, created by default and taking up role ids 1 & 2 respectively
+            role_row = [count+3, role, 'migrated from SCOT3', datetime.fromtimestamp(0).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(0).astimezone(timezone.utc).replace(tzinfo=None)] #Using an offset of 3 since we have two default groups: admin and everyone, created by default and taking up role ids 1 & 2 respectively
             writer.writerow(role_row)
-            role_lookup[role] = count+2
+            role_lookup[role] = count+3
 
     return role_lookup
 

@@ -189,7 +189,7 @@ def test_query_with_filters_file(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     files = []
     for _ in range(5):
-        files.append(create_random_file(db, faker, owner.username))
+        files.append(create_random_file(db, faker, owner))
 
     random_file = random.choice(files)
 
@@ -420,7 +420,7 @@ def test_get_history_file(db: Session, faker: Faker) -> None:
 def test_undelete_file(db: Session, faker: Faker) -> None:
     reset_storage_settings(db)
     user = create_random_user(db, faker)
-    file = create_random_file(db, faker, user.username)
+    file = create_random_file(db, faker, user)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.file.remove_file(db, file_id=file.id, audit_logger=audit_logger)
@@ -458,8 +458,9 @@ def test_get_storage_target(db: Session, faker: Faker) -> None:
 
 
 def test_retrieve_element_files(db: Session, faker: Faker) -> None:
-    alertgroup = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-    file = create_random_file(db, faker, alertgroup.owner, TargetTypeEnum.alertgroup, alertgroup.id)
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user, False)
+    file = create_random_file(db, faker, user, TargetTypeEnum.alertgroup, alertgroup.id)
 
     db_obj, count = crud.file.retrieve_element_files(db, alertgroup.id, TargetTypeEnum.alertgroup)
 

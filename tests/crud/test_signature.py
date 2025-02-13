@@ -166,7 +166,7 @@ def test_query_with_filters_signature(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signatures = []
     for _ in range(5):
-        signatures.append(create_random_signature(db, faker, owner.username))
+        signatures.append(create_random_signature(db, faker, owner))
 
     random_signature = random.choice(signatures)
 
@@ -361,7 +361,7 @@ def test_get_history_signature(db: Session, faker: Faker) -> None:
 
 def test_undelete_signature(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
+    signature = create_random_signature(db, faker, user)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.signature.remove(db, _id=signature.id, audit_logger=audit_logger)
@@ -388,8 +388,8 @@ def test_retrieve_signature_links(db: Session, faker: Faker) -> None:
 
 def test_get_event_owner_stats(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    event = create_random_event(db, faker, user.username, False)
-    signature = create_random_signature(db, faker, user.username)
+    event = create_random_event(db, faker, user, False)
+    signature = create_random_signature(db, faker, user)
     create_link(db, faker, TargetTypeEnum.signature, signature.id, TargetTypeEnum.event, event.id)
 
     db_obj = crud.signature.get_event_owner_stats(db, signature.id)

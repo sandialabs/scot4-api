@@ -54,45 +54,45 @@ def get_type_object(db: Session, faker: Faker, type_enum: TargetTypeEnum | None 
     type_object = None
     if type_enum == TargetTypeEnum.alert:
         user = create_random_user(db, faker)
-        type_object = create_random_alert(db, faker, user.username)
+        type_object = create_random_alert(db, faker, user)
     elif type_enum == TargetTypeEnum.alertgroup:
         type_object = create_random_alertgroup_no_sig(db, faker)
     elif type_enum == TargetTypeEnum.checklist:
         user = create_random_user(db, faker)
-        type_object = create_random_checklist(db, faker, user.username)
+        type_object = create_random_checklist(db, faker, user)
     elif type_enum == TargetTypeEnum.dispatch:
         user = create_random_user(db, faker)
-        type_object = create_random_dispatch(db, faker, user.username, False)
+        type_object = create_random_dispatch(db, faker, user, False)
     elif type_enum == TargetTypeEnum.entity:
         type_object = create_random_entity(db, faker)
     elif type_enum == TargetTypeEnum.entry:
         user = create_random_user(db, faker)
-        type_object = create_random_entry(db, faker, user.username)
+        type_object = create_random_entry(db, faker, user)
     elif type_enum == TargetTypeEnum.event:
         user = create_random_user(db, faker)
-        type_object = create_random_event(db, faker, user.username, False)
+        type_object = create_random_event(db, faker, user, False)
     elif type_enum == TargetTypeEnum.feed:
         user = create_random_user(db, faker)
-        type_object = create_random_feed(db, faker, user.username)
+        type_object = create_random_feed(db, faker, user)
     elif type_enum == TargetTypeEnum.file:
         user = create_random_user(db, faker)
-        type_object = create_random_file(db, faker, user.username)
+        type_object = create_random_file(db, faker, user)
     elif type_enum == TargetTypeEnum.guide:
         user = create_random_user(db, faker)
-        signature = create_random_signature(db, faker, user.username)
-        type_object = create_random_guide(db, faker, user.username, signature, False)
+        signature = create_random_signature(db, faker, user)
+        type_object = create_random_guide(db, faker, user, signature, False)
     elif type_enum == TargetTypeEnum.incident:
         user = create_random_user(db, faker)
-        type_object = create_random_incident(db, faker, user.username, False)
+        type_object = create_random_incident(db, faker, user, False)
     elif type_enum == TargetTypeEnum.intel:
         user = create_random_user(db, faker)
-        type_object = create_random_intel(db, faker, user.username, False)
+        type_object = create_random_intel(db, faker, user, False)
     elif type_enum == TargetTypeEnum.product:
         user = create_random_user(db, faker)
-        type_object = create_random_product(db, faker, user.username)
+        type_object = create_random_product(db, faker, user)
     elif type_enum == TargetTypeEnum.signature:
         user = create_random_user(db, faker)
-        type_object = create_random_signature(db, faker, user.username)
+        type_object = create_random_signature(db, faker, user)
     elif type_enum == TargetTypeEnum.source:
         type_object = create_random_source(db, faker)
     elif type_enum == TargetTypeEnum.tag:
@@ -101,13 +101,13 @@ def get_type_object(db: Session, faker: Faker, type_enum: TargetTypeEnum | None 
         # if anything else make it an alert
         type_enum = TargetTypeEnum.alert
         user = create_random_user(db, faker)
-        type_object = create_random_alert(db, faker, user.username)
+        type_object = create_random_alert(db, faker, user)
 
     # make extra sure we dont end up with a None type
     if type_enum is None:
         type_enum = TargetTypeEnum.alert
         user = create_random_user(db, faker)
-        type_object = create_random_alert(db, faker, user.username)
+        type_object = create_random_alert(db, faker, user)
 
     return type_enum, type_object.id
 

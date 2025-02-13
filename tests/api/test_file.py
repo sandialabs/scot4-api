@@ -15,7 +15,7 @@ from tests.utils.source import create_random_source
 
 def test_get_file(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    file = create_random_file(db, faker, user.username)
+    file = create_random_file(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/file/{file.id}",
@@ -45,7 +45,7 @@ def test_get_file(client: TestClient, superuser_token_headers: dict, normal_user
 
 def test_put_file(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    file = create_random_file(db, faker, user.username)
+    file = create_random_file(db, faker, user)
     data = {
         "description": faker.sentence()
     }
@@ -87,7 +87,7 @@ def test_put_file(client: TestClient, superuser_token_headers: dict, normal_user
 
 def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    file = create_random_file(db, faker, owner.username)
+    file = create_random_file(db, faker, owner)
     tag = create_random_tag(db, faker)
 
     r = client.post(
@@ -156,7 +156,7 @@ def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_use
 
 def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    file = create_random_file(db, faker, owner.username)
+    file = create_random_file(db, faker, owner)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -214,7 +214,7 @@ def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, 
 
 def test_history(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    file = create_random_file(db, faker, owner.username)
+    file = create_random_file(db, faker, owner)
 
     data = {
         "description": faker.sentence()
@@ -282,7 +282,7 @@ def test_create_file(client: TestClient, normal_user_token_headers: dict, faker:
 
 def test_download_file(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    file = create_random_file(db, faker, owner.username)
+    file = create_random_file(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/file/download/{file.id}",
@@ -306,7 +306,7 @@ def test_download_file(client: TestClient, normal_user_token_headers: dict, db: 
 
 def test_delete_files(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    file = create_random_file(db, faker, owner.username)
+    file = create_random_file(db, faker, owner)
 
     r = client.delete(
         f"{settings.API_V1_STR}/file/{file.id}",
@@ -347,7 +347,7 @@ def test_search_files(client: TestClient, superuser_token_headers: dict, normal_
     owner = create_random_user(db, faker)
     files = []
     for _ in range(5):
-        files.append(create_random_file(db, faker, owner.username))
+        files.append(create_random_file(db, faker, owner))
 
     r = client.get(
         f"{settings.API_V1_STR}/file/?owner={owner.username}",
@@ -542,7 +542,7 @@ def test_search_files(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_undelete(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    file = create_random_file(db, faker, owner.username)
+    file = create_random_file(db, faker, owner)
 
     r = client.delete(
         f"{settings.API_V1_STR}/file/{file.id}",

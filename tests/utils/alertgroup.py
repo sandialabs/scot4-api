@@ -2,7 +2,7 @@ import random
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import crud, schemas
 from app.enums import TargetTypeEnum, TlpEnum
 from app.schemas.alertgroup import AlertGroupDetailedCreate
 
@@ -21,13 +21,13 @@ except ImportError:
     from flair import create_flair_results
 
 
-def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, faker: Faker, owner: str | None = None):
+def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, faker: Faker, owner: schemas.User | None = None):
     """
     Create a random alertgroup with alerts and a schema included.
     """
 
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
     alert_count = faker.pyint(2, 5)
@@ -61,7 +61,7 @@ def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, fak
         chosen_sig = random.choice(filtered_sigs)
         alert_group_title = f'({chosen_sig["type"]} Alert) {chosen_sig["name"]}'
         alertgroup_create = AlertGroupDetailedCreate(
-            owner=owner,
+            owner=owner.username,
             tlp=tlp,
             alert_count=alert_count,
             open_count=open_count,
@@ -75,7 +75,7 @@ def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, fak
         )
     else:
         alertgroup_create = AlertGroupDetailedCreate(
-            owner=owner,
+            owner=owner.username,
             tlp=tlp,
             alert_count=alert_count,
             open_count=open_count,
@@ -107,9 +107,9 @@ def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, fak
     return alert_group_crud
 
 
-def create_random_alertgroup_no_sig(db: Session, faker: Faker, owner: str | None = None, with_alerts: bool | None = True, parsed: bool | None = None):
+def create_random_alertgroup_no_sig(db: Session, faker: Faker, owner: schemas.User | None = None, with_alerts: bool | None = True, parsed: bool | None = None):
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
 
     alert_count = faker.pyint(2, 5)
     closed_count = faker.pyint(0, alert_count)
@@ -123,7 +123,7 @@ def create_random_alertgroup_no_sig(db: Session, faker: Faker, owner: str | None
             alerts.append(create_random_alert_object(schema, db, faker, owner)[0])
 
     alertgroup_create = AlertGroupDetailedCreate(
-        owner=owner,
+        owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
         alert_count=alert_count,
         open_count=alert_count - closed_count,

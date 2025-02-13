@@ -55,6 +55,12 @@ class GuideStatusEnum(enum.Enum):
     outdated = "outdated"
 
 
+class PriorityEnum(enum.Enum):
+    high = "high"
+    medium = "medium"
+    low = "low"
+
+
 class TargetTypeEnum(enum.Enum):
     alert = "alert"
     alertgroup = "alertgroup"
@@ -121,3 +127,13 @@ class ExportFormatEnum(enum.Enum):
     html = "html"
     docx = "docx"
     pdf = "pdf"
+
+
+class PopularityMetricEnum(enum.Enum):
+    upvote = "upvote"
+    downvote = "downvote"
+
+
+class UserLinkEnum(enum.Enum):
+    favorite = "favorite"
+    subscription = "subscription"

@@ -20,7 +20,7 @@ from tests.utils.event import create_random_event
 
 def test_get_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username)
+    incident = create_random_incident(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/incident/{incident.id}",
@@ -87,7 +87,7 @@ def test_create_incident(client: TestClient, normal_user_token_headers: dict, db
 
 def test_update_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -132,7 +132,7 @@ def test_update_incident(client: TestClient, superuser_token_headers: dict, norm
 
 def test_delete_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/incident/{incident.id}",
@@ -161,7 +161,7 @@ def test_delete_incident(client: TestClient, superuser_token_headers: dict, norm
 
 def test_undelete_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/incident/{incident.id}",
@@ -197,8 +197,8 @@ def test_undelete_incident(client: TestClient, superuser_token_headers: dict, no
 
 def test_entries_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.incident, target_id=incident.id, entry_class=EntryClassEnum.entry)
+    incident = create_random_incident(db, faker, owner, False)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.incident, target_id=incident.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/incident/{incident.id}/entry",
@@ -220,7 +220,7 @@ def test_entries_incident(client: TestClient, superuser_token_headers: dict, nor
 
 def test_tag_untag_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
     tag = create_random_tag(db, faker)
 
     r = client.post(
@@ -254,7 +254,7 @@ def test_tag_untag_incident(client: TestClient, superuser_token_headers: dict, n
 
 def test_source_add_remove_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -288,7 +288,7 @@ def test_source_add_remove_incident(client: TestClient, superuser_token_headers:
 
 def test_entities_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.incident, incident.id)
 
     r = client.get(
@@ -325,7 +325,7 @@ def test_entities_incident(client: TestClient, superuser_token_headers: dict, no
 
 def test_history_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    incident = create_random_incident(db, faker, owner.username, False)
+    incident = create_random_incident(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -371,7 +371,7 @@ def test_search_incident(client: TestClient, superuser_token_headers: dict, norm
 
     incidents = []
     for _ in range(5):
-        incidents.append(create_random_incident(db, faker, owner.username, False))
+        incidents.append(create_random_incident(db, faker, owner, False))
 
     random_incident = random.choice(incidents)
 

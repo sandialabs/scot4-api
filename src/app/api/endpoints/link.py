@@ -11,16 +11,12 @@ from .generic import generic_delete, generic_get, generic_post, generic_put, gen
 router = APIRouter()
 
 # Create get, post, put, and delete endpoints
-generic_get(router, crud.link, TargetTypeEnum.none, schemas.Link, pretty_name="link")
+generic_get(router, crud.link, TargetTypeEnum.none, schemas.Link, "Link")
 # TODO: Permissions on who can link what to what?
-generic_post(
-    router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkCreate, pretty_name="link"
-)
-generic_put(
-    router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkUpdate, pretty_name="link"
-)
-generic_delete(router, crud.link, TargetTypeEnum.none, schemas.Link, pretty_name="link")
-generic_search(router, crud.link, TargetTypeEnum.none, schemas.LinkSearch, schemas.Link, summary="Search Links", pretty_name="link")
+generic_post(router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkCreate, "Link")
+generic_put(router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkUpdate, "Link")
+generic_delete(router, crud.link, TargetTypeEnum.none, schemas.Link, "Link")
+generic_search(router, crud.link, TargetTypeEnum.none, schemas.LinkSearch, schemas.Link, "Link")
 
 # Most relevant link stuff is handled via other endpoints on the linked objects
 
@@ -46,8 +42,7 @@ def delete_links_between_objects(
     Also deletes links in the other direction if the bidirectional parameter
     is set to true.
     """
-    deleted = crud.link.delete_links(db, v0_type, v0_id, v1_type, v1_id,
-                                     bidirectional, audit_logger=audit_logger)
+    deleted = crud.link.delete_links(db, v0_type, v0_id, v1_type, v1_id, bidirectional, audit_logger)
     if deleted is None:
         raise HTTPException(404, "No links found to delete")
     return deleted

@@ -12,8 +12,9 @@ from app.utils import send_flair_enrichment_request, index_for_search, send_refl
 
 
 router = APIRouter()
+
+
 description, examples = create_schema_details(schemas.FlairUpdateResult)
-description_remote, examples_remote = create_schema_details(schemas.RemoteFlairCreate)
 
 
 @router.post(
@@ -25,8 +26,9 @@ def flair_update(
     *,
     payload: Annotated[schemas.FlairUpdateResult, Body(..., openapi_examples=examples)],
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
+    background_tasks: BackgroundTasks
 ) -> Any:
     """
     Endpoint for flair updates from flair engine
@@ -35,20 +37,17 @@ def flair_update(
         if not payload.alerts:
             raise HTTPException(422, "You must use the alerts field to update alerts in an alertgroup")
 
-        alertgroup = crud.alert_group.flair_update(
-            db, payload.target.id, payload.alerts, audit_logger=audit_logger
-        )
-
+        alertgroup = crud.alert_group.flair_update(db, payload.target.id, payload.alerts, audit_logger)
         if not alertgroup:
             raise HTTPException(404, f"Alertgroup {payload.target.id} not found")
 
         obj_entities, _ = crud.entity.retrieve_element_entities(db, payload.target.id, payload.target.type)
         for entity in obj_entities:
-            send_flair_enrichment_request(entity)
+            background_tasks.add_task(send_flair_enrichment_request, entity)
 
         # add alert data to search index
         for alert in alertgroup.alerts:
-            index_for_search(alertgroup.subject, alert=alert)
+            background_tasks.add_task(index_for_search, alertgroup.subject, alert=alert)
 
         return alertgroup
     elif payload.target.type == TargetTypeEnum.alert:
@@ -71,11 +70,7 @@ def flair_update(
                 if entity_get:
                     results[entity][entity_name]["id"] = entity_get.id
 
-        update_obj = {
-            "status": RemoteFlairStatusEnum.ready,
-            "results": results
-        }
-        return crud.remote_flair.update(db, db_obj=flair_obj, obj_in=update_obj, audit_logger=audit_logger)
+        return crud.remote_flair.update(db, db_obj=flair_obj, obj_in={"status": RemoteFlairStatusEnum.ready, "results": results}, audit_logger=audit_logger)
     else:
         if payload.entities is None or payload.text_flaired is None:
             raise HTTPException(422, "You must provide the text_flaired and entities fields when updating a non-alertgroup object")
@@ -96,19 +91,19 @@ def flair_update(
                 # Index/Reindex the entry text for search
                 parent_crud = CRUDBase.target_crud_mapping.get(obj.target_type)
                 if parent_crud is not None:
-                    parent_obj = parent_crud.get(db_session=db, _id=obj.target_id)
+                    parent_obj = parent_crud.get(db, obj.target_id)
                     if hasattr(parent_obj, "subject"):
-                        index_for_search(parent_obj.subject, obj)
+                        background_tasks.add_task(index_for_search, parent_obj.subject, obj)
                     elif hasattr(parent_obj, "title"):
-                        index_for_search(parent_obj.title, obj)
+                        background_tasks.add_task(index_for_search, parent_obj.title, obj)
                     elif hasattr(parent_obj, "value"):
-                        index_for_search(parent_obj.value, obj)
+                        background_tasks.add_task(index_for_search, parent_obj.value, obj)
                     elif hasattr(parent_obj, "name"):
-                        index_for_search(parent_obj.name, obj)
+                        background_tasks.add_task(index_for_search, parent_obj.name, obj)
             # Also redo flair enrichment for all included entities
             obj_entities, _ = crud.entity.retrieve_element_entities(db, payload.target.id, payload.target.type)
             for entity in obj_entities:
-                send_flair_enrichment_request(entity)
+                background_tasks.add_task(send_flair_enrichment_request, entity)
             return obj
         else:
             raise HTTPException(404, f"{payload.target.type.value} objects do not support flair updates")
@@ -118,7 +113,7 @@ def flair_update(
 def enrich_entity(
     *,
     db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     entity_id: Annotated[int, Path(...)],
     classes: Annotated[list[str], Body(...)],
@@ -145,26 +140,23 @@ def enrich_entity(
         new_flair_data.update(flair_entity.data)
     if enriched_data:
         new_flair_data.update(enriched_data)
-    flair_entity = crud.entity.update(
-        db,
-        db_obj=flair_entity,
-        obj_in={"data": new_flair_data},
-        audit_logger=audit_logger
-    )
 
-    return flair_entity
+    return crud.entity.update(db, db_obj=flair_entity, obj_in={"data": new_flair_data}, audit_logger=audit_logger)
+
+
+description, examples = create_schema_details(schemas.RemoteFlairCreate, "Creates a Remote Flair Job from the browser plugin")
 
 
 @router.post(
     "/remote",
     response_model=schemas.RemoteFlair,
     summary="Create a Remote Flair job",
-    description=f"Creates a Remote Flair Job from the browser plugin\n{description_remote}"
+    description=description
 )
 def post_remote_flair(
     *,
     db: Session = Depends(deps.get_db),
-    obj: Annotated[schemas.RemoteFlairCreate, Body(..., openapi_examples=examples_remote)],
+    obj: Annotated[schemas.RemoteFlairCreate, Body(..., openapi_examples=examples)],
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     background_tasks: BackgroundTasks,
 ):

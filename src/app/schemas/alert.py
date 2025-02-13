@@ -7,6 +7,8 @@ from app.core.config import settings
 from app.enums import StatusEnum, TlpEnum
 from app.schemas.alertgroupschema import AlertGroupSchemaColumn
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 from app.utils import sanitize_html, is_bool
 
 
@@ -47,7 +49,7 @@ class AlertDataUpdate(BaseModel):
 
 
 # pretty
-class AlertData(AlertDataBase):
+class AlertData(AlertDataBase, FavoriteLink):
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -103,7 +105,7 @@ class AlertUpdate(AlertAdd):
 
 
 # pretty
-class Alert(AlertBase):
+class Alert(AlertBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     entry_count: Annotated[int | None, Field(...)] = 0
     created: Annotated[datetime | None, Field(...)] = datetime.now()

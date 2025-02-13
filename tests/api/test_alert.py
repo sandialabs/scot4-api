@@ -17,7 +17,7 @@ from tests.utils.promotion import promote_alert_to_event
 
 def test_get_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/alert/{alert.id}",
@@ -79,7 +79,7 @@ def test_create_alert(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_update_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
 
     tlp_list = [a.value for a in list(TlpEnum)]
     tlp_list.remove(alert.tlp.value)
@@ -119,7 +119,7 @@ def test_update_alert(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_delete_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/alert/{alert.id}",
@@ -155,7 +155,7 @@ def test_delete_alert(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_undelete_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/alert/{alert.id}",
@@ -191,8 +191,8 @@ def test_undelete_alert(client: TestClient, superuser_token_headers: dict, norma
 
 def test_entries_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
-    entry = create_random_entry(db, faker, user.username, target_type=TargetTypeEnum.alert, target_id=alert.id, entry_class=EntryClassEnum.entry)
+    alert = create_random_alert(db, faker, user)
+    entry = create_random_entry(db, faker, user, target_type=TargetTypeEnum.alert, target_id=alert.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/alert/{alert.id}/entry",
@@ -227,7 +227,7 @@ def test_entries_alert(client: TestClient, superuser_token_headers: dict, normal
 
 def test_entities_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     entity = create_random_entity(db, faker, TargetTypeEnum.alert, alert.id)
 
     r = client.get(
@@ -265,7 +265,7 @@ def test_search_alerts(client: TestClient, superuser_token_headers: dict, normal
     owner = create_random_user(db, faker)
     alerts = []
     for _ in range(5):
-        alerts.append(create_random_alert(db, faker, owner.username))
+        alerts.append(create_random_alert(db, faker, owner))
 
     r = client.get(
         f"{settings.API_V1_STR}/alert?owner={owner.username}",
@@ -379,7 +379,7 @@ def test_search_alerts(client: TestClient, superuser_token_headers: dict, normal
 
     assert r.status_code == 200
     api_alert = r.json()
-    assert any(a["id"]  == random_alert1.id for a in api_alert["result"])
+    assert any(a["id"] == random_alert1.id for a in api_alert["result"])
 
     # type checking
     r = client.get(

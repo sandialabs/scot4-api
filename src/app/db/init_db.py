@@ -12,7 +12,7 @@ from app.db.session import SessionLocal
 from app.enums import AuthTypeEnum, PermissionEnum, TargetTypeEnum, StorageProviderEnum
 from app.icons.flags import flags
 from app.icons.default_icons import default_icons
-from app.models import Entity, Link, Permission, Entry, Promotion, Audit
+from app.models import Entity, Link, Permission, Entry, Promotion, Audit, UserLinks, Popularity
 
 
 def create_indices(db_session: Session):
@@ -47,6 +47,14 @@ def create_indices(db_session: Session):
     index = Index('audit_speedup_3', Audit.username, mysql_length=16)
     index.create(bind=db_session.bind)
     index = Index('audit_speedup_4', Audit.when_date)
+    index.create(bind=db_session.bind)
+    index = Index('user_links_speedup_1', UserLinks.target_type, UserLinks.target_id, mysql_length={'target_type': 16})
+    index.create(bind=db_session.bind)
+    index = Index('user_links_speedup_2', UserLinks.owner_id)
+    index.create(bind=db_session.bind)
+    index = Index('popularity_speedup_1', Popularity.target_type, Popularity.target_id, mysql_length={'target_type': 16})
+    index.create(bind=db_session.bind)
+    index = Index('popularity_speedup_2', Popularity.owner_id)
     index.create(bind=db_session.bind)
 
 

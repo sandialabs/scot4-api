@@ -6,18 +6,19 @@ from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.ext.declarative import declared_attr
 
 from app.enums import EntityStatusEnum, EntryClassEnum
-from app.models.mixins import EntityCountMixin, TimestampMixin, EntryMixin, TagMixin, SourceMixin
+from app.models.mixins import EntityCountMixin, TimestampMixin, EntryMixin, TagMixin, SourceMixin, PopularityMixin, UserLinksMixin
 from app.db.base_class import Base
 
 association_table = Table(
     "entity_class_entity_association",
     Base.metadata,
+
     Column("entity_id", ForeignKey("entities.entity_id")),
     Column("entity_class_id", ForeignKey("entity_classes.entity_class_id")),
 )
 
 
-class Entity(Base, TimestampMixin, TagMixin, SourceMixin, EntityCountMixin, EntryMixin):
+class Entity(Base, TimestampMixin, TagMixin, SourceMixin, EntityCountMixin, EntryMixin, PopularityMixin, UserLinksMixin):
     __tablename__ = "entities"
     id = Column("entity_id", Integer, primary_key=True)
     classes = relationship("EntityClass", secondary=association_table, lazy="joined")

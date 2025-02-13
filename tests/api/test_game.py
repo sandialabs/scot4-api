@@ -7,6 +7,7 @@ from app.core.config import settings
 from tests.utils.game import create_random_game
 from tests.utils.audit import create_audit
 from tests.utils.alert import create_random_alert
+from tests.utils.user import create_random_user
 
 
 def test_get_games(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -22,8 +23,9 @@ def test_get_games(client: TestClient, normal_user_token_headers: dict, db: Sess
 
     games = []
     for _ in range(3):
-        alert = create_random_alert(db, faker)
-        audit = create_audit(db, faker, alert.owner, alert)
+        user = create_random_user(db, faker)
+        alert = create_random_alert(db, faker, user)
+        audit = create_audit(db, faker, user, alert)
         games.append(create_random_game(db, faker, audit))
 
     r = client.get(
@@ -39,8 +41,9 @@ def test_get_games(client: TestClient, normal_user_token_headers: dict, db: Sess
 
 
 def test_create_game(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
 
     data = {
         "name": faker.word(),
@@ -82,8 +85,9 @@ def test_create_game(client: TestClient, superuser_token_headers: dict, normal_u
 
 
 def test_get_results(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = create_random_game(db, faker, audit)
 
     r = client.get(
@@ -105,8 +109,9 @@ def test_get_game(client: TestClient, normal_user_token_headers: dict, db: Sessi
 
     assert r.status_code == 404
 
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = create_random_game(db, faker, audit)
 
     r = client.get(

@@ -73,6 +73,9 @@ def main(mongo_db=None, role_lookup=None):
         with tqdm.tqdm(total=scot3_entry_count) as pbar:
             bulk_array = []
             for entry in scot3_entries:
+                if entry.get('target') is None or entry['target'].get('type') is None:
+                    pbar.update(1) # Malformed data
+                    continue
                 if entry['target']['type'] == 'alert' or entry['target']['type'] == 'alertgroup' or entry['target']['type'] == 'feed':
                     pbar.update(1)
                     continue

@@ -6,7 +6,5 @@ from app.schemas.role import RoleCreate
 
 
 def create_random_role(db: Session, faker: Faker):
-    name = f"{faker.unique.word()}_{faker.pyint()}"
-    description = faker.sentence(12)
-    role_create = RoleCreate(name=name, description=description)
+    role_create = RoleCreate(name=f"{faker.unique.word()}_{faker.pyint()}", description=faker.sentence(12))
     return crud.role.create(db, obj_in=role_create)

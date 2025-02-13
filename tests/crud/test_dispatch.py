@@ -16,7 +16,7 @@ from tests.utils.user import create_random_user, create_user_with_role
 
 def test_get_dispatch(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, owner.username, create_extras=False)
+    dispatch = create_random_dispatch(db, faker, owner, create_extras=False)
     db_obj = crud.dispatch.get(db, dispatch.id)
 
     assert db_obj.id == dispatch.id
@@ -31,7 +31,7 @@ def test_get_multi_dispatch(db: Session, faker: Faker) -> None:
 
     owner = create_random_user(db, faker)
     for _ in range(3):
-        dispatches.append(create_random_dispatch(db, faker, owner.username, create_extras=False))
+        dispatches.append(create_random_dispatch(db, faker, owner, create_extras=False))
 
     db_objs = crud.dispatch.get_multi(db)
     old_length = len(db_objs)
@@ -71,7 +71,7 @@ def test_create_dispatch(db: Session, faker: Faker) -> None:
 
 def test_update_dispatch(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, owner.username, create_extras=False)
+    dispatch = create_random_dispatch(db, faker, owner, create_extras=False)
     update = DispatchUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
@@ -121,7 +121,7 @@ def test_update_dispatch(db: Session, faker: Faker) -> None:
 
 def test_remove_dispatch(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, owner.username, create_extras=False)
+    dispatch = create_random_dispatch(db, faker, owner, create_extras=False)
 
     db_obj = crud.dispatch.remove(db, _id=dispatch.id)
 
@@ -158,7 +158,7 @@ def test_query_with_filters_dispatch(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     dispatches = []
     for _ in range(5):
-        dispatches.append(create_random_dispatch(db, faker, owner.username, create_extras=False))
+        dispatches.append(create_random_dispatch(db, faker, owner, create_extras=False))
 
     random_dispatch = random.choice(dispatches)
 
@@ -339,7 +339,7 @@ def test_get_history_dispatch(db: Session, faker: Faker) -> None:
 
 def test_undelete_dispatch(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    dispatch = create_random_dispatch(db, faker, user.username, create_extras=False)
+    dispatch = create_random_dispatch(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.dispatch.remove(db, _id=dispatch.id, audit_logger=audit_logger)

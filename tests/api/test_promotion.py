@@ -13,7 +13,7 @@ from tests.utils.event import create_random_event
 
 def test_promote_new(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, user.username, False)
+    intel = create_random_intel(db, faker, user, False)
 
     data = {
         "source": [{
@@ -65,8 +65,8 @@ def test_promote_new(client: TestClient, superuser_token_headers: dict, normal_u
 
 def test_promote_existing(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, user.username)
-    event = create_random_event(db, faker, user.username, False)
+    alert = create_random_alert(db, faker, user)
+    event = create_random_event(db, faker, user, False)
 
     data = {
         "source": [{

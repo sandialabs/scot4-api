@@ -16,8 +16,8 @@ from tests.utils.entry import create_random_entry
 
 def test_get_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature)
 
     r = client.get(
         f"{settings.API_V1_STR}/guide/{guide.id}",
@@ -46,7 +46,7 @@ def test_get_guide(client: TestClient, superuser_token_headers: dict, normal_use
 
 def test_create_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
+    signature = create_random_signature(db, faker, user)
 
     data = {
         "owner": user.username,
@@ -78,8 +78,8 @@ def test_create_guide(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_update_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature, False)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature, False)
 
     data = {
         "subject": faker.word()
@@ -124,8 +124,8 @@ def test_update_guide(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_delete_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature, False)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/guide/{guide.id}",
@@ -161,8 +161,8 @@ def test_delete_guide(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_undelete_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature, False)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/guide/{guide.id}",
@@ -208,9 +208,9 @@ def test_undelete_guide(client: TestClient, superuser_token_headers: dict, norma
 
 def test_entries_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
-    guide = create_random_guide(db, faker, owner.username, signature, False)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.guide, target_id=guide.id, entry_class=EntryClassEnum.entry)
+    signature = create_random_signature(db, faker, owner)
+    guide = create_random_guide(db, faker, owner, signature, False)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.guide, target_id=guide.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/guide/{guide.id}/entry",
@@ -246,8 +246,8 @@ def test_entries_guide(client: TestClient, superuser_token_headers: dict, normal
 
 def test_entities_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
-    guide = create_random_guide(db, faker, owner.username, signature, False)
+    signature = create_random_signature(db, faker, owner)
+    guide = create_random_guide(db, faker, owner, signature, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.guide, guide.id)
 
     r = client.get(
@@ -284,8 +284,8 @@ def test_entities_guide(client: TestClient, superuser_token_headers: dict, norma
 
 def test_history_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature, False)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature, False)
 
     data = {
         "subject": faker.word()
@@ -329,11 +329,11 @@ def test_history_guide(client: TestClient, superuser_token_headers: dict, normal
 
 def test_search_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
+    signature = create_random_signature(db, faker, user)
 
     guides = []
     for _ in range(5):
-        guides.append(create_random_guide(db, faker, user.username, signature, False))
+        guides.append(create_random_guide(db, faker, user, signature, False))
 
     random_guide = random.choice(guides)
 
@@ -491,8 +491,8 @@ def test_search_guide(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_get_signatures_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, user.username)
-    guide = create_random_guide(db, faker, user.username, signature, False)
+    signature = create_random_signature(db, faker, user)
+    guide = create_random_guide(db, faker, user, signature, False)
 
     r = client.get(
         f"{settings.API_V1_STR}/guide/{guide.id}/signatures",

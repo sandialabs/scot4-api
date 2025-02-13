@@ -8,6 +8,8 @@ from app.schemas.tag import Tag
 from app.schemas.promotion import Promotion
 from app.core.config import settings
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class VulnTrackBase(BaseModel):
@@ -28,7 +30,7 @@ class VulnTrackUpdate(VulnTrackBase):
 
 
 # pretty
-class VulnTrack(VulnTrackBase):
+class VulnTrack(VulnTrackBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

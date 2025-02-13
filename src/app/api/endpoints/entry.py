@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
 from app.api import deps
-from app.enums import PermissionEnum, TargetTypeEnum, TlpEnum, EntryClassEnum
+from app.enums import PermissionEnum, TargetTypeEnum
 from app.utils import send_flair_entry_request, create_schema_details
 
 from .generic import (
@@ -16,24 +16,25 @@ from .generic import (
     generic_undelete,
     generic_reflair,
     generic_search,
-    generic_export
+    generic_export,
+    generic_upvote_and_downvote,
+    generic_user_links
 )
 
 router = APIRouter()
-description, examples = create_schema_details(schemas.EntryCreate)
 
 # Create get, post, put, delete, tag, and source endpoints
 generic_export(router, crud.entry, TargetTypeEnum.entry)
-generic_put(
-    router, crud.entry, TargetTypeEnum.entry, schemas.Entry, schemas.EntryUpdate
-)
+generic_put(router, crud.entry, TargetTypeEnum.entry, schemas.Entry, schemas.EntryUpdate)
 generic_delete(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
 generic_undelete(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
 generic_tag_untag(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
 generic_source_add_remove(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
 generic_entities(router, TargetTypeEnum.entry)
 generic_reflair(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
-generic_search(router, crud.entry, TargetTypeEnum.entry, schemas.EntrySearch, schemas.Entry)
+generic_search(router, crud.entry, TargetTypeEnum.entry, schemas.EntrySearch, schemas.EntryWithParent)
+generic_upvote_and_downvote(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
+generic_user_links(router, crud.entry, TargetTypeEnum.entry, schemas.Entry)
 
 read_dep = Depends(deps.PermissionCheckId(TargetTypeEnum.entry, PermissionEnum.read))
 modify_dep = Depends(deps.PermissionCheckId(TargetTypeEnum.entry, PermissionEnum.modify))
@@ -54,25 +55,23 @@ def read_object(
     roles: list[models.Role] = Depends(deps.get_current_roles),
     id: int,
 ) -> Any:
-    entry = crud.entry.get(db_session=db, _id=id, audit_logger=audit_logger)
+    entry = crud.entry.get(db, id, audit_logger)
     if not entry:
         raise HTTPException(404, f"{TargetTypeEnum.entry.value} not found")
-    parent_permission_check = deps.PermissionCheckId(
-        entry.target_type, PermissionEnum.read
-    )
     # To read an entry, you also need permission on its parent object
     # Will raise HTTPException on failure
-    parent_permission_check(entry.target_id, db, user, roles)
+    deps.PermissionCheckId(entry.target_type, PermissionEnum.read)(entry.target_id, db, user, roles)
     return entry
+
+
+description, examples = create_schema_details(schemas.EntryCreate, "Create an entry, optionally granting read, write, or delete permissions. It will otherwise inherit the permissions of its parent entry or object.\n")
 
 
 @router.post(
     "/",
     response_model=schemas.Entry,
     summary="Create an entry",
-    description="Create an entry, optionally granting read, "
-    "write, or delete permissions. It will otherwise inherit "
-    "the permissions of its parent entry or object.\n" + description
+    description=description
 )
 def create_entry(
     *,
@@ -85,18 +84,13 @@ def create_entry(
     background_tasks: BackgroundTasks,
 ) -> Any:
     # The user must have modify permissions on the parent object
-    parent_permission_check = deps.PermissionCheckId(
-        entry.target_type, PermissionEnum.modify
-    )
     # Will raise HTTPException on failure
-    parent_permission_check(entry.target_id, db, current_user, current_roles)
+    deps.PermissionCheckId(entry.target_type, PermissionEnum.modify)(entry.target_id, db, current_user, current_roles)
     if permissions is not None:
-        _obj = crud.entry.create_with_permissions(
-            db_session=db, obj_in=entry, perm_in=permissions, audit_logger=audit_logger
-        )
+        _obj = crud.entry.create_with_permissions(db, obj_in=entry, perm_in=permissions, audit_logger=audit_logger)
     elif entry.parent_entry_id is not None:
         _obj = crud.entry.create_in_object(
-            db_session=db,
+            db,
             obj_in=entry,
             source_type=TargetTypeEnum.entry,
             source_id=entry.parent_entry_id,
@@ -104,11 +98,12 @@ def create_entry(
         )
     else:
         _obj = crud.entry.create_in_object(
-            db_session=db,
+            db,
             obj_in=entry,
             source_type=entry.target_type,
             source_id=entry.target_id,
             audit_logger=audit_logger,
         )
     background_tasks.add_task(send_flair_entry_request, TargetTypeEnum.entry, _obj)
+    crud.notification.send_create_notifications(db, _obj, current_user)
     return _obj

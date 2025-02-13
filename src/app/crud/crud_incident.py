@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.models.role import Role
 from app.models.permission import Permission
 from app.models.incident import Incident
+from app.models.user import User
 from app.schemas.incident import IncidentCreate, IncidentUpdate
 
 
@@ -25,23 +26,17 @@ class CRUDIncident(CRUDBase[Incident, IncidentCreate, IncidentUpdate]):
         self,
         db_session: Session,
         roles: list[Role],
-        required_permission: PermissionEnum = PermissionEnum.read,
+        required_permission: PermissionEnum = PermissionEnum.read
     ):
         """
         Incidents have json fields, and so need a slightly different query
         Note: admin permissions must be checked elsewhere
         """
-        query = (
-            db_session.query(self.model)
-            .join(Permission, (self.model.id == Permission.target_id))
-            .filter(((self.model.target_type_enum() == Permission.target_type)
-                     & (required_permission == Permission.permission))
-                    )
-            .filter(Permission.role_id.in_([role.id for role in roles]
-                                           + [settings.EVERYONE_ROLE_ID]))
+        return db_session.query(self.model)\
+            .join(Permission, (self.model.id == Permission.target_id))\
+            .filter(((self.model.target_type_enum() == Permission.target_type) & (required_permission == Permission.permission)))\
+            .filter(Permission.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
             .group_by(self.model.id)  # We can't use DISTINCT with incidents
-        )
-        return query
 
     def increment_view_count(self, db_session: Session, id: int, new_transaction=True):
         incident = db_session.get(Incident, id)

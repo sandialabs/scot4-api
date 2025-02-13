@@ -34,11 +34,13 @@ def promote_event_to_incident(db: Session, event_ids: list[int]):
         db_session=db, source=source, destination=TargetTypeEnum.incident
     )
 
+
 def promote_vuln_feed_to_incident(db: Session, vuln_feed_ids: list[int]):
     source = [{"id": vuln_feed_id, "type": TargetTypeEnum.vuln_feed} for vuln_feed_id in vuln_feed_ids]
     return crud.promotion.promote(
         db_session=db, source=source, destination=TargetTypeEnum.incident
     )
+
 
 def promote_vuln_track_to_incident(db: Session, vuln_track_ids: list[int]):
     source = [{"id": vuln_track_id, "type": TargetTypeEnum.vuln_track} for vuln_track_id in vuln_track_ids]

@@ -76,7 +76,7 @@ def test_create_apikey(client: TestClient, superuser_token_headers: dict, normal
 
 def test_update_apikey(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    apikey = create_apikey(db, faker, user.username)
+    apikey = create_apikey(db, faker, user)
 
     data = {"active": False}
 
@@ -141,7 +141,7 @@ def test_update_apikey(client: TestClient, normal_user_token_headers: dict, supe
 
 def test_get_apikey(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    apikey = create_apikey(db, faker, user.username)
+    apikey = create_apikey(db, faker, user)
 
     r = client.get(
         f"{settings.API_V1_STR}/apikey/{apikey.key}",
@@ -169,7 +169,7 @@ def test_get_apikey(client: TestClient, normal_user_token_headers: dict, superus
 
 def test_delete_apikey(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    apikey = create_apikey(db, faker, user.username)
+    apikey = create_apikey(db, faker, user)
 
     r = client.delete(
         f"{settings.API_V1_STR}/apikey/{apikey.key}", headers=superuser_token_headers

@@ -147,7 +147,7 @@ def test_query_with_filters_product(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     products = []
     for _ in range(5):
-        products.append(create_random_product(db, faker, owner.username, create_extras=False))
+        products.append(create_random_product(db, faker, owner, create_extras=False))
 
     random_product = random.choice(products)
 
@@ -310,7 +310,7 @@ def test_get_history_product(db: Session, faker: Faker) -> None:
 
 def test_undelete_product(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    product = create_random_product(db, faker, user.username, create_extras=False)
+    product = create_random_product(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.product.remove(db, _id=product.id, audit_logger=audit_logger)

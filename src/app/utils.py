@@ -4,14 +4,15 @@ import meilisearch
 import requests
 import traceback
 import nh3
+import random
+
 from os import environ
 
-from faker import Faker
 from pathlib import Path
 from pydantic import BaseModel
 from pydantic.fields import PydanticUndefined
-from datetime import datetime, timedelta
-from typing import Union, Tuple
+from datetime import datetime, timedelta, timezone
+from typing import Union, Tuple, Any
 from fastapi import HTTPException, Request, status
 from fastapi.openapi.models import OAuthFlows as OAuthFlowsModel
 from fastapi.security import OAuth2
@@ -19,7 +20,7 @@ from fastapi.security.utils import get_authorization_scheme_param
 from jose import jwt
 
 from app.core.config import settings
-from app.models import Entry, Alert
+from app.models import Entry, Alert, Entity
 from app.core.logger import logger
 from app.enums import TargetTypeEnum
 
@@ -29,24 +30,33 @@ def index_for_search(parent_subject: str, entry: Entry = None, alert: Alert = No
         if settings.SEARCH_HOST != "" and settings.SEARCH_API_KEY != "" and settings.SEARCH_API_KEY is not None:
             client = meilisearch.Client(settings.SEARCH_HOST, settings.SEARCH_API_KEY)
             if entry is not None:
-                client.index('entries').add_documents([{'parent_text': parent_subject, 'entry_id': entry.id, 'target_id': entry.target_id, 'target_type': entry.target_type.value, 'entry_text': entry.entry_data['plain_text']}])
+                client.index('entries').add_documents([{
+                    'parent_text': parent_subject,
+                    'entry_id': entry.id,
+                    'target_id': entry.target_id,
+                    'target_type': entry.target_type.value,
+                    'entry_text': entry.entry_data['plain_text']
+                }])
             elif alert is not None:
-                client.index('entries').add_documents([{'parent_text': parent_subject, 'entry_id': alert.id, 'target_id': alert.alertgroup_id, 'target_type': TargetTypeEnum.alertgroup.value, 'entry_text': dict(alert.data) if alert.data else None}])  # or should the be the parse data?
+                client.index('entries').add_documents([{
+                    'parent_text': parent_subject,
+                    'entry_id': alert.id,
+                    'target_id': alert.alertgroup_id,
+                    'target_type': TargetTypeEnum.alertgroup.value,
+                    'entry_text': dict(alert.data) if alert.data else None
+                }])  # or should the be the parse data?
     except Exception:
         logging.exception(traceback.format_exc())
 
 
-def send_flair_entry_request(flair_type: TargetTypeEnum, flair_entry) -> None:
+def send_flair_entry_request(flair_type: TargetTypeEnum, flair_entry: Any) -> None:
     session = requests.Session()
     session.trust_env = False
     if settings.FLAIR_HOST is not None:
-        post_url = settings.FLAIR_HOST + settings.FLAIR_API_FLAIR_ENDPOINT
         flair_data = None
         flair_id = flair_entry.id
         if flair_type == TargetTypeEnum.alertgroup:
-            flair_data = {
-                "alerts": [{"id": a.id, "row": dict(a.data)} for a in flair_entry.alerts]
-            }
+            flair_data = {"alerts": [{"id": a.id, "row": dict(a.data)} for a in flair_entry.alerts]}
         elif flair_type == TargetTypeEnum.alert:
             flair_data = {"alerts": [{"id": flair_entry.id, "row": flair_entry.data}]}
             flair_type == TargetTypeEnum.alertgroup
@@ -55,10 +65,13 @@ def send_flair_entry_request(flair_type: TargetTypeEnum, flair_entry) -> None:
             flair_data = flair_entry.entry_data["html"]
         else:
             flair_data = flair_entry.data
-        post_data = {"id": flair_id, "type": flair_type.value, "data": flair_data}
         resp = None
         try:
-            resp = session.post(post_url, data=json.dumps(post_data), headers={'Authorization': f'apikey {settings.FLAIR_API_KEY}', 'Content-Type': 'application/json'})
+            resp = session.post(
+                settings.FLAIR_HOST + settings.FLAIR_API_FLAIR_ENDPOINT,
+                data=json.dumps({"id": flair_id, "type": flair_type.value, "data": flair_data}),
+                headers={'Authorization': f'apikey {settings.FLAIR_API_KEY}', 'Content-Type': 'application/json'}
+            )
             print('Sent flair request')
             print(resp.text)
         except Exception:
@@ -67,15 +80,25 @@ def send_flair_entry_request(flair_type: TargetTypeEnum, flair_entry) -> None:
             logging.error("Error while sending flair notification: %s" % resp.body)
 
 
-def send_new_regex_request(entity_value, entity_type) -> None:
+def send_new_regex_request(entity_value: str, entity_type: str) -> None:
     session = requests.Session()
     session.trust_env = False
     if settings.FLAIR_HOST is not None:
-        post_url = settings.FLAIR_HOST + settings.FLAIR_API_REGEX_ENDPOINT
-        scot4_regex_body = {"name": entity_value, "description": "User Defined Flair", "match": f"\\b{entity_value}\\b", "entity_type": entity_type, "regex_type": "udef", "re_order": 30, "multiword": False}
         resp = None
         try:
-            resp = session.post(post_url, data=json.dumps(scot4_regex_body), headers={'Authorization': f'apikey {settings.FLAIR_API_KEY}', 'Content-Type': 'application/json'})
+            resp = session.post(
+                settings.FLAIR_HOST + settings.FLAIR_API_REGEX_ENDPOINT,
+                data=json.dumps({
+                    "name": entity_value,
+                    "description": "User Defined Flair",
+                    "match": f"\\b{entity_value}\\b",
+                    "entity_type": entity_type,
+                    "regex_type": "udef",
+                    "re_order": 30,
+                    "multiword": False
+                }),
+                headers={'Authorization': f'apikey {settings.FLAIR_API_KEY}', 'Content-Type': 'application/json'}
+            )
             print('Sent Create Regex request')
             print(resp.text)
         except Exception:
@@ -101,7 +124,7 @@ def send_reflair_request(id: int, flair_type: TargetTypeEnum, object_to_flair: U
             logging.error("Error while sending flair notification: %s" % resp.body)
 
 
-def send_flair_enrichment_request(entity, enrichments: list[str] | None = None) -> None:
+def send_flair_enrichment_request(entity: Entity, enrichments: list[str] | None = None) -> None:
     session = requests.Session()
 
     # verify this is an entity type with enrichments available
@@ -123,9 +146,12 @@ def send_flair_enrichment_request(entity, enrichments: list[str] | None = None) 
         }
         resp = None
         try:
-            resp = session.post(post_url, data=json.dumps(req_dict), auth=(settings.ENRICHMENT_USERNAME, settings.ENRICHMENT_PASSWORD),
-                                headers={'Content-Type': 'application/json'}, verify=environ.get('REQUESTS_CA_BUNDLE')
-                                )
+            resp = session.post(
+                post_url,
+                data=json.dumps(req_dict),
+                auth=(settings.ENRICHMENT_USERNAME, settings.ENRICHMENT_PASSWORD),
+                headers={'Content-Type': 'application/json'}, verify=environ.get('REQUESTS_CA_BUNDLE')
+            )
         except Exception:
             logging.exception("Error while connecting to enrichment host")
             logging.exception(traceback.format_exc())
@@ -162,11 +188,7 @@ def generate_password_reset_token(email: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
     now = datetime.utcnow()
     expires = now + delta
-    exp = expires.timestamp()
-    encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email}, settings.SECRET_KEY, algorithm="HS256"
-    )
-    return encoded_jwt
+    return jwt.encode({"exp": expires.timestamp(), "nbf": now, "sub": email}, settings.SECRET_KEY, algorithm="HS256")
 
 
 def verify_password_reset_token(token: str) -> str | None:
@@ -195,31 +217,19 @@ class OAuth2PasswordBearerWithCookie(OAuth2):
         super().__init__(flows=flows, scheme_name=scheme_name, auto_error=auto_error)
 
     async def __call__(self, request: Request) -> str | None:
-        authorization: str = request.headers.get(
-            "Authorization"
-        )  # check the Authorization header like normal
+        authorization: str = request.headers.get("Authorization")  # check the Authorization header like normal
         scheme, param = get_authorization_scheme_param(authorization)
         if not authorization or scheme.lower() != "bearer":
-            authorization: str = request.cookies.get(
-                "access_token"
-            )  # changed to accept access token from httpOnly Cookie
+            authorization: str = request.cookies.get("access_token")  # changed to accept access token from httpOnly Cookie
             scheme, param = get_authorization_scheme_param(authorization)
             if not authorization or scheme.lower() != "bearer":
                 if self.auto_error:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Not authenticated",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
+                    raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated", {"WWW-Authenticate": "Bearer"})
                 else:
                     return None
 
             if self.auto_error:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Not authenticated",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
+                raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Not authenticated", {"WWW-Authenticate": "Bearer"})
             else:
                 return param
         return param
@@ -261,26 +271,27 @@ svg_tags = ['svg', 'a', 'altglyph', 'altglyphdef', 'altglyphitem', 'animatecolor
             'glyph', 'glyphref', 'hkern', 'image', 'line', 'lineargradient', 'marker', 'mask', 'metadata',
             'mpath', 'path', 'pattern', 'polygon', 'polyline', 'radialgradient', 'rect', 'stop',
             'switch', 'symbol', 'text', 'textpath', 'title', 'tref', 'tspan', 'view', 'vkern']
-sanitize_attributes = {'a': set(['href', 'hreflang']),
-                       'bdo': set(['dir']),
-                       'blockquote': set(['cite']),
-                       'col': set(['align', 'char', 'charoff', 'span']),
-                       'colgroup': set(['align', 'char', 'charoff', 'span']),
-                       'del': set(['cite', 'datetime']),
-                       'hr': set(['align', 'size', 'width']),
-                       'img': set(['align', 'alt', 'src', 'height', 'width']),
-                       'ins': set(['cite', 'datetime']),
-                       'ol': set(['start']),
-                       'q': set(['cite']),
-                       'table': set(['align', 'char', 'charoff', 'summary', 'cellpadding', 'cellspacing']),
-                       'tbody': set(['align', 'char', 'charoff']),
-                       'td': set(['align', 'char', 'charoff', 'colspan', 'headers', 'rowspan']),
-                       'tfoot': set(['align', 'char', 'charoff']),
-                       'thead': set(['align', 'char', 'charoff', 'colspan', 'headers', 'rowspan', 'scope']),
-                       'tr': set(['align', 'char', 'charoff']),
-                       'span': set(['data-entity-value', 'data-entity-type', 'class']),
-                       '*': set(['style', 'bgcolor', 'background', 'tabindex', 'align', 'border', 'color', 'width', 'height', 'valign', 'vspace', 'hspace', 'hidden'] + svg_attributes)
-                       }
+sanitize_attributes = {
+    'a': set(['href', 'hreflang']),
+    'bdo': set(['dir']),
+    'blockquote': set(['cite']),
+    'col': set(['align', 'char', 'charoff', 'span']),
+    'colgroup': set(['align', 'char', 'charoff', 'span']),
+    'del': set(['cite', 'datetime']),
+    'hr': set(['align', 'size', 'width']),
+    'img': set(['align', 'alt', 'src', 'height', 'width']),
+    'ins': set(['cite', 'datetime']),
+    'ol': set(['start']),
+    'q': set(['cite']),
+    'table': set(['align', 'char', 'charoff', 'summary', 'cellpadding', 'cellspacing']),
+    'tbody': set(['align', 'char', 'charoff']),
+    'td': set(['align', 'char', 'charoff', 'colspan', 'headers', 'rowspan']),
+    'tfoot': set(['align', 'char', 'charoff']),
+    'thead': set(['align', 'char', 'charoff', 'colspan', 'headers', 'rowspan', 'scope']),
+    'tr': set(['align', 'char', 'charoff']),
+    'span': set(['data-entity-value', 'data-entity-type', 'class']),
+    '*': set(['style', 'bgcolor', 'background', 'tabindex', 'align', 'border', 'color', 'width', 'height', 'valign', 'vspace', 'hspace', 'hidden'] + svg_attributes)
+}
 # Allow svg attributes only on svg tags
 for t in svg_tags:
     if t in sanitize_attributes:
@@ -299,7 +310,7 @@ sanitize_tags = set(['a', 'abbr', 'acronym', 'area', 'article', 'aside',
                      'td', 'th', 'thead', 'time', 'tr', 'tt', 'u', 'ul', 'var', 'wbr'] + svg_tags)
 
 
-def sanitize_attribute_filter_flaired_alert(element, attribute, value):
+def sanitize_attribute_filter_flaired_alert(element: str, attribute: str, value: str) -> str:
     if (attribute == 'href' or attribute == 'src') and value.startswith('data:'):
         if attribute != 'src' or element != 'img' or not value.startswith('data:image/'):
             return None
@@ -315,7 +326,7 @@ def sanitize_attribute_filter_flaired_alert(element, attribute, value):
         return value
 
 
-def sanitize_attribute_filter(element, attribute, value):
+def sanitize_attribute_filter(element: str, attribute: str, value: str) -> str:
     if (attribute == 'href' or attribute == 'src') and value.startswith('data:'):
         if attribute != 'src' or element != 'img' or not value.startswith('data:image/'):
             return None
@@ -339,7 +350,7 @@ NH3_ALLOWED_URL_SCHEMES = {"bitcoin", "ftp", "ftps", "geo", "http", "https", "im
 allowed_url_schemes = NH3_ALLOWED_URL_SCHEMES.union({"data"})
 
 
-def sanitize_html(html: str, flaired_alert=False):
+def sanitize_html(html: str, flaired_alert: bool = False):
     if isinstance(html, str):
         if flaired_alert is True:
             # This should come in the form of an array. We are going to change it instead to <br> separated html string
@@ -347,15 +358,12 @@ def sanitize_html(html: str, flaired_alert=False):
                 html = json.loads(html)
                 if isinstance(html, list):
                     html = "<br/>".join(html)
-                res = nh3.clean(html, tags=sanitize_tags, attributes=sanitize_attributes, attribute_filter=sanitize_attribute_filter_flaired_alert, url_schemes=allowed_url_schemes)
-                return res
+                return nh3.clean(html, tags=sanitize_tags, attributes=sanitize_attributes, attribute_filter=sanitize_attribute_filter_flaired_alert, url_schemes=allowed_url_schemes)
             except Exception:
                 logger.warning('Unable to parse flaired data as an array, defaulting to regular sanitization')
-                res = nh3.clean(html, tags=sanitize_tags, attributes=sanitize_attributes, attribute_filter=sanitize_attribute_filter, url_schemes=allowed_url_schemes)
-                return res
+                return nh3.clean(html, tags=sanitize_tags, attributes=sanitize_attributes, attribute_filter=sanitize_attribute_filter, url_schemes=allowed_url_schemes)
         else:
-            res = nh3.clean(html, tags=sanitize_tags, attributes=sanitize_attributes, attribute_filter=sanitize_attribute_filter, url_schemes=allowed_url_schemes)
-            return res
+            return nh3.clean(html, tags=sanitize_tags, attributes=sanitize_attributes, attribute_filter=sanitize_attribute_filter, url_schemes=allowed_url_schemes)
     else:
         return ""
 
@@ -382,14 +390,13 @@ def filter_fixup(value: str) -> str:
     return value.strip().replace("\\", "")
 
 
-def create_schema_details(schema: BaseModel) -> Tuple[str, dict[str, dict]]:
+def create_schema_details(schema: BaseModel, prepend_description: str = "", append_description: str = "") -> Tuple[str, dict[str, dict]]:
     """
     Dynamically create schema descriptions and examples
     """
 
     # add possible entries to description
     key_name = schema.__name__.lower()
-    faker = Faker()
     examples = {
         f"{key_name}_basic": {
             "summary": "Basic Example",
@@ -403,7 +410,7 @@ def create_schema_details(schema: BaseModel) -> Tuple[str, dict[str, dict]]:
         }
     }
 
-    description = "\n\n### Fields\n"
+    description = f"{prepend_description}\n\n### Fields\n"
     # add field type to the description
     for field_name, field_value in schema.model_fields.items():
         # if set to exclude from schema then dont add anything
@@ -430,7 +437,8 @@ def create_schema_details(schema: BaseModel) -> Tuple[str, dict[str, dict]]:
             .replace("datetime.", "")\
             .replace("app.", "")\
             .replace("enums.", "")\
-            .replace("schemas.", "")
+            .replace("schemas.", "")\
+            .replace("pydantic.networks.", "")
         description += f"  - Type: `{annotation}`\n\n"
 
         # if a field has a default value
@@ -450,20 +458,20 @@ def create_schema_details(schema: BaseModel) -> Tuple[str, dict[str, dict]]:
             # if no default value make some up
             if field_value.annotation == str | None or field_value.annotation == str:
                 if field_value.is_required():
-                    examples[f"{key_name}_required"]["value"][field_name] = faker.word()
-                examples[f"{key_name}_basic"]["value"][field_name] = faker.word()
+                    examples[f"{key_name}_required"]["value"][field_name] = "string"
+                examples[f"{key_name}_basic"]["value"][field_name] = "string"
             elif field_value.annotation == int | None or field_value.annotation == int:
                 if field_value.is_required():
-                    examples[f"{key_name}_required"]["value"][field_name] = faker.pyint()
-                examples[f"{key_name}_basic"]["value"][field_name] = faker.pyint()
+                    examples[f"{key_name}_required"]["value"][field_name] = random.randint(0, 10)  # nosec B311
+                examples[f"{key_name}_basic"]["value"][field_name] = random.randint(0, 10)  # nosec B311
             elif field_value.annotation == bool | None or field_value.annotation == bool:
                 if field_value.is_required():
-                    examples[f"{key_name}_required"]["value"][field_name] = faker.pybool()
-                examples[f"{key_name}_basic"]["value"][field_name] = faker.pybool()
+                    examples[f"{key_name}_required"]["value"][field_name] = random.choice([True, False])  # nosec B311
+                examples[f"{key_name}_basic"]["value"][field_name] = random.choice([True, False])  # nosec B311
             elif field_value.annotation == datetime | None or field_value.annotation == datetime:
                 if field_value.is_required():
-                    examples[f"{key_name}_required"]["value"][field_name] = faker.date_time_this_month()
-                examples[f"{key_name}_basic"]["value"][field_name] = faker.date_time_this_month()
+                    examples[f"{key_name}_required"]["value"][field_name] = datetime.now(timezone.utc)
+                examples[f"{key_name}_basic"]["value"][field_name] = datetime.now(timezone.utc)
             else:
                 # everything else for now just add the annotation
                 if field_value.is_required():
@@ -491,7 +499,57 @@ def create_schema_details(schema: BaseModel) -> Tuple[str, dict[str, dict]]:
     for key in delete_keys:
         del examples[key]
 
-    return description, examples
+    return f"{description}\n{append_description}", examples
+
+
+def get_search_filters(search_schema: BaseModel) -> dict:
+    filter_dict = {"not": {}}
+    key: str
+    value: str
+    for key, value in search_schema.model_dump().items():
+        if value is None:
+            continue
+        # remove any extra whitespace
+        value = value.strip()
+        is_not = False
+        if value.startswith("!"):
+            is_not = True
+            value = value[1:]
+
+        do_normal = False
+        # (n, n1) - in range
+        if value.startswith("(") and value.endswith(")"):
+            try:
+                # if for any reason this fails
+                v0, v1 = value[1:-1].split(",")
+                if is_not:
+                    filter_dict["not"][key] = (search_schema.type_mapping(key, v0.strip()), search_schema.type_mapping(key, v1.strip()))
+                else:
+                    filter_dict[key] = (search_schema.type_mapping(key, v0.strip()), search_schema.type_mapping(key, v1.strip()))
+            except Exception:
+                do_normal = True
+        # [n, n1, n2, ...] - in list of items
+        elif value.startswith("[") and value.endswith("]"):
+            try:
+                v = value[1:-1].split(",")
+                if is_not:
+                    filter_dict["not"][key] = [search_schema.type_mapping(key, a.strip()) for a in v]
+                else:
+                    filter_dict[key] = [search_schema.type_mapping(key, a.strip()) for a in v]
+            except Exception:
+                do_normal = True
+        # !n - not an item
+        elif is_not:
+            filter_dict["not"][key] = search_schema.type_mapping(key, value)
+        else:
+            do_normal = True
+        if do_normal:
+            # remove any escape characters that exist at the beginning and end of the string
+            if value.startswith("\\!") or value.startswith("\\(") or value.startswith("\\["):
+                value = value[1:]
+            filter_dict[key] = search_schema.type_mapping(key, value.strip())
+
+    return filter_dict
 
 
 """

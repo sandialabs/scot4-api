@@ -18,8 +18,9 @@ from tests.utils.user import create_random_user, create_user_with_role
 
 
 def test_get_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = create_random_game(db, faker, audit)
     db_obj = crud.game.get(db, game.id)
 
@@ -31,10 +32,11 @@ def test_get_game(db: Session, faker: Faker) -> None:
 
 
 def test_get_multi_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
     games = []
     for _ in range(5):
-        audit = create_audit(db, faker, alert.owner, alert)
+        audit = create_audit(db, faker, user, alert)
         games.append(create_random_game(db, faker, audit))
 
     db_objs = crud.game.get_multi(db)
@@ -57,8 +59,9 @@ def test_get_multi_game(db: Session, faker: Faker) -> None:
 
 
 def test_create_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -80,8 +83,8 @@ def test_create_game(db: Session, faker: Faker) -> None:
 def test_update_game(db: Session, faker: Faker) -> None:
     game = create_random_game(db, faker)
     owner = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, owner.username)
-    audit = create_audit(db, faker, owner.username, alert)
+    alert = create_random_alert(db, faker, owner)
+    audit = create_audit(db, faker, owner, alert)
     update = GameUpdate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -143,8 +146,9 @@ def test_remove_game(db: Session, faker: Faker) -> None:
 
 
 def test_get_or_create_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -191,8 +195,8 @@ def test_get_with_roles_game(db: Session, faker: Faker) -> None:
     for _ in range(5):
         role = create_random_role(db, faker)
         owner = create_user_with_role(db, [role], faker)
-        alert = create_random_alert(db, faker, owner.username)
-        audit = create_audit(db, faker, owner.username, alert)
+        alert = create_random_alert(db, faker, owner)
+        audit = create_audit(db, faker, owner, alert)
         game = GameCreate(
             name=faker.word(),
             tooltip=faker.sentence(),
@@ -220,7 +224,7 @@ def test_query_objects_with_roles_game(db: Session, faker: Faker) -> None:
         role = create_random_role(db, faker)
         owner = create_user_with_role(db, [role], faker)
         alert = create_random_alert(db, faker)
-        audit = create_audit(db, faker, owner.username, alert)
+        audit = create_audit(db, faker, owner, alert)
         game = GameCreate(
             name=faker.word(),
             tooltip=faker.sentence(),
@@ -242,8 +246,9 @@ def test_query_objects_with_roles_game(db: Session, faker: Faker) -> None:
 
 
 def test_create_with_owner_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -265,9 +270,10 @@ def test_create_with_owner_game(db: Session, faker: Faker) -> None:
 
 
 def test_create_with_permissions_game(db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
     role = create_random_role(db, faker)
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -294,8 +300,9 @@ def test_create_with_permissions_game(db: Session, faker: Faker) -> None:
 
 
 def test_create_in_object_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -319,8 +326,9 @@ def test_create_in_object_game(db: Session, faker: Faker) -> None:
 
 
 def test_get_history_game(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    audit = create_audit(db, faker, alert.owner, alert)
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    audit = create_audit(db, faker, user, alert)
     game = GameCreate(
         name=faker.word(),
         tooltip=faker.sentence(),
@@ -331,7 +339,7 @@ def test_get_history_game(db: Session, faker: Faker) -> None:
             "data": jsonable_encoder(audit.audit_data)
         }
     )
-    audit_logger = AuditLogger(alert.owner, faker.ipv4(), faker.user_agent(), db)
+    audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
     db_obj = crud.game.create(db, obj_in=game, audit_logger=audit_logger)
 
     assert db_obj is not None
@@ -357,8 +365,8 @@ def test_undelete_game(db: Session, faker: Faker) -> None:
 
 def test_get_results_for_games(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, owner.username)
-    audit = create_audit(db, faker, owner.username, alert)
+    alert = create_random_alert(db, faker, owner)
+    audit = create_audit(db, faker, owner, alert)
     game = create_random_game(db, faker, audit)
 
     db_obj = crud.game.get_results_for_games(db)

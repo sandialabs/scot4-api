@@ -7,4 +7,5 @@ tqdm==4.66.5
 pymongo==4.8.0
 splunk-sdk==2.0.2
 pytest-xdist==3.6.1
+Faker==27.0.0
 -r requirements.txt

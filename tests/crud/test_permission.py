@@ -57,7 +57,7 @@ def test_get_multi_permission(db: Session, faker: Faker) -> None:
 def test_create_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -76,11 +76,11 @@ def test_create_permission(db: Session, faker: Faker) -> None:
 def test_update_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = create_random_permission(db, role, alert)
 
     role1 = create_random_role(db, faker)
-    alert1 = create_random_alert(db, faker, owner.username)
+    alert1 = create_random_alert(db, faker, owner)
     update = PermissionUpdate(
         role_id=role1.id,
         target_type=TargetTypeEnum.alert,
@@ -112,7 +112,7 @@ def test_update_permission(db: Session, faker: Faker) -> None:
     assert not hasattr(db_obj, "test")
 
     role1 = create_random_role(db, faker)
-    alert1 = create_random_alert(db, faker, owner.username)
+    alert1 = create_random_alert(db, faker, owner)
     update = {
         "role_id": role1.id,
         "target_type": TargetTypeEnum.alert,
@@ -132,7 +132,7 @@ def test_update_permission(db: Session, faker: Faker) -> None:
 def test_remove_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = create_random_permission(db, role, alert)
 
     db_obj = crud.permission.remove(db, _id=permission.id)
@@ -151,7 +151,7 @@ def test_remove_permission(db: Session, faker: Faker) -> None:
 def test_get_or_create_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -172,7 +172,7 @@ def test_query_with_filters_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
     owner = create_random_user(db, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permissions = []
     for _ in range(5):
         permissions.append(create_random_permission(db, role, alert))
@@ -210,7 +210,7 @@ def test_query_with_filters_permission(db: Session, faker: Faker) -> None:
 def test_create_with_owner_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -228,7 +228,7 @@ def test_create_with_owner_permission(db: Session, faker: Faker) -> None:
 def test_create_with_permissions_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -248,7 +248,7 @@ def test_create_with_permissions_permission(db: Session, faker: Faker) -> None:
 def test_create_in_object_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -272,7 +272,7 @@ def test_create_in_object_permission(db: Session, faker: Faker) -> None:
 def test_get_history_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner.username)
+    alert = create_random_alert(db, faker, owner)
     permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -309,7 +309,7 @@ def test_undelete_permission(db: Session, faker: Faker) -> None:
 def test_get_permission_from_roles(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     role = create_random_role(db, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     permission = create_random_permission(db, role, alert)
 
     db_obj = crud.permission.get_permissions_from_roles(db, [role], TargetTypeEnum.alert, alert.id)
@@ -322,7 +322,7 @@ def test_get_permission_from_roles(db: Session, faker: Faker) -> None:
 def test_get_permissions(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     permission = create_random_permission(db, role, alert)
 
     assert crud.permission.get_permissions(
@@ -367,7 +367,7 @@ def test_roles_have_admin(db: Session, faker: Faker) -> None:
 def test_grant_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     read_permission = PermissionCreate(
         role_id=role.id,
         target_type=TargetTypeEnum.alert,
@@ -407,7 +407,7 @@ def test_grant_permission(db: Session, faker: Faker) -> None:
 def test_revoke_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     permission = create_random_permission(db, role, alert)
 
     crud.permission.revoke_permission(db, permission)
@@ -424,7 +424,7 @@ def test_create_owner_permissions(db: Session, faker: Faker):
     role2 = create_random_role(db, faker)  # Role only on user 2
     user1 = create_user_with_role(db, role, faker)
     user2 = create_user_with_role(db, [role, role2], faker)
-    alert = create_random_alert(db, faker, user1.username)
+    alert = create_random_alert(db, faker, user1)
 
     crud.permission.create_owner_permissions(db, user1, TargetTypeEnum.alert, alert.id)
 
@@ -469,7 +469,7 @@ def test_create_owner_permissions(db: Session, faker: Faker):
             permission=PermissionEnum.delete,
         ),
     )
-    alert = create_random_alert(db, faker, user2.username)
+    alert = create_random_alert(db, faker, user2)
     crud.permission.create_owner_permissions(db, user2, TargetTypeEnum.alert, alert.id)
 
     permissions2 = crud.permission.get_permissions(db, user2.username, TargetTypeEnum.alert, alert.id)
@@ -539,7 +539,7 @@ def test_copy_permissions(db: Session, faker: Faker):
 def test_filter_search_hits(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     create_random_permission(db, [role], alert)
 
     db_obj = crud.permission.filter_search_hits(db, [], [role])

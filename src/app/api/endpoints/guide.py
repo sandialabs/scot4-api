@@ -16,7 +16,9 @@ from .generic import (
     generic_history,
     generic_entities,
     generic_search,
-    generic_export
+    generic_export,
+    generic_upvote_and_downvote,
+    generic_user_links
 )
 
 router = APIRouter()
@@ -24,18 +26,16 @@ router = APIRouter()
 # Create get, post, put, and delete endpoints
 generic_export(router, crud.guide, TargetTypeEnum.guide)
 generic_get(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
-generic_post(
-    router, crud.guide, TargetTypeEnum.guide, schemas.Guide, schemas.GuideCreate
-)
-generic_put(
-    router, crud.guide, TargetTypeEnum.guide, schemas.Guide, schemas.GuideUpdate
-)
+generic_post(router, crud.guide, TargetTypeEnum.guide, schemas.Guide, schemas.GuideCreate)
+generic_put(router, crud.guide, TargetTypeEnum.guide, schemas.Guide, schemas.GuideUpdate)
 generic_delete(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_undelete(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_entries(router, TargetTypeEnum.guide)
 generic_entities(router, TargetTypeEnum.guide)
 generic_history(router, crud.guide, TargetTypeEnum.guide)
 generic_search(router, crud.guide, TargetTypeEnum.guide, schemas.GuideSearch, schemas.Guide)
+generic_upvote_and_downvote(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
+generic_user_links(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 
 
 @router.get(

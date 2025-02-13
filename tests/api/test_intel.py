@@ -18,7 +18,7 @@ from tests.utils.promotion import promote_intel_to_product
 
 def test_get_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username)
+    intel = create_random_intel(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/intel/{intel.id}",
@@ -77,7 +77,7 @@ def test_create_intel(client: TestClient, normal_user_token_headers: dict, db: S
 
 def test_update_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -115,7 +115,7 @@ def test_update_intel(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_delete_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/intel/{intel.id}",
@@ -151,7 +151,7 @@ def test_delete_intel(client: TestClient, superuser_token_headers: dict, normal_
 
 def test_undelete_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/intel/{intel.id}",
@@ -194,8 +194,8 @@ def test_undelete_intel(client: TestClient, superuser_token_headers: dict, norma
 
 def test_entries_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.intel, target_id=intel.id, entry_class=EntryClassEnum.entry)
+    intel = create_random_intel(db, faker, owner, False)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.intel, target_id=intel.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/intel/{intel.id}/entry",
@@ -231,7 +231,7 @@ def test_entries_intel(client: TestClient, superuser_token_headers: dict, normal
 
 def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
     tag = create_random_tag(db, faker)
 
     r = client.post(
@@ -289,7 +289,7 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
 
 def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -347,7 +347,7 @@ def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: 
 
 def test_entities_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.intel, intel.id)
 
     r = client.get(
@@ -384,7 +384,7 @@ def test_entities_intel(client: TestClient, superuser_token_headers: dict, norma
 
 def test_history_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, owner.username, False)
+    intel = create_random_intel(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -430,7 +430,7 @@ def test_search_intel(client: TestClient, superuser_token_headers: dict, normal_
 
     intels = []
     for _ in range(5):
-        intels.append(create_random_intel(db, faker, owner.username, False))
+        intels.append(create_random_intel(db, faker, owner, False))
 
     random_intel = random.choice(intels)
 

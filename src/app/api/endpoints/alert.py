@@ -16,23 +16,25 @@ from .generic import (
     generic_post,
     generic_undelete,
     generic_history,
-    generic_search
+    generic_search,
+    generic_upvote_and_downvote,
 )
 
 router = APIRouter()
-description, examples = create_schema_details(schemas.AlertUpdate)
 
 # Create get, post, put, and delete endpoints
 generic_get(router, crud.alert, TargetTypeEnum.alert, schemas.Alert)
-generic_post(
-    router, crud.alert, TargetTypeEnum.alert, schemas.Alert, schemas.AlertCreate
-)
+generic_post(router, crud.alert, TargetTypeEnum.alert, schemas.Alert, schemas.AlertCreate)
 generic_delete(router, crud.alert, TargetTypeEnum.alert, schemas.Alert)
 generic_undelete(router, crud.alert, TargetTypeEnum.alert, schemas.Alert)
 generic_entries(router, TargetTypeEnum.alert)
 generic_entities(router, TargetTypeEnum.alert)
 generic_search(router, crud.alert, TargetTypeEnum.alert, schemas.AlertSearch, schemas.Alert)
 generic_history(router, crud.alert, TargetTypeEnum.alert)
+generic_upvote_and_downvote(router, crud.alert, TargetTypeEnum.alert, schemas.Alert)
+
+
+description, examples = create_schema_details(schemas.AlertUpdate)
 
 
 # Custom PUT so that you can modify alerts if you have access to the alertgroup
@@ -71,9 +73,7 @@ def update_alert(
         raise HTTPException(422, f"Validation error: {e}")
 
     try:
-        updated = crud.alert.update(
-            db_session=db, db_obj=_obj, obj_in=obj, audit_logger=audit_logger
-        )
+        updated = crud.alert.update(db, _obj, obj, audit_logger)
     except ValueError as e:
         raise HTTPException(422, f"Error when updating alert: {e}")
 

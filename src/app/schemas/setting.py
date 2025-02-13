@@ -3,6 +3,8 @@ from pydantic import BaseModel, EmailStr, ConfigDict, Field
 from typing import Annotated
 
 from app.enums import AuthTypeEnum, StorageProviderEnum
+from app.object_storage.base import BaseStorageProvider
+from app.object_storage import storage_provider_classes
 
 
 class SettingsBase(BaseModel):
@@ -53,12 +55,12 @@ class AuthSettings(AuthSettingsBase):
 
 class AuthHelp(BaseModel):
     config_name_pretty: Annotated[dict[AuthTypeEnum, dict[str, str]], Field(..., examples=[{a.value: {"string": "string"}} for a in list(AuthTypeEnum)])]
-    config_help: Annotated[dict[AuthTypeEnum, dict[str, str]], Field(..., examples=[{a.value: {"string": "string"}} for a in list(AuthTypeEnum)])]
+    config_help: Annotated[dict[AuthTypeEnum, dict[str, str]], Field(..., examples=[])]
 
 
 class StorageProviderSettingsBase(BaseModel):
     provider: Annotated[StorageProviderEnum, Field(..., examples=[a.value for a in list(StorageProviderEnum)])]
-    config: Annotated[dict | None, Field(...)] = {}
+    config: Annotated[dict | None, Field(..., examples=[storage_provider_classes.get(a, BaseStorageProvider).config_help for a in list(StorageProviderEnum)])] = {}
     enabled: Annotated[bool | None, Field(...)] = False
 
 
@@ -68,7 +70,7 @@ class StorageProviderSettingsCreate(StorageProviderSettingsBase):
 
 class StorageProviderSettingsUpdate(StorageProviderSettingsBase):
     provider: Annotated[StorageProviderEnum | None, Field(..., examples=[a.value for a in list(StorageProviderEnum)])] = None
-    config: Annotated[dict | None, Field(...)] = None
+    config: Annotated[dict | None, Field(..., examples=[storage_provider_classes.get(a, BaseStorageProvider).config_help for a in list(StorageProviderEnum)])] = None
     enabled: Annotated[bool | None, Field(...)] = None
 
 
@@ -81,5 +83,5 @@ class StorageProviderSettings(StorageProviderSettingsBase):
 
 
 class StorageProviderHelp(BaseModel):
-    config_name_pretty: Annotated[dict[StorageProviderEnum, dict[str, str]], Field(..., examples=[{a.value: {"string": "string"}} for a in list(AuthTypeEnum)])]
-    config_help: Annotated[dict[StorageProviderEnum, dict[str, str]], Field(..., examples=[{a.value: {"string": "string"}} for a in list(AuthTypeEnum)])]
+    config_name_pretty: Annotated[dict[StorageProviderEnum, dict[str, str]], Field(..., examples=[storage_provider_classes.get(a, BaseStorageProvider).config_name_pretty for a in list(StorageProviderEnum)])]
+    config_help: Annotated[dict[StorageProviderEnum, dict[str, str]], Field(..., examples=[storage_provider_classes.get(a, BaseStorageProvider).config_help for a in list(StorageProviderEnum)])]

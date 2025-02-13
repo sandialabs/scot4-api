@@ -1,11 +1,11 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import Column, func, select, types, and_
+from sqlalchemy import Column, func, select, types, and_, bindparam, exists
 from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import (
-    column_property, foreign, relationship, backref, synonym, remote
+    column_property, foreign, relationship, backref, synonym, remote, object_session
 )
-from app.enums import TargetTypeEnum
+from app.enums import TargetTypeEnum, PopularityMetricEnum, UserLinkEnum
 
 # BUG server-default https://github.com/sqlalchemy/alembic/issues/768
 
@@ -318,3 +318,69 @@ class PromotionToMixin(object):
                             & (Promotion.p0_type == self.target_type_enum()),
                             overlaps="promoted_to_targets",
                             cascade="all", lazy="selectin", uselist=True)
+
+
+class PopularityMixin(object):
+    """
+    Inherit from this mixin to indicate that this object can have a popularity. Adds
+    a popularity_count which is the difference between upvotes and downvotes.
+    """
+
+    @declared_attr
+    def popularity_voted(self):
+        from app.models.popularity import Popularity
+        return column_property(
+            select(Popularity.metric_type)
+            .where(
+                (Popularity.target_type == self.target_type_enum())
+                & (Popularity.target_id == self.id)
+                & (Popularity.owner_id == bindparam("user_id", required=False))
+            ).scalar_subquery()
+        )
+
+    @declared_attr
+    def popularity_count(self):
+        from app.models.popularity import Popularity
+
+        left_subquery = select(func.count(Popularity.id)).where(
+            (Popularity.target_type == self.target_type_enum())
+            & (Popularity.target_id == self.id)
+            & (Popularity.metric_type == PopularityMetricEnum.upvote)
+        ).scalar_subquery()
+        right_subquery = select(func.count(Popularity.id)).where(
+            (Popularity.target_type == self.target_type_enum())
+            & (Popularity.target_id == self.id)
+            & (Popularity.metric_type == PopularityMetricEnum.downvote)
+        ).scalar_subquery()
+
+        return column_property(left_subquery - right_subquery)
+
+
+class UserLinksMixin(object):
+    """
+    Inherit from this mixin to indicate that this object can have a user list. Adds
+    a favorite which is the value of the UserLinksEnum from the UserLinks table.
+    """
+    @declared_attr
+    def favorite(self):
+        from app.models.user_links import UserLinks
+        return column_property(
+            exists().where(
+                (UserLinks.target_type == self.target_type_enum())
+                & (UserLinks.target_id == self.id)
+                & (UserLinks.link_type == UserLinkEnum.favorite)
+                & (UserLinks.owner_id == bindparam("user_id", required=False))
+            ).correlate_except(UserLinks)
+        )
+
+    @declared_attr
+    def subscribed(self):
+        from app.models.user_links import UserLinks
+        return column_property(
+            exists().where(
+                (UserLinks.target_type == self.target_type_enum())
+                & (UserLinks.target_id == self.id)
+                & (UserLinks.link_type == UserLinkEnum.subscription)
+                & (UserLinks.owner_id == bindparam("user_id", required=False))
+            ).correlate_except(UserLinks)
+        )

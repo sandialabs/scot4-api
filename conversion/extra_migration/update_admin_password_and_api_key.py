@@ -8,7 +8,7 @@ def main(db_session):
     new_admin_apikey = os.getenv('SCOT_ADMIN_APIKEY')
     db_obj = db_session.query(User).filter(User.username=='scot-admin').one_or_none()
     if new_admin_pw:
-        update_dict={'username':'scot-admin', 'password':os.environ['SCOT_ADMIN_PASSWORD'])
+        update_dict={'username':'scot-admin', 'password':os.environ['SCOT_ADMIN_PASSWORD']}
         crud.user.update(db_session=db_session, db_obj=db_obj, obj_in=update_dict)
     else:
         print('SCOT_ADMIN_PASSWORD not set, not resetting scot-admin password')

@@ -16,7 +16,9 @@ from .generic import (
     generic_history,
     generic_files,
     generic_search,
-    generic_export
+    generic_export,
+    generic_upvote_and_downvote,
+    generic_user_links
 )
 
 router = APIRouter()
@@ -24,12 +26,8 @@ router = APIRouter()
 # Create get, post, put, delete, entries, tag, and source endpoints
 generic_export(router, crud.intel, TargetTypeEnum.intel)
 generic_get(router, crud.intel, TargetTypeEnum.intel, schemas.Intel)
-generic_post(
-    router, crud.intel, TargetTypeEnum.intel, schemas.Intel, schemas.IntelCreate
-)
-generic_put(
-    router, crud.intel, TargetTypeEnum.intel, schemas.Intel, schemas.IntelUpdate
-)
+generic_post(router, crud.intel, TargetTypeEnum.intel, schemas.Intel, schemas.IntelCreate)
+generic_put(router, crud.intel, TargetTypeEnum.intel, schemas.Intel, schemas.IntelUpdate)
 generic_delete(router, crud.intel, TargetTypeEnum.intel, schemas.Intel)
 generic_undelete(router, crud.intel, TargetTypeEnum.intel, schemas.Intel)
 generic_entries(router, TargetTypeEnum.intel)
@@ -39,3 +37,5 @@ generic_entities(router, TargetTypeEnum.intel)
 generic_history(router, crud.intel, TargetTypeEnum.intel)
 generic_files(router, TargetTypeEnum.intel)
 generic_search(router, crud.intel, TargetTypeEnum.intel, schemas.IntelSearch, schemas.Intel)
+generic_upvote_and_downvote(router, crud.intel, TargetTypeEnum.intel, schemas.Intel)
+generic_user_links(router, crud.intel, TargetTypeEnum.intel, schemas.Intel)

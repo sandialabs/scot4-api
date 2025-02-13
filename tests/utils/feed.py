@@ -1,7 +1,7 @@
 from faker import Faker
 from sqlalchemy.orm import Session
 
-from app import crud
+from app import crud, schemas
 from app.schemas.feed import FeedCreate
 
 try:
@@ -11,13 +11,13 @@ except ImportError:
     from user import create_random_user
 
 
-def create_random_feed(db: Session, faker: Faker, owner: str | None = None):
+def create_random_feed(db: Session, faker: Faker, owner: schemas.User | None = None):
     if owner is None:
-        owner = create_random_user(db, faker).username
+        owner = create_random_user(db, faker)
 
     feed_create = FeedCreate(
         name=faker.word(),
-        owner=owner,
+        owner=owner.username,
         type=faker.word(),
         uri=faker.url()
     )

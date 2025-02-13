@@ -1,7 +1,7 @@
 import enum
 
 from typing import Any
-
+from datetime import datetime
 from sqlalchemy import inspect
 from sqlalchemy.orm import as_declarative, declared_attr
 
@@ -74,6 +74,8 @@ class Base:
                             result[key] = processed_attr
             elif isinstance(item, enum.Enum) and enum_value:
                 result = item.value
+            elif isinstance(item, datetime):
+                result = item.isoformat()
             # Everything else
             else:
                 result = item
@@ -116,3 +118,15 @@ class Base:
         else:
             # Use table name directly if not mapped
             return TargetTypeEnum(cls.__tablename__)
+
+    @classmethod
+    def get_model_by_target_type(cls, target_type: TargetTypeEnum):
+        """
+        Gets a model from a target type enum
+        """
+        table_name = list(cls.target_type_mapping.keys())[list(cls.target_type_mapping.values()).index(target_type)]
+        if table_name is not None:
+            registry_instance = getattr(cls, "registry")
+            for mapper_ in registry_instance.mappers:
+                if (mapper_.class_.__tablename__ == table_name):
+                    return mapper_.class_

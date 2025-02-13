@@ -16,7 +16,7 @@ from tests.utils.entity import create_random_entity
 
 def test_get_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
+    feed = create_random_feed(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/feed/{feed.id}",
@@ -72,7 +72,7 @@ def test_create_feed(client: TestClient, normal_user_token_headers: dict, faker:
 
 def test_update_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
+    feed = create_random_feed(db, faker, owner)
     data = {
         "status": faker.word()
     }
@@ -90,7 +90,7 @@ def test_update_feed(client: TestClient, normal_user_token_headers: dict, superu
     assert feed_data["status"] != feed.status
 
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
+    feed = create_random_feed(db, faker, owner)
     data = {
         "status": faker.word()
     }
@@ -121,7 +121,7 @@ def test_update_feed(client: TestClient, normal_user_token_headers: dict, superu
 
 def test_delete_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
+    feed = create_random_feed(db, faker, owner)
 
     r = client.delete(
         f"{settings.API_V1_STR}/feed/{feed.id}",
@@ -147,7 +147,7 @@ def test_delete_feed(client: TestClient, normal_user_token_headers: dict, superu
 
 def test_feed_history(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
+    feed = create_random_feed(db, faker, owner)
 
     data = {
         "status": faker.word()
@@ -191,8 +191,8 @@ def test_feed_history(client: TestClient, normal_user_token_headers: dict, super
 
 def test_feed_entries(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.feed, target_id=feed.id, entry_class=EntryClassEnum.entry)
+    feed = create_random_feed(db, faker, owner)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.feed, target_id=feed.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/feed/{feed.id}/entry",
@@ -228,7 +228,7 @@ def test_feed_entries(client: TestClient, normal_user_token_headers: dict, super
 
 def test_feed_entities(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
-    feed = create_random_feed(db, faker, owner.username)
+    feed = create_random_feed(db, faker, owner)
     entity = create_random_entity(db, faker, TargetTypeEnum.feed, feed.id)
 
     r = client.get(
@@ -266,7 +266,7 @@ def test_search_feeds(client: TestClient, normal_user_token_headers: dict, super
     owner = create_random_user(db, faker)
     feeds = []
     for _ in range(5):
-        feeds.append(create_random_feed(db, faker, owner.username))
+        feeds.append(create_random_feed(db, faker, owner))
     random_feed = random.choice(feeds)
 
     r = client.get(

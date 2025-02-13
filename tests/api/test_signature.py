@@ -19,7 +19,7 @@ from tests.utils.link import create_link
 
 def test_get_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}",
@@ -79,7 +79,7 @@ def test_create_signature(client: TestClient, normal_user_token_headers: dict, d
 
 def test_update_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     data = {
         "type": faker.word()
@@ -124,7 +124,7 @@ def test_update_signature(client: TestClient, superuser_token_headers: dict, nor
 
 def test_delete_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     r = client.delete(
         f"{settings.API_V1_STR}/signature/{signature.id}",
@@ -160,7 +160,7 @@ def test_delete_signature(client: TestClient, superuser_token_headers: dict, nor
 
 def test_undelete_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     r = client.delete(
         f"{settings.API_V1_STR}/signature/{signature.id}",
@@ -196,8 +196,8 @@ def test_undelete_signature(client: TestClient, superuser_token_headers: dict, n
 
 def test_entries_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
-    entry = create_random_entry(db, faker, owner.username, target_type=TargetTypeEnum.signature, target_id=signature.id, entry_class=EntryClassEnum.entry)
+    signature = create_random_signature(db, faker, owner)
+    entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.signature, target_id=signature.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}/entry",
@@ -233,7 +233,7 @@ def test_entries_signature(client: TestClient, superuser_token_headers: dict, no
 
 def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     tag = create_random_tag(db, faker)
 
     r = client.post(
@@ -305,7 +305,7 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
 
 def test_source_add_remove_signature(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -377,7 +377,7 @@ def test_source_add_remove_signature(client: TestClient, normal_user_token_heade
 
 def test_entities_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     entity = create_random_entity(db, faker, TargetTypeEnum.signature, signature.id)
 
     r = client.get(
@@ -411,7 +411,7 @@ def test_entities_signature(client: TestClient, superuser_token_headers: dict, n
 
 def test_history_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
 
     data = {
         "description": faker.sentence()
@@ -456,7 +456,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
 
     signatures = []
     for _ in range(5):
-        signatures.append(create_random_signature(db, faker, owner.username))
+        signatures.append(create_random_signature(db, faker, owner))
 
     random_signature = random.choice(signatures)
 
@@ -651,7 +651,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     # test with special characters should search normally
     name = r"(AAQ) Process [Executed] out of <drive>:\\ProgramData\\"
     name2 = "(AAQ) Process [Executed] out of <drive>:\\ProgramData\\"
-    signature = create_random_signature(db, faker,  owner.username, name)
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
@@ -662,7 +662,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
 
     name = r"((AAQ) Process [Executed] out of <drive>:\\ProgramData\\)"
     name2 = "((AAQ) Process [Executed] out of <drive>:\\ProgramData\\)"
-    signature = create_random_signature(db, faker,  owner.username, name)
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
@@ -674,7 +674,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     # test with a list, even though its bad will return something
     name = r"[(AAQ) Process [Executed] out of <drive>:\\ProgramData\\]"
     name2 = "[(AAQ) Process [Executed] out of <drive>:\\ProgramData\\]"
-    signature = create_random_signature(db, faker,  owner.username, name)
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
@@ -696,7 +696,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     # test with bad negation with no escape characters shouldn't return anything
     name = r"!(AAQ) Process [Executed] out of <drive>:\\ProgramData\\"
     name2 = "!(AAQ) Process [Executed] out of <drive>:\\ProgramData\\"
-    signature = create_random_signature(db, faker,  owner.username, name)
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
@@ -707,7 +707,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
 
     # test with bad negation with escape characters should return something
     name2 = "\\!(AAQ) Process [Executed] out of <drive>:\\ProgramData\\"
-    signature = create_random_signature(db, faker,  owner.username, name)
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
@@ -719,7 +719,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     # test with '+' special character
     name = r"(AAQ) Process Executed + out of <drive>:\\ProgramData\\"
     name2 = "(AAQ) Process Executed %2B out of <drive>:\\ProgramData\\"
-    signature = create_random_signature(db, faker,  owner.username, name)
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
@@ -728,9 +728,10 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     assert r.status_code == 200
     assert any(i["id"] == signature.id for i in r.json()["result"])
 
+
 def test_sigbodies_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     sigbody = create_random_sigbody(db, faker, signature.id)
 
     r = client.get(
@@ -762,7 +763,7 @@ def test_sigbodies_signature(client: TestClient, superuser_token_headers: dict, 
 
 def test_links_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    signature = create_random_signature(db, faker, owner.username)
+    signature = create_random_signature(db, faker, owner)
     link = create_link(db, faker, TargetTypeEnum.alert, None, TargetTypeEnum.signature, signature.id)
 
     r = client.get(

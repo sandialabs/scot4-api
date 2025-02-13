@@ -19,7 +19,7 @@ from tests.utils.promotion import promote_intel_to_product
 
 def test_get_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    product = create_random_product(db, faker, user.username, False)
+    product = create_random_product(db, faker, user, False)
 
     r = client.get(
         f"{settings.API_V1_STR}/product/{product.id}",
@@ -76,7 +76,7 @@ def test_create_product(client: TestClient, normal_user_token_headers: dict, db:
 
 def test_update_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    product = create_random_product(db, faker, user.username, False)
+    product = create_random_product(db, faker, user, False)
 
     data = {
         "subject": faker.sentence()
@@ -121,7 +121,7 @@ def test_update_product(client: TestClient, superuser_token_headers: dict, norma
 
 def test_delete_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    product = create_random_product(db, faker, user.username, False)
+    product = create_random_product(db, faker, user, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/product/{product.id}",
@@ -157,7 +157,7 @@ def test_delete_product(client: TestClient, superuser_token_headers: dict, norma
 
 def test_undelete_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    product = create_random_product(db, faker, user.username, False)
+    product = create_random_product(db, faker, user, False)
 
     r = client.delete(
         f"{settings.API_V1_STR}/product/{product.id}",
@@ -193,8 +193,8 @@ def test_undelete_product(client: TestClient, superuser_token_headers: dict, nor
 
 def test_entries_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    product = create_random_product(db, faker, user.username, False)
-    entry = create_random_entry(db, faker, user.username, target_type=TargetTypeEnum.product, target_id=product.id, entry_class=EntryClassEnum.entry)
+    product = create_random_product(db, faker, user, False)
+    entry = create_random_entry(db, faker, user, target_type=TargetTypeEnum.product, target_id=product.id, entry_class=EntryClassEnum.entry)
 
     r = client.get(
         f"{settings.API_V1_STR}/product/{product.id}/entry",
@@ -230,7 +230,7 @@ def test_entries_product(client: TestClient, superuser_token_headers: dict, norm
 
 def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    product = create_random_product(db, faker, owner.username, False)
+    product = create_random_product(db, faker, owner, False)
     tag = create_random_tag(db, faker)
 
     r = client.post(
@@ -302,7 +302,7 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
 
 def test_source_add_remove_product(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    product = create_random_product(db, faker, owner.username, False)
+    product = create_random_product(db, faker, owner, False)
     source = create_random_source(db, faker)
 
     r = client.post(
@@ -374,7 +374,7 @@ def test_source_add_remove_product(client: TestClient, normal_user_token_headers
 
 def test_entities_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    product = create_random_product(db, faker, owner.username, False)
+    product = create_random_product(db, faker, owner, False)
     entity = create_random_entity(db, faker, TargetTypeEnum.product, product.id)
 
     r = client.get(
@@ -411,7 +411,7 @@ def test_entities_product(client: TestClient, superuser_token_headers: dict, nor
 
 def test_history_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
-    product = create_random_product(db, faker, owner.username, False)
+    product = create_random_product(db, faker, owner, False)
 
     data = {
         "subject": faker.sentence()
@@ -457,7 +457,7 @@ def test_search_product(client: TestClient, superuser_token_headers: dict, norma
 
     products = []
     for _ in range(5):
-        products.append(create_random_product(db, faker, owner.username, False))
+        products.append(create_random_product(db, faker, owner, False))
 
     random_product = random.choice(products)
 

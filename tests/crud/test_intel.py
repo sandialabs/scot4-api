@@ -155,7 +155,7 @@ def test_query_with_filters_intel(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     intels = []
     for _ in range(3):
-        intels.append(create_random_intel(db, faker, owner.username, create_extras=False))
+        intels.append(create_random_intel(db, faker, owner, create_extras=False))
 
     random_intel = random.choice(intels)
 
@@ -337,7 +337,7 @@ def test_get_history_intel(db: Session, faker: Faker) -> None:
 
 def test_undelete_intel(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    intel = create_random_intel(db, faker, user.username, create_extras=False)
+    intel = create_random_intel(db, faker, user, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.intel.remove(db, _id=intel.id, audit_logger=audit_logger)

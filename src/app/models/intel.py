@@ -8,11 +8,13 @@ from app.models.mixins import (
     SourceMixin,
     TagMixin,
     TimestampMixin,
-    PromotionToMixin
+    PromotionToMixin,
+    PopularityMixin,
+    UserLinksMixin
 )
 
 
-class Intel(Base, TimestampMixin, FileCountMixin, EntryMixin, TagMixin, SourceMixin, PromotionToMixin):
+class Intel(Base, TimestampMixin, FileCountMixin, EntryMixin, TagMixin, SourceMixin, PromotionToMixin, PopularityMixin, UserLinksMixin):
     __tablename__ = "intels"
 
     id = Column("intel_id", Integer, primary_key=True)

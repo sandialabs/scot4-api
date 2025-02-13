@@ -7,6 +7,8 @@ from app.enums import TlpEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class SignatureBase(BaseModel):
@@ -31,7 +33,7 @@ class SignatureUpdate(SignatureBase):
     owner: Annotated[str | None, Field(...)] = None
 
 
-class Signature(SignatureBase):
+class Signature(SignatureBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     modified: Annotated[datetime | None, Field(...)] = datetime.now()
     created: Annotated[datetime | None, Field(...)] = datetime.now()

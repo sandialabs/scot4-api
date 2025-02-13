@@ -3,10 +3,10 @@ from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
 from app.enums import TlpEnum
-from app.models.mixins import TimestampMixin, UTCDateTime, EntryMixin
+from app.models.mixins import TimestampMixin, UTCDateTime, EntryMixin, PopularityMixin
 
 
-class Feed(Base, TimestampMixin, EntryMixin):
+class Feed(Base, TimestampMixin, EntryMixin, PopularityMixin):
     __tablename__ = "feeds"
 
     id = Column("feed_id", Integer, primary_key=True)

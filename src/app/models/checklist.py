@@ -4,10 +4,10 @@ from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
 from app.enums import TlpEnum
-from app.models.mixins import TagMixin, TimestampMixin
+from app.models.mixins import TagMixin, TimestampMixin, PopularityMixin, UserLinksMixin
 
 
-class Checklist(Base, TimestampMixin, TagMixin):
+class Checklist(Base, TimestampMixin, TagMixin, PopularityMixin, UserLinksMixin):
     __tablename__ = "checklists"
 
     id = Column("checklist_id", Integer, primary_key=True)

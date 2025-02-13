@@ -271,6 +271,10 @@ CREATE TABLE `auth_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
+LOCK TABLES `auth_settings` WRITE;
+INSERT INTO `auth_settings` VALUES (1, 'local', '{}', 1, '2023-06-06 16:53:27','2023-06-06 16:53:27');
+UNLOCK TABLES;
+
 --
 -- Table structure for table `auth_storage`
 --
@@ -840,9 +844,9 @@ LOCK TABLES `links` WRITE;
 /*!40000 ALTER TABLE `links` ENABLE KEYS */;
 UNLOCK TABLES;
 
----
---- Table structure for table `metrics`
----
+--
+-- Table structure for table `metrics`
+--
 
 DROP TABLE IF EXISTS `metrics`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;

@@ -11,6 +11,8 @@ from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.utils import sanitize_html
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class EntryBase(BaseModel):
@@ -64,7 +66,7 @@ class EntryUpdate(EntryBase):
 
 
 # pretty
-class Entry(EntryBase):
+class Entry(EntryBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

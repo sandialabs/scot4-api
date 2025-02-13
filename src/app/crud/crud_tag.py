@@ -8,6 +8,7 @@ from app.enums import TargetTypeEnum, PermissionEnum
 from app.models.link import Link
 from app.models.tag import Tag
 from app.models.role import Role
+from app.models.user import User
 from app.schemas.appearance import AppearanceCreate
 from app.schemas.tag import TagCreate, TagUpdate
 

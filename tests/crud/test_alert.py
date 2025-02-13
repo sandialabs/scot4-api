@@ -80,7 +80,7 @@ def test_query_with_filters_alert(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     alert = []
     for _ in range(5):
-        alert.append(create_random_alert(db, faker, owner.username))
+        alert.append(create_random_alert(db, faker, owner))
 
     random_alert = random.choice(alert)
 

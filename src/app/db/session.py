@@ -2,7 +2,7 @@ import time
 import logging
 
 from sqlalchemy import create_engine, event
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, ORMExecuteState
 from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
@@ -31,23 +31,15 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 
-DB_Subscriber = {}
-
-
-def publish(action):
-    for key in DB_Subscriber.keys():
-        DB_Subscriber[key].append({"action": action})
-
-
-@event.listens_for(SessionLocal, "before_commit")
-def new_item_catch(session: Session):
-    if session.new:
-        publish({"new": session.new})
-
-
 @event.listens_for(SessionLocal, "do_orm_execute")
-def statement_catch(session: Session):
-    publish({'statement': str(session.statement)})
+def statement_catch(state: ORMExecuteState):
+    session_vars = {}
+    if state.session.info:
+        session_vars.update(state.session.info)
+    # Bug in sqlalchemy?
+    if state.parameters is None:
+        state.parameters = {}
+    return state.invoke_statement(params=session_vars)
 
 
 logging.basicConfig()

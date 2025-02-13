@@ -8,6 +8,8 @@ from app.enums import StatusEnum, TlpEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
+from app.schemas.user_links import FavoriteLink
 
 
 class IntelBase(BaseModel):
@@ -25,7 +27,7 @@ class IntelUpdate(IntelBase):
     owner: Annotated[str | None, Field(...)] = None
 
 
-class Intel(IntelBase):
+class Intel(IntelBase, PopularityVoted, FavoriteLink):
     id: Annotated[int, Field(...)]
     created: Annotated[datetime | None, Field(...)] = datetime.now()
     modified: Annotated[datetime | None, Field(...)] = datetime.now()

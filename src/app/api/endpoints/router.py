@@ -26,6 +26,7 @@ from app.api.endpoints import (
     login,
     metric,
     permissions,
+    popularity,
     product,
     promotion,
     role,
@@ -36,6 +37,7 @@ from app.api.endpoints import (
     stat,
     tag,
     threat_model_items,
+    user_links,
     users,
     search,
     notification,
@@ -61,6 +63,7 @@ api_router.include_router(incident.router, prefix='/incident', tags=['incident']
 api_router.include_router(signature.router, prefix='/signature', tags=['signature'])
 api_router.include_router(event.router, prefix='/event', tags=['event'])
 api_router.include_router(permissions.router, prefix='/permissions', tags=['permissions'])
+api_router.include_router(popularity.router, prefix='/popularity', tags=['popularity'])
 api_router.include_router(apikey.router, prefix='/apikey', tags=['apikey'])
 api_router.include_router(appearance.router, prefix='/appearance', tags=['appearance'])
 api_router.include_router(audit.router, prefix='/audit', tags=['audit'])
@@ -75,6 +78,7 @@ api_router.include_router(dispatch.router, prefix='/dispatch', tags=['dispatch']
 api_router.include_router(feed.router, prefix='/feed', tags=['feed'])
 api_router.include_router(source.router, prefix='/source', tags=['source'])
 api_router.include_router(tag.router, prefix='/tag', tags=['tag'])
+api_router.include_router(user_links.router, prefix='/user_links', tags=['user_links'])
 api_router.include_router(handler.router, prefix='/handler', tags=['handler'])
 api_router.include_router(file.router, prefix='/file', tags=['file'])
 api_router.include_router(promotion.router, prefix='/promotion', tags=['promotion'])

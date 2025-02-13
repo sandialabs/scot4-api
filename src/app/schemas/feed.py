@@ -6,6 +6,7 @@ from dateutil import parser
 from app.core.config import settings
 from app.enums import TlpEnum
 from app.schemas.response import SearchBase
+from app.schemas.popularity import PopularityVoted
 
 
 class FeedBase(BaseModel):
@@ -37,7 +38,7 @@ class FeedUpdate(FeedBase):
 
 
 # pretty
-class Feed(FeedBase):
+class Feed(FeedBase, PopularityVoted):
     id: Annotated[int, Field(...)]
     last_article: Annotated[datetime, Field(...)]
     last_attempt: Annotated[datetime, Field(...)]

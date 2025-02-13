@@ -114,14 +114,13 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
         if obj_in.subject is not None:
             looking_for = re.sub(r"\([^()]*\)", "", obj_in.subject)
             looking_for = re.sub("Splunk Alert:", "", looking_for)
-            if "*" in looking_for or "_" in looking_for:
-                looking_for = looking_for.strip().replace("\\", "\\\\")
+            looking_for = escape_sql_like(looking_for.strip())
+            if "*" in looking_for or "?" in looking_for:
                 looking_for = (
-                    looking_for.replace("_", "__").replace("*", "%").replace("?", "_")
+                    looking_for.replace("*", "%").replace("?", "_")
                 )
             else:
-                looking_for = looking_for.strip()
-                looking_for = "%{0}%".format(escape_sql_like(looking_for))
+                looking_for = "%{0}%".format(looking_for)
             sigs_to_link_query = db_session.query(Signature).filter(
                 Signature.name.ilike(looking_for)
             )
@@ -137,10 +136,6 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
                         context=f"Automatically linked from alertgroup subject matching: {looking_for}",
                     ),
                 )
-        db_session.refresh(db_obj)
-        # Log
-        if audit_logger is not None:
-            audit_logger.log("create", db_obj)
         # Finally, add tags and sources if provided
         if obj_in.tags:
             for t in obj_in.tags:
@@ -150,6 +145,10 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
             for s in obj_in.sources:
                 source.assign_by_name(db_session, s, TargetTypeEnum.alertgroup,
                     db_obj.id, create=True, audit_logger=audit_logger)
+        db_session.refresh(db_obj)
+        # Log
+        if audit_logger is not None:
+            audit_logger.log("create", db_obj)
         return db_obj
 
     def create_with_permissions(
@@ -290,7 +289,7 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
         alertgroup_id: int,
         column_name: str,
         values: Dict[str, str] = {},
-        audit_logger=None
+        audit_logger=None,
     ):
         alertgroup = self.get(db_session, alertgroup_id)
         if not alertgroup:
@@ -488,7 +487,7 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
                     db_session,
                     alert_id,
                     flair_result=alert_results,
-                    audit_logger=audit_logger,
+                    audit_logger=audit_logger
                 )
 
                 # Also link each entity to the alertgroup

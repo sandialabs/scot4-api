@@ -17,8 +17,8 @@ from tests.utils.roles import create_random_role
 
 def test_get_audit(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert_group = create_random_alertgroup_no_sig(db, faker, user.username, False)
-    audit = create_audit(db, faker, user.username, alert_group, TargetTypeEnum.alertgroup)
+    alert_group = create_random_alertgroup_no_sig(db, faker, user, False)
+    audit = create_audit(db, faker, user, alert_group, TargetTypeEnum.alertgroup)
 
     db_obj = crud.audit.get(db, audit.id)
 
@@ -31,10 +31,10 @@ def test_get_audit(db: Session, faker: Faker) -> None:
 
 def test_get_multi_audit(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert_group = create_random_alertgroup_no_sig(db, faker, user.username, False)
+    alert_group = create_random_alertgroup_no_sig(db, faker, user, False)
     audits = []
     for _ in range(5):
-        audits.append(create_audit(db, faker, user.username, alert_group, TargetTypeEnum.alertgroup))
+        audits.append(create_audit(db, faker, user, alert_group, TargetTypeEnum.alertgroup))
 
     db_objs = crud.audit.get_multi(db)
     old_length = len(db_objs)
@@ -78,8 +78,8 @@ def test_create_audit(db: Session, faker: Faker) -> None:
 
 def test_update_audit(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert_group = create_random_alertgroup_no_sig(db, faker, user.username, False)
-    audit = create_audit(db, faker, user.username, alert_group, TargetTypeEnum.alertgroup)
+    alert_group = create_random_alertgroup_no_sig(db, faker, user, False)
+    audit = create_audit(db, faker, user, alert_group, TargetTypeEnum.alertgroup)
 
     update = AuditUpdate(
         when_date=faker.iso8601(),
@@ -131,8 +131,8 @@ def test_update_audit(db: Session, faker: Faker) -> None:
 
 def test_remove_audit(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert_group = create_random_alertgroup_no_sig(db, faker, user.username, False)
-    audit = create_audit(db, faker, user.username, alert_group, TargetTypeEnum.alertgroup)
+    alert_group = create_random_alertgroup_no_sig(db, faker, user, False)
+    audit = create_audit(db, faker, user, alert_group, TargetTypeEnum.alertgroup)
     db_obj = crud.audit.remove(db, _id=audit.id)
 
     assert db_obj.id == audit.id
@@ -164,10 +164,10 @@ def test_get_or_create_audit(db: Session, faker: Faker) -> None:
 
 def test_query_with_filters_audit(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert_group = create_random_alertgroup_no_sig(db, faker, user.username, False)
+    alert_group = create_random_alertgroup_no_sig(db, faker, user, False)
     audits = []
     for _ in range(5):
-        audits.append(create_audit(db, faker, user.username, alert_group, TargetTypeEnum.alertgroup))
+        audits.append(create_audit(db, faker, user, alert_group, TargetTypeEnum.alertgroup))
 
     random_audit = random.choice(audits)
 
@@ -329,8 +329,8 @@ def test_get_history_audit(db: Session, faker: Faker) -> None:
 
 def test_undelete_audit(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    alert_group = create_random_alertgroup_no_sig(db, faker, user.username, False)
-    audit = create_audit(db, faker, user.username, alert_group, TargetTypeEnum.alertgroup)
+    alert_group = create_random_alertgroup_no_sig(db, faker, user, False)
+    audit = create_audit(db, faker, user, alert_group, TargetTypeEnum.alertgroup)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.audit.remove(db, _id=audit.id, audit_logger=audit_logger)

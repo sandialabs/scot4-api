@@ -14,6 +14,9 @@ def main(mongo_db=None):
     scot3_links = mongo_db.link.find()
     with tqdm.tqdm(total=scot3_link_count) as pbar:
         for link in scot3_links:
+            if link.get('vertices') is None:
+                pbar.update(1)
+                continue
             if type(link.get('when')) is int:
                 new_link = [ datetime.fromtimestamp(link['when']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(0).astimezone(timezone.utc).replace(tzinfo=None), link['id'], link['vertices'][1]['type'], link['vertices'][1]['id'], link['vertices'][0]['type'], link['vertices'][0]['id']]
             else:

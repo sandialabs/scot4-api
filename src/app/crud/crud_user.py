@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from typing import Any, Union
 from sqlalchemy.orm import Session
 
@@ -139,10 +139,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = self.get_by_username(db_session, username=username)
         # Check if this user has too many failed password attempts
         if user and user.failed_attempts >= settings.MAX_FAILED_PASSWORD_ATTEMPTS:
-            return (
-                "Max password retry attempts exceeded, contact your "
-                "administrator for assistance"
-            )
+            # If a lockout time is set and it has expired, skip lockout
+            if settings.PASSWORD_LOCKOUT_MINUTES is None or (user.last_login_attempt
+                + timedelta(minutes=settings.PASSWORD_LOCKOUT_MINUTES) > datetime.now(timezone.utc)
+            ):
+                if settings.PASSWORD_LOCKOUT_MINUTES is None:
+                    return (
+                        "Max password retry attempts exceeded, contact your "
+                        "administrator for assistance"
+                    )
+                else:
+                    return (
+                        "Max password retry attempts exceeded, contact your "
+                        "administrator for assistance"
+                        " or wait %s minutes to log in"
+                    ) % settings.PASSWORD_LOCKOUT_MINUTES
+            user.last_login_attempt = datetime.now(timezone.utc)
         if allowed_methods is not None:
             auth_methods = [m for m in auth_methods if m.auth in allowed_methods]
         for method in auth_methods:

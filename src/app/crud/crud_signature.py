@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.enums import TargetTypeEnum, PermissionEnum
-from app.models import Event, Signature, Role, Permission, Link
+from app.models import Event, Signature, Role, Permission, Link, User
 from app.schemas.signature import SignatureCreate, SignatureUpdate
 
 
@@ -24,23 +24,17 @@ class CRUDSignature(CRUDBase[Signature, SignatureCreate, SignatureUpdate]):
         self,
         db_session: Session,
         roles: list[Role],
-        required_permission: PermissionEnum = PermissionEnum.read,
+        required_permission: PermissionEnum = PermissionEnum.read
     ):
         """
         Signatures have json fields, and so need a slightly different query
         Note: admin permissions must be checked elsewhere
         """
-        query = (
-            db_session.query(self.model)
-            .join(Permission, (self.model.id == Permission.target_id))
-            .filter(((self.model.target_type_enum() == Permission.target_type)
-                     & (required_permission == Permission.permission))
-                    )
-            .filter(Permission.role_id.in_([role.id for role in roles]
-                                           + [settings.EVERYONE_ROLE_ID]))
+        return db_session.query(self.model)\
+            .join(Permission, (self.model.id == Permission.target_id))\
+            .filter(((self.model.target_type_enum() == Permission.target_type) & (required_permission == Permission.permission)))\
+            .filter(Permission.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
             .group_by(self.model.id)  # We can't use DISTINCT with signatures
-        )
-        return query
 
     def retrieve_signature_links(self, db_session: Session, signature_id: int):
         link_query_right = db_session.query(Link).filter(

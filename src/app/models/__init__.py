@@ -24,6 +24,7 @@ from .incident import Incident
 from .intel import Intel
 from .link import Link
 from .metric import Metric
+from .popularity import Popularity
 from .product import Product
 from .promotion import Promotion
 from .remote_flair import RemoteFlair
@@ -35,6 +36,7 @@ from .stat import Stat
 from .storage_settings import StorageSettings
 from .tag import Tag
 from .threat_model_item import ThreatModelItem
+from .user_links import UserLinks
 from .user import User
 from .pivot import Pivot, pivots_to_entity_classes, pivots_to_entity_types
 from .enrichment import Enrichment

@@ -8,6 +8,7 @@ from app.crud.crud_alertgroup import alert_group
 from app.crud.crud_alertgroup_schema import alert_group_schema
 from app.crud.crud_entity import entity as entity_crud
 from app.enums import TargetTypeEnum
+from app.models.user import User
 from app.models.alert import Alert, AlertData
 from app.models.audit import Audit
 from app.schemas.alert import AlertAdd, AlertCreate, AlertUpdate
@@ -28,7 +29,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
         alert_group_id: int,
         skip: int = 0,
         limit: int = 100,
-        audit_logger=None
+        audit_logger=None,
     ) -> list[Alert]:
         result = (
             db_session.query(self.model)
@@ -105,9 +106,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
                              thing_pk=new_alert.alertgroup_id)
         return new_alert
 
-    def update(
-        self, db_session: Session, db_obj: Alert, obj_in: AlertUpdate, audit_logger=None
-    ):
+    def update(self, db_session: Session, db_obj: Alert, obj_in: AlertUpdate, audit_logger=None):
         schema_map = alert_group_schema.get_alertgroup_schema_map(
             db_session, db_obj.alertgroup_id
         )
@@ -154,8 +153,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
             exclude={"data", "data_flaired"}, exclude_unset=True
         )
         # No audit log for super() because we already audit logged this
-        return super().update(db_session, db_obj=db_obj,
-                              obj_in=other_update_data, audit_logger=None)
+        return super().update(db_session, db_obj=db_obj, obj_in=other_update_data, audit_logger=None)
 
     def add_to_alert_group(
         self,

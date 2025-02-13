@@ -13,7 +13,7 @@ from tests.utils.permission import create_random_permission
 def test_grant_permission(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
 
     data = {
         "role_id": role.id,
@@ -101,7 +101,7 @@ def test_grant_permission(client: TestClient, normal_user_token_headers: dict, s
 def test_revoke_permission(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     permission = create_random_permission(db, role, alert)
 
     data = {
@@ -168,7 +168,7 @@ def test_revoke_permission(client: TestClient, normal_user_token_headers: dict, 
 def test_set_permission(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     user = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
 
     data = {
         "target_type": TargetTypeEnum.alert.value,
@@ -221,7 +221,7 @@ def test_get_permission_roles(client: TestClient, normal_user_token_headers: dic
     role1 = create_random_role(db, faker)
     role2 = create_random_role(db, faker)
     user = create_user_with_role(db, [role1, role2], faker)
-    alert = create_random_alert(db, faker, user.username)
+    alert = create_random_alert(db, faker, user)
     permission = create_random_permission(db, [role1, role2], alert)
 
     # Get data
