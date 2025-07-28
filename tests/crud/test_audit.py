@@ -288,27 +288,6 @@ def test_create_with_permissions_audit(db: Session, faker: Faker) -> None:
     assert count == 0
 
 
-def test_create_in_object_audit(db: Session, faker: Faker) -> None:
-    audit = AuditCreate(
-        what="create",
-        when_date=faker.iso8601(),
-        thing_id=faker.pyint(),
-        thing_type=faker.word(),
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.audit.create_in_object(db, obj_in=audit, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.thing_id == audit.thing_id
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_audit(db: Session, faker: Faker) -> None:
     audit = AuditCreate(
         what="create",

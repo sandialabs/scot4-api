@@ -4,13 +4,14 @@ from datetime import datetime
 from typing import Any, Annotated
 
 from pydantic import BaseModel, Json, field_validator, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
 from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.utils import sanitize_html
-from app.schemas.response import SearchBase
+from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
 from app.schemas.user_links import FavoriteLink
 
@@ -24,8 +25,8 @@ class EntryBase(BaseModel):
     entry_class: Annotated[EntryClassEnum, Field(..., examples=[a.value for a in list(EntryClassEnum)])] = EntryClassEnum.entry
 
     entry_data_ver: Annotated[str | None, Field(...)] = None
-    entry_data: Annotated[Json | None, Field(...)] = None
-    parsed: Annotated[bool | None, Field(...)] = False
+    entry_data: Annotated[Json | None, Field(..., examples=[{"html": "Entry text"}])] = None
+    parsed: Annotated[bool, Field(...)] = False
 
     @field_validator("entry_data", mode="before")
     def sanitize(cls, v: Json | dict | list[dict] | None):
@@ -55,23 +56,20 @@ class EntryBase(BaseModel):
 
 
 class EntryCreate(EntryBase):
-    owner: Annotated[str | None, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
+    owner: Annotated[str, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
 
 
 class EntryUpdate(EntryBase):
-    owner: Annotated[str | None, Field(...)] = None
-    target_type: Annotated[TargetTypeEnum | None, Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = TargetTypeEnum.none
-    target_id: Annotated[int | None, Field(...)] = None
-    parsed: Annotated[bool | None, Field(...)] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    target_type: Annotated[TargetTypeEnum, Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = TargetTypeEnum.none
+    target_id: Annotated[int | SkipJsonSchema[None], Field(...)] = None
+    parsed: Annotated[bool | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty
-class Entry(EntryBase, PopularityVoted, FavoriteLink):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
-    tags: Annotated[list[Tag] | None, Field(...)] = []
-    sources: Annotated[list[Source] | None, Field(...)] = []
+class Entry(PopularityVoted, FavoriteLink, EntryBase, ResultBase):
+    tags: Annotated[list[Tag], Field(...)] = []
+    sources: Annotated[list[Source], Field(...)] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -81,16 +79,16 @@ class EntryWithParent(Entry):
 
 
 class EntrySearch(SearchBase):
-    owner: Annotated[str | None, Field(...)] = None
-    tlp: Annotated[str | None, Field(...)] = None
-    tag: Annotated[str | None, Field(...)] = None
-    source: Annotated[str | None, Field(...)] = None
-    target_type: Annotated[str | None, Field(...)] = None
-    target_id: Annotated[str | None, Field(...)] = None
-    entry_class: Annotated[str | None, Field(...)] = None
-    task_assignee: Annotated[str | None, Field(...)] = None
-    task_status: Annotated[str | None, Field(...)] = None
-    parent_subject: Annotated[str | None, Field(...)] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tag: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    source: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    target_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    target_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    entry_class: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    task_assignee: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    task_status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    parent_subject: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         if attr == "owner" or attr == "tag" or attr == "source" or attr == "task_assignee" or attr == "task_status" or attr == "parent_subject":

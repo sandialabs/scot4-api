@@ -2,11 +2,12 @@ from datetime import datetime
 from typing import Any, Annotated
 
 from pydantic import BaseModel, field_validator, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
 from app.enums import StatusEnum, TlpEnum
 from app.schemas.alertgroupschema import AlertGroupSchemaColumn
-from app.schemas.response import SearchBase
+from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
 from app.schemas.user_links import FavoriteLink
 from app.utils import sanitize_html, is_bool
@@ -21,9 +22,9 @@ class AlertDataBase(BaseModel):
 
 
 class AlertDataCreate(BaseModel):
-    name: Annotated[str, Field(...)]
-    value: Annotated[str, Field(...)]
-    value_flaired: Annotated[str | None, Field(...)] = None
+    name: Annotated[str, Field(..., examples=["fieldname"])]
+    value: Annotated[str, Field(..., examples=["alert data"])]
+    value_flaired: Annotated[str | None, Field(..., examples=["flaired alert data"])] = None
 
     @field_validator("value", mode="before")
     def sanitize(cls, v: str):
@@ -55,15 +56,24 @@ class AlertData(AlertDataBase, FavoriteLink):
 
 class AlertBase(BaseModel):
     owner: Annotated[str, Field(...)]
-    tlp: Annotated[TlpEnum | None, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
-    status: Annotated[StatusEnum | None, Field(..., examples=[a.value for a in list(StatusEnum)])] = StatusEnum.open
-    parsed: Annotated[bool | None, Field(...)] = False
-    alertgroup_id: Annotated[int | None, Field(...)] = None
+    tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    status: Annotated[StatusEnum, Field(..., examples=[a.value for a in list(StatusEnum)])] = StatusEnum.open
+    parsed: Annotated[bool, Field(...)] = False
+
+
+alert_data_examples = [
+    {"field1": "value1", "field2": "value2"},
+    [
+        {"name": "field1", "value": "value1", "value_flaired": "value1flaired"},
+        {"name": "field2", "value": "value2", "value_flaired": "value2flaired"}
+    ]
+]
 
 
 class AlertCreate(AlertBase):
-    owner: Annotated[str | None, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
-    data: Annotated[list[AlertDataCreate] | None, Field(...)] = None
+    alertgroup_id: Annotated[int | None, Field(...)] = None
+    owner: Annotated[str, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
+    data: Annotated[list[AlertDataCreate] | dict | None, Field(..., examples=alert_data_examples)] = None
 
     @field_validator("data", mode="before")
     def convert_dict_to_alert_data(cls, v):
@@ -79,9 +89,10 @@ class AlertCreate(AlertBase):
 
 
 class AlertAdd(AlertBase):
+    alertgroup_id: Annotated[SkipJsonSchema[int | None], Field(...)] = None
     owner: Annotated[str, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
-    data: Annotated[dict | None, Field(...)] = None
-    data_flaired: Annotated[dict | None, Field(...)] = None
+    data: Annotated[dict | None, Field(..., examples=[alert_data_examples[0]])] = None
+    data_flaired: Annotated[dict | None, Field(..., examples=[alert_data_examples[0]])] = None
 
     @field_validator("data", mode="before")
     def sanitize(cls, v):
@@ -101,30 +112,26 @@ class AlertAdd(AlertBase):
 
 
 class AlertUpdate(AlertAdd):
-    owner: Annotated[str | None, Field(...)] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty
-class Alert(AlertBase, PopularityVoted, FavoriteLink):
-    id: Annotated[int, Field(...)]
+class Alert(PopularityVoted, FavoriteLink, AlertBase, ResultBase):
     entry_count: Annotated[int | None, Field(...)] = 0
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
     alertgroup_id: Annotated[int, Field(...)]
     alertgroup_subject: Annotated[str | None, Field(...)] = None
     data: Annotated[dict | None, Field(...)] = {}
     data_flaired: Annotated[dict | None, Field(...)] = {}
-                                                                                                                      
     model_config = ConfigDict(from_attributes=True)
 
 
 class AlertSearch(SearchBase):
-    owner: Annotated[str | None, Field(...)] = None
-    tlp: Annotated[str | None, Field(...)] = None
-    parsed: Annotated[str | None, Field(...)] = None
-    alertgroup_id: Annotated[str | None, Field(...)] = None
-    entry_count: Annotated[str | None, Field(...)] = None
-    promoted_to: Annotated[str | None, Field(...)] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    parsed: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alertgroup_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    entry_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    promoted_to: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         value = value.strip()

@@ -22,7 +22,13 @@ if "sqlite" in settings.SQLALCHEMY_DATABASE_URI:
         poolclass=StaticPool,
     )
 else:
-    engine = create_engine(settings.SQLALCHEMY_DATABASE_URI, connect_args={"connect_timeout": 100000}, pool_size=15, max_overflow=-1)
+    engine = create_engine(settings.SQLALCHEMY_DATABASE_URI,
+        connect_args={"connect_timeout": settings.DB_CONNECT_TIMEOUT},
+        pool_size=settings.DB_CONNECTION_POOL_SIZE,
+        pool_pre_ping=True,
+        pool_recycle=3600,
+        max_overflow=settings.DB_CONNECTION_POOL_OVERFLOW
+    )
 # scoped_session
 # db_session = scoped_session(
 #     sessionmaker(autocommit=False, autoflush=False, bind=engine)

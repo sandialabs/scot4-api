@@ -16,10 +16,16 @@ class MetricUpdate(MetricBase):
     pass
 
 
+result_example = {
+    "2025-01-01": 10,
+    "2025-01-02": 2
+}
+
+
 class MetricResult(BaseModel):
     name: Annotated[str | None, Field(...)] = None
     tooltip: Annotated[str | None, Field(...)] = None
-    results: Annotated[Json[dict] | dict | None, Field(...)] = {}
+    results: Annotated[Json[dict] | dict | None, Field(..., examples=[result_example])] = {}
 
 
 # pretty

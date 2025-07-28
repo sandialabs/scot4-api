@@ -3,12 +3,13 @@ from dateutil import parser
 from typing import Any, Annotated
 
 from pydantic import BaseModel, field_validator, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.enums import TlpEnum, StatusEnum
 from app.core.config import settings
 from app.schemas.alert import AlertCreate
 from app.schemas.alertgroupschema import AlertGroupSchemaColumnCreate
-from app.schemas.response import SearchBase
+from app.schemas.response import SearchBase, ResultBase
 from app.schemas.tag import Tag
 from app.schemas.source import Source
 from app.schemas.popularity import PopularityVoted
@@ -19,25 +20,33 @@ from app.utils import is_bool
 class AlertGroupBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
-    view_count: Annotated[int | None, Field(...)] = 0
+    view_count: Annotated[int, Field(...)] = 0
     first_view: Annotated[datetime | None, Field(...)] = None
     message_id: Annotated[str | None, Field(...)] = None
     back_refs: Annotated[str | None, Field(...)] = None
-    subject: Annotated[str | None, Field(...)] = ""
-    sources: Annotated[list[Source] | None, Field(...)] = []
-    tags: Annotated[list[Tag] | None, Field(...)] = []
+    subject: Annotated[str | None, Field(...)] = None
 
     model_config = ConfigDict(
         use_enum_values=True,
     )
 
 
+alert_examples = [
+    [{"data": {"number_field": "1", "string_field": "value1"}},
+     {"data": {"number_field": "2", "string_field": "value2"}}]
+]
+alert_schema_examples = [
+    [{"schema_key_name": "number_field", "schema_key_type": "number", "schema_key_order": 0},
+     {"schema_key_name": "string_field", "schema_key_type": "string", "schema_key_order": 1}]
+]
+
+
 class AlertGroupDetailedCreate(AlertGroupBase):
     owner: Annotated[str, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
-    alert_schema: Annotated[list[AlertGroupSchemaColumnCreate] | None, Field(...)] = []
-    alerts: Annotated[list[AlertCreate] | None, Field(...)] = []
-    sources: Annotated[list[str] | None, Field(...)] = []
-    tags: Annotated[list[str] | None, Field(...)] = []
+    alert_schema: Annotated[list[AlertGroupSchemaColumnCreate] | None, Field(..., examples=alert_schema_examples)] = None
+    alerts: Annotated[list[AlertCreate], Field(..., examples=alert_examples)] = []
+    sources: Annotated[list[str], Field(..., examples=[["sourcename"]])] = []
+    tags: Annotated[list[str], Field(..., examples=[["tagname"]])] = []
 
     model_config = ConfigDict(
         use_enum_values=True,
@@ -45,22 +54,21 @@ class AlertGroupDetailedCreate(AlertGroupBase):
 
 
 class AlertGroupCreate(AlertGroupBase):
-    sources: Annotated[list[str] | None, Field(...)] = []
-    tags: Annotated[list[str] | None, Field(...)] = []
+    sources: Annotated[list[str], Field(..., examples=[["sourcename"]])] = []
+    tags: Annotated[list[str], Field(..., examples=[["tagname"]])] = []
 
 
 class AlertGroupUpdate(AlertGroupBase):
-    owner: Annotated[str | None, Field(...)] = None
+    owner: Annotated[str, Field(...)] = None
 
 
-class AlertGroup(AlertGroupBase, PopularityVoted, FavoriteLink):
-    id: Annotated[int, Field(...)]
-    alert_count: Annotated[int | None, Field(...)] = 0
-    open_count: Annotated[int | None, Field(...)] = 0
-    closed_count: Annotated[int | None, Field(...)] = 0
-    promoted_count: Annotated[int | None, Field(...)] = 0
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
+class AlertGroup(PopularityVoted, FavoriteLink, AlertGroupBase, ResultBase):
+    alert_count: Annotated[int, Field(...)] = 0
+    open_count: Annotated[int, Field(...)] = 0
+    closed_count: Annotated[int, Field(...)] = 0
+    promoted_count: Annotated[int, Field(...)] = 0
+    tags: Annotated[list[Tag], Field(...)] = []
+    sources: Annotated[list[Source], Field(...)] = []
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -70,9 +78,9 @@ class AlertGroupDetailed(AlertGroup):
     full_column_types: Annotated[list[str | None], Field(...)]
     full_alert_data_flaired: Annotated[list[dict], Field(...)]
     full_alert_data: Annotated[list[dict], Field(...)]
-    associated_sig_guide_map: Annotated[dict | None, Field(...)] = {}
-    tags: Annotated[list[Tag] | None, Field(...)] = []
-    sources: Annotated[list[Source] | None, Field(...)] = []
+    associated_sig_guide_map: Annotated[dict, Field(...)] = {}
+    tags: Annotated[list[Tag], Field(...)] = []
+    sources: Annotated[list[Source], Field(...)] = []
 
     # Pydantic doesn't like list association proxies
     @field_validator(
@@ -87,20 +95,20 @@ class AlertGroupDetailed(AlertGroup):
 
 
 class AlertGroupSearch(SearchBase):
-    owner: Annotated[str | None, Field(...)] = None
-    subject: Annotated[str | None, Field(...)] = None
-    tlp: Annotated[str | None, Field(...)] = None
-    message_id: Annotated[str | None, Field(...)] = None
-    source: Annotated[str | None, Field(...)] = None
-    tag: Annotated[str | None, Field(...)] = None
-    status: Annotated[str | None, Field(...)] = None
-    alert_count: Annotated[str | None, Field(...)] = None
-    promoted_count: Annotated[str | None, Field(...)] = None
-    open_count: Annotated[str | None, Field(...)] = None
-    closed_count: Annotated[str | None, Field(...)] = None
-    first_view: Annotated[str | None, Field(...)] = None
-    parsed: Annotated[str | None, Field(...)] = None
-    view_count: Annotated[str | None, Field(...)] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    subject: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    message_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    source: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tag: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alert_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    promoted_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    open_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    closed_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    first_view: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    parsed: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    view_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         value = value.strip()

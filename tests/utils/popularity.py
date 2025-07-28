@@ -6,21 +6,21 @@ from sqlalchemy.orm import Session
 from app.enums import TargetTypeEnum, PopularityMetricEnum
 from app import schemas, crud
 
+
 try:
     from tests.utils.user import create_random_user
+    from tests.utils.utils import select_random_target_type
 except ImportError:
     # needed to make initial_data.py function properly
     from user import create_random_user
+    from utils import select_random_target_type
 
 
 def create_random_popularity(db: Session, faker: Faker, target_type: TargetTypeEnum = None, target_id: int = None, metric: PopularityMetricEnum = None, owner: schemas.User = None) -> schemas.Popularity:
     if owner is None:
         owner = create_random_user(db, faker)
     if target_type is None:
-        target_list = list(TargetTypeEnum)
-        target_list.remove(TargetTypeEnum.none)
-        target_list.remove(TargetTypeEnum.remote_flair)
-        target_type = random.choice(target_list)
+        target_type = select_random_target_type()
     if target_id is None:
         target_id = faker.pyint()
     if metric is None:

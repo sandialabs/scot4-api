@@ -15,7 +15,7 @@ def test_get_handler(client: TestClient, normal_user_token_headers: dict, db: Se
     handler = create_random_handler(db, faker, user.username)
 
     r = client.get(
-        f"{settings.API_V1_STR}/handler/-1",
+        f"{settings.API_V1_STR}/handler/0",
         headers=normal_user_token_headers
     )
 

@@ -129,6 +129,7 @@ def test_read_user_who_am_i(client: TestClient, superuser_token_headers: dict) -
 
 def test_create_user_open(client: TestClient, faker: Faker) -> None:
     data = {
+        "username": faker.word(),
         "password": faker.password(),
         "email": faker.email(),
         "fullname": faker.word()

@@ -12,12 +12,12 @@ router = APIRouter()
 
 # Reads unacknowledged notification data
 # For a specific user
-@router.get("/", response_model=schemas.ListResponse[schemas.Notification])
+@router.get("/", response_model=schemas.ListResponse[schemas.Notification], summary="Read notifications")
 def read_notifications(
     *,
     db: Session = Depends(deps.get_db),
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = 100,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = 100,
     include_acked: Annotated[bool, Query(...)] = False,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
@@ -31,7 +31,7 @@ def read_notifications(
     return {"totalCount": count, "resultCount": len(_notifications), "result": _notifications}
 
 
-@router.post("/ack")  # response_model=schemas.ListResponse[schemas.NotificationUpdate]
+@router.post("/ack", summary="Acknowledge notifications")  # response_model=schemas.ListResponse[schemas.NotificationUpdate]
 def ack_notifications(
     *,
     db: Session = Depends(deps.get_db),
@@ -51,7 +51,7 @@ def ack_notifications(
 
 
 @router.post(
-    "/broadcast", status_code=201, dependencies=[Depends(deps.admin_only)]
+    "/broadcast", status_code=201, summary="Send a notification to all users", dependencies=[Depends(deps.admin_only)]
 )
 def broadcast_notification(
     *,
@@ -72,7 +72,7 @@ def broadcast_notification(
         raise HTTPException(422, "Error: " + e)
 
 
-@router.post("/subscribe", response_model=schemas.UserLinks)
+@router.post("/subscribe", summary="Subscribe to an object", response_model=schemas.UserLinks)
 def subscribe(
     *,
     db: Session = Depends(deps.get_db),
@@ -102,7 +102,7 @@ def subscribe(
         raise HTTPException(422, "Error: " + str(e))
 
 
-@router.post("/unsubscribe", response_model=schemas.UserLinks)
+@router.post("/unsubscribe", summary="Unsubscribe from an object", response_model=schemas.UserLinks)
 def unsubscribe(
     *,
     db: Session = Depends(deps.get_db),

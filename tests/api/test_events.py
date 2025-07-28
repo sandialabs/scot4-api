@@ -37,7 +37,7 @@ def test_get_event(client: TestClient, normal_user_token_headers: dict, superuse
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/event/-1",
+        f"{settings.API_V1_STR}/event/0",
         headers=superuser_token_headers
     )
     assert r.status_code == 404
@@ -66,6 +66,45 @@ def test_create_event(client: TestClient, normal_user_token_headers: dict, faker
 
     r = client.post(
         f"{settings.API_V1_STR}/event/",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_events(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    data = [{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "view_count": faker.pyint()
+    },{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "view_count": faker.pyint()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/event/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    created_event = r.json()
+    assert len(created_event) == 2
+    assert created_event[0]["id"] >= 0
+    assert created_event[0]["owner"] == data[0]["owner"]
+    assert created_event[1]["id"] >= 0
+    assert created_event[1]["owner"] == data[1]["owner"]
+    assert created_event[0]["id"] < created_event[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/event/many",
         headers=normal_user_token_headers,
     )
 
@@ -116,6 +155,53 @@ def test_update_event(client: TestClient, normal_user_token_headers: dict, super
     assert event_data["subject"] != event.subject
 
 
+def test_update_events(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    event1 = create_random_event(db, faker, owner, False)
+    event2 = create_random_event(db, faker, owner, False)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/event/many/?ids={event1.id}&ids={event2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/event/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/event/many/?ids={event1.id}&ids={event2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/event/many/?ids={event1.id}&ids={event2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    event_data = r.json()
+    assert len(event_data) == 2
+    assert event_data[0]["id"] == event1.id
+    assert event_data[0]["subject"] == data["subject"]
+    assert event_data[1]["id"] == event2.id
+    assert event_data[1]["subject"] == data["subject"]
+
+
 def test_delete_event(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
     event = create_random_event(db, faker, owner, False)
@@ -135,6 +221,36 @@ def test_delete_event(client: TestClient, normal_user_token_headers: dict, super
     assert r.status_code == 200
     event_data = r.json()
     assert event_data["id"] == event.id
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/event/-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_events(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    event1 = create_random_event(db, faker, owner, False)
+    event2 = create_random_event(db, faker, owner, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/event/many/?ids={event1.id}&ids={event2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/event/many/?ids={event1.id}&ids={event2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    event_data = r.json()
+    assert event_data[0]["id"] == event1.id
+    assert event_data[1]["id"] == event2.id
 
     r = client.delete(
         f"{settings.API_V1_STR}/event/-1",
@@ -263,7 +379,7 @@ def test_tag_untag_event(client: TestClient, normal_user_token_headers: dict, su
 
     r = client.post(
         f"{settings.API_V1_STR}/event/{event.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag1.id},
     )
 
@@ -347,7 +463,7 @@ def test_source_event(client: TestClient, normal_user_token_headers: dict, super
 
     r = client.post(
         f"{settings.API_V1_STR}/event/{event.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source1.id},
     )
 

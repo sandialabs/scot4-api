@@ -12,10 +12,10 @@ from .generic import generic_delete, generic_get, generic_post, generic_put
 router = APIRouter()
 
 # Create get, post, put, and delete endpoints
-generic_get(router, crud.handler, TargetTypeEnum.none, schemas.Handler, "Handler")
-generic_post(router, crud.handler, TargetTypeEnum.none, schemas.Handler, schemas.HandlerCreate, "Handler")
-generic_put(router, crud.handler, TargetTypeEnum.none, schemas.Handler, schemas.HandlerUpdate, "Handler")
-generic_delete(router, crud.handler, TargetTypeEnum.none, schemas.Handler, "Handler")
+generic_get(router, crud.handler, TargetTypeEnum.none, schemas.Handler, "handler")
+generic_post(router, crud.handler, TargetTypeEnum.none, schemas.Handler, schemas.HandlerCreate, "handler", permissions=False, many=False)
+generic_put(router, crud.handler, TargetTypeEnum.none, schemas.Handler, schemas.HandlerUpdate, "handler", many=False)
+generic_delete(router, crud.handler, TargetTypeEnum.none, schemas.Handler, "handler", many=False)
 
 
 @router.get(

@@ -89,7 +89,7 @@ def create_random_signature(db: Session, faker: Faker, owner: schemas.User | Non
         owner=owner.username,
         name=signature_name,
         description=faker.text(max_nb_chars=30),
-        data=json.dumps(signature_data),
+        data=signature_data,
         type=signature_type_to_choose,
         status=random.choice(["enabled", "disabled"])
     )

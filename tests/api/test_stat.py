@@ -9,6 +9,10 @@ from app.core.config import settings
 from tests.utils.scot_stat import create_random_stat
 
 
+import pytest
+pytest.skip("Stat api is currently disabled", allow_module_level=True)
+
+
 def test_read_stat(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     stat = create_random_stat(db, faker)
 

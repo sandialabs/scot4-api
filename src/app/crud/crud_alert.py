@@ -166,7 +166,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
         # check if alertgroup exists before continuing
         _alertgroup = alert_group.get(db_session, obj_in.alertgroup_id)
         if not _alertgroup:
-            raise ValueError("Alertgroup with %s no found" % obj_in.alertgroup_id)
+            raise ValueError("Alertgroup with id %s not found" % obj_in.alertgroup_id)
 
         # Set owner to current user if owner not set
         if ("owner" not in obj_in.model_fields_set

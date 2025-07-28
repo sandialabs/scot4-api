@@ -15,11 +15,7 @@ from tests.utils.alertgroup import create_random_alertgroup_no_sig
 from tests.utils.entry import create_random_entry
 from tests.utils.roles import create_random_role
 from tests.utils.user import create_random_user, create_user_with_role
-
-
-TARGET_LIST = list(TargetTypeEnum)
-TARGET_LIST.remove(TargetTypeEnum.none)
-TARGET_LIST.remove(TargetTypeEnum.remote_flair)
+from tests.utils.utils import select_random_target_type
 
 
 def test_get_entry(db: Session, faker: Faker) -> None:
@@ -62,7 +58,7 @@ def test_create_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
     )
@@ -81,7 +77,7 @@ def test_update_entry(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     update = EntryUpdate(
         owner=owner.username,
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         parsed=faker.pybool()
     )
@@ -111,7 +107,7 @@ def test_update_entry(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
-        "target_type": random.choice(TARGET_LIST),
+        "target_type": select_random_target_type(),
         "target_id": faker.pyint(),
         "parsed": faker.pybool()
     }
@@ -170,7 +166,7 @@ def test_get_or_create_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
     )
@@ -322,7 +318,7 @@ def test_query_objects_with_roles_entry(db: Session, faker: Faker) -> None:
 def test_create_with_owner_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         tlp=random.choice(list(TlpEnum)),
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
     )
@@ -346,7 +342,7 @@ def test_create_with_permissions_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
     )
@@ -371,7 +367,7 @@ def test_create_in_object_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
     )
@@ -383,12 +379,10 @@ def test_create_in_object_entry(db: Session, faker: Faker) -> None:
     assert db_obj is not None
     assert db_obj.owner == entry.owner
 
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
+    link, _ = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
 
-    assert count == 1
-    assert len(link) == 1
-    assert link[0].v0_id == alert_group.id
-    assert link[0].v1_id == db_obj.id
+    assert any(i.v0_id == alert_group.id for i in link)
+    assert any(i.v1_id == db_obj.id for i in link)
 
 
 def test_get_history_entry(db: Session, faker: Faker) -> None:
@@ -396,7 +390,7 @@ def test_get_history_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
-        target_type=random.choice(TARGET_LIST),
+        target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
     )

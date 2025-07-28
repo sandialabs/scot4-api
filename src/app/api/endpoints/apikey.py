@@ -9,12 +9,12 @@ from app.api import deps
 router = APIRouter()
 
 
-@router.get("/", response_model=schemas.ListResponse[schemas.ApiKey])
+@router.get("/", summary="Read api keys", response_model=schemas.ListResponse[schemas.ApiKey])
 def read_apikeys(
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = 100,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = 100,
 ) -> Any:
     """
     Retrieve all api keys owned by this user (paginated)
@@ -23,17 +23,17 @@ def read_apikeys(
     return {"totalCount": count, "resultCount": len(apikeys), "result": apikeys}
 
 
-@router.post("/", response_model=schemas.ApiKey)
+@router.post("/", summary="Create an api key", response_model=schemas.ApiKey)
 def create_apikey(
     *,
     db: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
     current_roles: list[models.Role] = Depends(deps.get_current_roles),
-    roles: list[Union[str, int]] | None = []
+    roles: Annotated[list[Union[str, int]], Body(..., examples=[["rolename", 1]])] = []
 ) -> Any:
     """
     Create a new api key; specific roles can be assigned to this new key by
-    including an array of role names or ids
+    including an array of role names or ids in the request body
     """
     # Translate role ids/names into the actual role objects
     resolved_roles = []
@@ -56,7 +56,7 @@ def create_apikey(
     return apikey
 
 
-@router.put("/{key}", response_model=schemas.ApiKey)
+@router.put("/{key}", summary="Update an api key", response_model=schemas.ApiKey)
 def update_apikey(
     *,
     db: Session = Depends(deps.get_db),
@@ -67,7 +67,7 @@ def update_apikey(
     roles: Annotated[list[Union[int, str]] | None, Body()] = None,
 ) -> Any:
     """
-    Update an api key (only roles and active allowed)
+    Update an api key, changing its roles and/or active status
     """
     # Search for the api key
     apikey = crud.apikey.get(db_session=db, key=key)
@@ -96,7 +96,7 @@ def update_apikey(
     return updated
 
 
-@router.get("/{key}", response_model=schemas.ApiKey)
+@router.get("/{key}", summary="Get an api key", response_model=schemas.ApiKey)
 def read_apikey(
     *,
     db: Session = Depends(deps.get_db),
@@ -104,7 +104,7 @@ def read_apikey(
     current_user: models.User = Depends(deps.get_current_active_user)
 ) -> Any:
     """
-    Get api key by ID.
+    Get details of an api key
     """
     apikey = crud.apikey.get(db, key)
     if not apikey:
@@ -114,7 +114,7 @@ def read_apikey(
     return apikey
 
 
-@router.delete("/{key}", response_model=schemas.ApiKey)
+@router.delete("/{key}", summary="Delete an api key", response_model=schemas.ApiKey)
 def delete_apikey(
     *,
     db: Session = Depends(deps.get_db),

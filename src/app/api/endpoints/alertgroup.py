@@ -19,24 +19,26 @@ from .generic import (
     generic_search,
     generic_export,
     generic_upvote_and_downvote,
-    generic_user_links
+    generic_user_links,
+    generic_tag_untag
 )
 
 router = APIRouter()
 
 # Create get, post, put, and delete endpoints
-generic_export(router, crud.alert_group, TargetTypeEnum.alertgroup)
 generic_get(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed)
 generic_post(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed, schemas.AlertGroupDetailedCreate)
 generic_put(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed, schemas.AlertGroupUpdate)
 generic_delete(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed)
+generic_search(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupSearch, schemas.AlertGroup)
 generic_undelete(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed)
 generic_entities(router, TargetTypeEnum.alertgroup)
 generic_history(router, crud.alert_group, TargetTypeEnum.alertgroup)
 generic_reflair(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed)
-generic_search(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupSearch, schemas.AlertGroup)
+generic_export(router, crud.alert_group, TargetTypeEnum.alertgroup)
 generic_upvote_and_downvote(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroup)
 generic_user_links(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroupDetailed)
+generic_tag_untag(router, crud.alert_group, TargetTypeEnum.alertgroup, schemas.AlertGroup)
 
 
 alertgroup_read_dep = Depends(deps.PermissionCheckId(TargetTypeEnum.alertgroup, PermissionEnum.read))

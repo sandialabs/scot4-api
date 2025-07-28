@@ -63,6 +63,59 @@ def test_update_entry(client: TestClient, superuser_token_headers: dict, normal_
     assert entry_data["id"] == entry.id
 
 
+def test_update_entries(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    entry1 = create_random_entry(db, faker, user)
+    entry2 = create_random_entry(db, faker, user)
+    data_raw, data_flaired, _ = generate_html_entry(faker)
+
+    data = {
+        "entry_data": {
+            "html": data_raw,
+            "flaired_html": data_flaired,
+            "flaired": True,
+        },
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entry/many/?ids={entry1.id}&&ids={entry2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entry/many/?ids={entry1.id}&&ids={entry2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entry/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entry/many/?ids={entry1.id}&&ids={entry2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    entry_data = r.json()
+    assert entry_data is not None
+    assert len(entry_data) == 2
+    assert entry_data[0]["id"] == entry1.id
+    assert entry_data[0]["entry_data"]["flaired"] == data["entry_data"]["flaired"]
+    assert entry_data[1]["id"] == entry2.id
+    assert entry_data[1]["entry_data"]["flaired"] == data["entry_data"]["flaired"]
+
+
 def test_delete_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     entry = create_random_entry(db, faker, user)
@@ -93,6 +146,52 @@ def test_delete_entry(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.get(
         f"{settings.API_V1_STR}/entry/{entry.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_entries(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    entry1 = create_random_entry(db, faker, user)
+    entry2 = create_random_entry(db, faker, user)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/entry/many/?ids={entry1.id}&ids={entry2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/entry/many/?ids=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/entry/many/?ids={entry1.id}&ids={entry2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    entry_data = r.json()
+    assert entry_data is not None
+    assert len(entry_data) == 2
+    assert entry_data[0]["id"] == entry1.id
+    assert entry_data[1]["id"] == entry2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/entry/{entry1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/entry/{entry2.id}",
         headers=superuser_token_headers
     )
 
@@ -154,7 +253,7 @@ def test_tag_untag_entry(client: TestClient, superuser_token_headers: dict, norm
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/-1/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag2.id}
     )
 
@@ -162,14 +261,14 @@ def test_tag_untag_entry(client: TestClient, superuser_token_headers: dict, norm
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/{entry.id}/tag",
-        headers=normal_user_token_headers
+        headers=superuser_token_headers
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/{entry.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag2.id}
     )
 
@@ -179,7 +278,7 @@ def test_tag_untag_entry(client: TestClient, superuser_token_headers: dict, norm
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/-1/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -237,7 +336,7 @@ def test_source_add_remove_entry(client: TestClient, superuser_token_headers: di
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/-1/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source2.id}
     )
 
@@ -245,7 +344,7 @@ def test_source_add_remove_entry(client: TestClient, superuser_token_headers: di
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/{entry.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -253,14 +352,14 @@ def test_source_add_remove_entry(client: TestClient, superuser_token_headers: di
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/{entry.id}/add-source",
-        headers=normal_user_token_headers
+        headers=superuser_token_headers
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/entry/{entry.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source2.id}
     )
 
@@ -403,18 +502,16 @@ def test_create_entry(client: TestClient, superuser_token_headers: dict, normal_
     data_raw, data_flaired, _ = generate_html_entry(faker)
 
     data = {
-        "entry": {
-            "owner": user.username,
-            "tlp": random.choice(list(TlpEnum)).value,
-            "target_type": TargetTypeEnum.alert.value,
-            "target_id": alert.id,
-            "entry_class": EntryClassEnum.entry.value,
-            "entry_data": {
-                "html": data_raw,
-                "flaired_html": data_flaired,
-                "flaired": True,
-            },
-        }
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "target_type": TargetTypeEnum.alert.value,
+        "target_id": alert.id,
+        "entry_class": EntryClassEnum.entry.value,
+        "entry_data": {
+            "html": data_raw,
+            "flaired_html": data_flaired,
+            "flaired": True,
+        },
     }
 
     r = client.post(
@@ -442,7 +539,68 @@ def test_create_entry(client: TestClient, superuser_token_headers: dict, normal_
     entry_data = r.json()
     assert entry_data is not None
     assert entry_data["id"] > 0
-    assert entry_data["tlp"] == data["entry"]["tlp"]
+    assert entry_data["tlp"] == data["tlp"]
+
+
+def test_create_entries(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alert = create_random_alert(db, faker, user)
+    data_raw, data_flaired, _ = generate_html_entry(faker)
+
+    data = [{
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "target_type": TargetTypeEnum.alert.value,
+        "target_id": alert.id,
+        "entry_class": EntryClassEnum.entry.value,
+        "entry_data": {
+            "html": data_raw,
+            "flaired_html": data_flaired,
+            "flaired": True,
+        },
+    },{
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "target_type": TargetTypeEnum.alert.value,
+        "target_id": alert.id,
+        "entry_class": EntryClassEnum.entry.value,
+        "entry_data": {
+            "html": data_raw,
+            "flaired_html": data_flaired,
+            "flaired": True,
+        },
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entry/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entry/many",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entry/many",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    entry_data = r.json()
+    assert entry_data is not None
+    assert len(entry_data) == 2
+    assert entry_data[0]["id"] > 0
+    assert entry_data[0]["tlp"] == data[0]["tlp"]
+    assert entry_data[1]["id"] > 0
+    assert entry_data[1]["tlp"] == data[1]["tlp"]
+    assert entry_data[0]["id"] < entry_data[1]["id"]
 
 
 def test_search_entry(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:

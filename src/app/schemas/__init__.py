@@ -63,8 +63,9 @@ from .setting import (
 )
 from .sigbody import Sigbody, SigbodyCreate, SigbodyUpdate, SigbodySearch
 from .signature import Signature, SignatureCreate, SignatureUpdate, SignatureSearch
-from .source import Source, SourceCreate, SourceUpdate, SourceSearch
-from .tag import Tag, TagCreate, TagUpdate, TagSearch
+from .source import Source, SourceCreate, SourceUpdate, SourceSearch, LinkSources
+from .special_metric import SpecialMetric, SpecialMetricCreate, SpecialMetricUpdate, SpecialMetricSearch
+from .tag import Tag, TagCreate, TagUpdate, TagSearch, LinkTags
 from .threat_model_item import (
     ThreatModelItem,
     ThreatModelItemCreate,

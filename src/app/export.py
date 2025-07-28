@@ -68,15 +68,14 @@ def fmt_entries(db: Session, obj: Union[list[Entry], list[dict]], from_entry: bo
                 else:
                     journal += f"<h5>[{entry.id}] {entry.owner} @ {entry.modified} - {entry.tlp}</h5>"
             if isinstance(entry, dict):
-                entry_data = entry.get("entry_data", {})
+                entry_data = entry.get("entry data", {})
             else:
                 entry_data = entry.entry_data or {}
-
             if "html" in entry_data.keys():
-                journal += f"<div>{entry.entry_data['html']}</div>"
+                journal += f"<div>{entry_data['html']}</div>"
             if "markdown" in entry_data.keys():
                 journal = "<div><table><thead><tr>"
-                rows = entry.entry_data['markdown'].splitlines()
+                rows = entry_data['markdown'].splitlines()
                 for column in rows[0].split("|")[1:-1]:
                     journal += f"<td>{column.strip()}</td>"
                 journal += "</tr><thead><tbody>"
@@ -96,9 +95,9 @@ def fmt_entries(db: Session, obj: Union[list[Entry], list[dict]], from_entry: bo
                     elif source["type"] == "alert":
                         journal += f"<p>Promoted from {source['type']} {source['id']}</p>{fmt_alert(crud_obj)}"
             if isinstance(entry, dict):
-                for child_entry in entry.get("child_entries", []):
+                for child_entry in entry.get("child entries", []):
                     journal += f"<h5>[{child_entry['id']}] {child_entry['owner']} @ {child_entry['modified']} - {child_entry['tlp']}</h5>"
-                    journal += f"<div>{child_entry['entry_data']['html']}</div>"
+                    journal += f"<div>{child_entry['entry data']['html']}</div>"
             else:
                 for child_entry in entry.child_entries:
                     journal += f"<h5>[{child_entry.id}] {child_entry.owner} @ {child_entry.modified} - {child_entry.tlp}</h5>"
@@ -118,7 +117,7 @@ def fmt_signatures(db: Session, obj: list[Signature], from_guide: bool = False):
         del signature_obj["data"]
         if not from_guide:
             for guide in signature_obj.get("associated guides", []):
-                guides += f"<p>Assoicated Guide ${guide['id']}</p>{fmt_entries(db, guide.get('entries'))}"
+                guides += f"<p>Associated Guide ${guide['id']}</p>{fmt_entries(db, guide.get('entries'))}"
         del signature_obj["associated guides"]
         for cell in signature.data:
             signature_obj[cell] = signature.data[cell]
@@ -128,8 +127,9 @@ def fmt_signatures(db: Session, obj: list[Signature], from_guide: bool = False):
 
 def fmt_column_table(obj: dict):
     table = "<table>"
-    for key, value in obj.items():
-        table += f"<tr><td>{key}</td><td>{value}</td></tr>"
+    if obj:
+        for key, value in obj.items():
+            table += f"<tr><td>{key}</td><td>{value}</td></tr>"
     return table + "</table>"
 
 
@@ -286,20 +286,20 @@ def export_object(db: Session, _obj: Any, target_type: TargetTypeEnum, format: E
         if format == ExportFormatEnum.md:
             # insert header
             media_type = "text/markdown"
-            tmp.write(f"> <center>SCOT 4.1: {settings.site_name} - {settings.environment_level}</center>\n\n{markdownify(html)}".encode())
+            tmp.write(f"> <center>SCOT 4.3: {settings.site_name} - {settings.environment_level}</center>\n\n{markdownify(html)}".encode())
         # save the HTML
         elif format == ExportFormatEnum.html:
             media_type = "text/html"
             # insert header
             index = html.find("<body>")
-            html = html[:index] + f"<div id='header_content' style='text-align: center; font-size: 12px;'>SCOT 4.1: {settings.site_name} - {settings.environment_level}</div>" + html[index:]
+            html = html[:index] + f"<div id='header_content' style='text-align: center; font-size: 12px;'>SCOT 4.3: {settings.site_name} - {settings.environment_level}</div>" + html[index:]
             tmp.write(html.encode())
         # convert the HTML to PDF do this also for WORD DOCX as its easier to convert from PDF later
         elif format == ExportFormatEnum.pdf or format == ExportFormatEnum.docx:
             media_type = "application/pdf"
             # insert header
             index = html.find("<body>")
-            html = html[:index] + f"<div id='header_content' style='text-align: center; font-size: 12px;'>SCOT 4.1: {settings.site_name} - {settings.environment_level}</div>" + html[index:]
+            html = html[:index] + f"<div id='header_content' style='text-align: center; font-size: 12px;'>SCOT 4.3: {settings.site_name} - {settings.environment_level}</div>" + html[index:]
             pisa.CreatePDF(html, dest=tmp)
 
     # convert from PDF to DOCX

@@ -40,6 +40,11 @@ class Settings(BaseSettings):
 
     # The database URL used to connect to the database (required)
     SQLALCHEMY_DATABASE_URI: str
+    # Database connection settings
+    DB_CONNECT_TIMEOUT: int = 100000
+    DB_CONNECTION_POOL_SIZE: int = 10
+    # this is the amount *over* the pool size, not total
+    DB_CONNECTION_POOL_OVERFLOW: int = 20 
     # Will be set to True when running unit tests
     TEST: bool = False
     # The key used to sign JWT tokens (required)
@@ -99,6 +104,9 @@ class Settings(BaseSettings):
     DOCS_URL = "/api/docs"
     OPENAPI_URL: str | None = "/api/openapi.json"
     REDOC_URL: str | None = "/api/redoc"
+    SWAGGER_JS_URL: str | None = "/api/static/swagger-ui-bundle.js"
+    SWAGGER_CSS_URL: str | None = "/api/static/swagger-ui.css"
+    REDOC_JS_URL: str | None = "/api/static/redoc.standalone.js"
 
     # Settings for email password resets
     EMAIL_RESET_TOKEN_EXPIRE_HOURS: int = 48

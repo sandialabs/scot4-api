@@ -9,7 +9,7 @@ def get_requirements():
 
 setup(
     name="SCOT",
-    version="4.2.0",
+    version="4.4.0",
     description="Sandia Cyber Omni Tracker Server",
     packages=find_packages("src"),
     package_dir={"": "src"},

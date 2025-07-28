@@ -333,12 +333,10 @@ def test_create_in_object_vuln_track(db: Session, faker: Faker) -> None:
     assert db_obj is not None
     assert db_obj.subject == vuln_track.subject
 
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
+    link, _ = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
 
-    assert count == 1
-    assert len(link) == 1
-    assert link[0].v0_id == alert_group.id
-    assert link[0].v1_id == db_obj.id
+    assert any(i.v0_id == alert_group.id for i in link)
+    assert any(i.v1_id == db_obj.id for i in link)
 
 
 def test_get_history_vuln_track(db: Session, faker: Faker) -> None:

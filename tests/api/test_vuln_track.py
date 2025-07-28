@@ -37,7 +37,7 @@ def test_get_vuln_track(client: TestClient, normal_user_token_headers: dict, sup
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/vuln_track/-1",
+        f"{settings.API_V1_STR}/vuln_track/0",
         headers=superuser_token_headers
     )
     assert r.status_code == 404
@@ -66,6 +66,45 @@ def test_create_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/vuln_track/",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_vuln_tracks(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    data = [{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "view_count": faker.pyint()
+    },{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "view_count": faker.pyint()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/vuln_track/many/",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    created_vuln_track = r.json()
+    assert len(created_vuln_track) == 2
+    assert created_vuln_track[0]["id"] >= 0
+    assert created_vuln_track[0]["owner"] == data[0]["owner"]
+    assert created_vuln_track[1]["id"] >= 0
+    assert created_vuln_track[1]["owner"] == data[1]["owner"]
+    assert created_vuln_track[0]["id"] < created_vuln_track[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/vuln_track/many/",
         headers=normal_user_token_headers,
     )
 
@@ -116,6 +155,53 @@ def test_update_vuln_track(client: TestClient, normal_user_token_headers: dict, 
     assert vuln_track_data["subject"] != vuln_track.subject
 
 
+def test_update_vuln_tracks(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    vuln_track1 = create_random_vuln_track(db, faker, owner, False)
+    vuln_track2 = create_random_vuln_track(db, faker, owner, False)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids={vuln_track1.id}&ids={vuln_track2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids={vuln_track1.id}&ids={vuln_track2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids={vuln_track1.id}&ids={vuln_track2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    vuln_track_data = r.json()
+    assert len(vuln_track_data) == 2
+    assert vuln_track_data[0]["id"] == vuln_track1.id
+    assert vuln_track_data[0]["subject"] == data["subject"]
+    assert vuln_track_data[1]["id"] == vuln_track2.id
+    assert vuln_track_data[1]["subject"] == data["subject"]
+
+
 def test_delete_vuln_track(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
     vuln_track = create_random_vuln_track(db, faker, owner, False)
@@ -138,6 +224,37 @@ def test_delete_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.delete(
         f"{settings.API_V1_STR}/vuln_track/-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_vuln_tracks(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    vuln_track1 = create_random_vuln_track(db, faker, owner, False)
+    vuln_track2 = create_random_vuln_track(db, faker, owner, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids={vuln_track1.id}&ids={vuln_track2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids={vuln_track1.id}&ids={vuln_track2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    vuln_track_data = r.json()
+    assert len(vuln_track_data) == 2
+    assert vuln_track_data[0]["id"] == vuln_track1.id
+    assert vuln_track_data[1]["id"] == vuln_track2.id
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/vuln_track/many/?ids=-1",
         headers=superuser_token_headers
     )
 
@@ -263,7 +380,7 @@ def test_tag_untag_vuln_track(client: TestClient, normal_user_token_headers: dic
 
     r = client.post(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag1.id},
     )
 
@@ -347,7 +464,7 @@ def test_source_vuln_track(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/vuln_track/{vuln_track.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source1.id},
     )
 

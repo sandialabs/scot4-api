@@ -29,7 +29,7 @@ def test_get_product(client: TestClient, superuser_token_headers: dict, normal_u
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/product/-1",
+        f"{settings.API_V1_STR}/product/0",
         headers=superuser_token_headers
     )
 
@@ -72,6 +72,42 @@ def test_create_product(client: TestClient, normal_user_token_headers: dict, db:
     assert product_data is not None
     assert product_data["id"] > 0
     assert product_data["subject"] == data["subject"]
+
+
+def test_create_products(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    data = [{
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": faker.sentence()
+    },{
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": faker.sentence()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/product/many",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/product/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    product_data = r.json()
+    assert product_data is not None
+    assert len(product_data) == 2
+    assert product_data[0]["id"] > 0
+    assert product_data[0]["subject"] == data[0]["subject"]
+    assert product_data[1]["id"] > 0
+    assert product_data[1]["subject"] == data[1]["subject"]
+    assert product_data[0]["id"] < product_data[1]["id"]
 
 
 def test_update_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -119,6 +155,54 @@ def test_update_product(client: TestClient, superuser_token_headers: dict, norma
     assert product_data["subject"] != product.subject
 
 
+def test_update_products(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    product1 = create_random_product(db, faker, user, False)
+    product2 = create_random_product(db, faker, user, False)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/product/many/?ids={product1.id}&ids={product2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/product/many/?ids={product1.id}&ids={product2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/product/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/product/many/?ids={product1.id}&ids={product2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    product_data = r.json()
+    assert product_data is not None
+    assert len(product_data) == 2
+    assert product_data[0]["id"] == product1.id
+    assert product_data[0]["subject"] == data["subject"]
+    assert product_data[1]["id"] == product2.id
+    assert product_data[1]["subject"] == data["subject"]
+
+
 def test_delete_product(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     product = create_random_product(db, faker, user, False)
@@ -149,6 +233,52 @@ def test_delete_product(client: TestClient, superuser_token_headers: dict, norma
 
     r = client.get(
         f"{settings.API_V1_STR}/product/{product.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_products(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    product1 = create_random_product(db, faker, user, False)
+    product2 = create_random_product(db, faker, user, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/product/many/?ids={product1.id}&ids={product2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/product/many/?ids=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/product/many/?ids={product1.id}&ids={product2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    product_data = r.json()
+    assert product_data is not None
+    assert len(product_data) == 2
+    assert product_data[0]["id"] == product1.id
+    assert product_data[1]["id"] == product2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/product/{product1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/product/{product2.id}",
         headers=superuser_token_headers
     )
 
@@ -228,21 +358,21 @@ def test_entries_product(client: TestClient, superuser_token_headers: dict, norm
     assert entry_data["result"][0]["id"] == entry.id
 
 
-def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_tag_untag_product(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     product = create_random_product(db, faker, owner, False)
     tag = create_random_tag(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/product/-1/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -250,7 +380,7 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -258,7 +388,7 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -268,14 +398,14 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/product/-1/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -283,7 +413,7 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -291,7 +421,7 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -300,21 +430,21 @@ def test_tag_untag_product(client: TestClient, normal_user_token_headers: dict, 
     assert tag_product["tags"] == []
 
 
-def test_source_add_remove_product(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_source_add_remove_product(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     product = create_random_product(db, faker, owner, False)
     source = create_random_source(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/product/-1/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -322,7 +452,7 @@ def test_source_add_remove_product(client: TestClient, normal_user_token_headers
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -330,7 +460,7 @@ def test_source_add_remove_product(client: TestClient, normal_user_token_headers
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -340,14 +470,14 @@ def test_source_add_remove_product(client: TestClient, normal_user_token_headers
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{-1}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -355,7 +485,7 @@ def test_source_add_remove_product(client: TestClient, normal_user_token_headers
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -363,7 +493,7 @@ def test_source_add_remove_product(client: TestClient, normal_user_token_headers
 
     r = client.post(
         f"{settings.API_V1_STR}/product/{product.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 

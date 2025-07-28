@@ -24,16 +24,16 @@ from .generic import (
 router = APIRouter()
 
 # Create get, post, put, and delete endpoints
-generic_export(router, crud.guide, TargetTypeEnum.guide)
 generic_get(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_post(router, crud.guide, TargetTypeEnum.guide, schemas.Guide, schemas.GuideCreate)
 generic_put(router, crud.guide, TargetTypeEnum.guide, schemas.Guide, schemas.GuideUpdate)
 generic_delete(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
+generic_search(router, crud.guide, TargetTypeEnum.guide, schemas.GuideSearch, schemas.Guide)
 generic_undelete(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_entries(router, TargetTypeEnum.guide)
 generic_entities(router, TargetTypeEnum.guide)
 generic_history(router, crud.guide, TargetTypeEnum.guide)
-generic_search(router, crud.guide, TargetTypeEnum.guide, schemas.GuideSearch, schemas.Guide)
+generic_export(router, crud.guide, TargetTypeEnum.guide)
 generic_upvote_and_downvote(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_user_links(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 
@@ -51,6 +51,9 @@ def signatures_for(
     db: Session = Depends(deps.get_db),
     id: Annotated[int, Path(...)],
 ) -> Any:
+    """
+    Get all the signatures associated with a guide
+    """
     _signatures = crud.guide.get_signatures_for(db, id, roles)
     if _signatures is None:
         raise HTTPException(404, f"Guide {id} not found")

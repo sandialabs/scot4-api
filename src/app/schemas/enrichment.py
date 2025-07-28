@@ -3,6 +3,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.enums import EnrichmentClassEnum
+from app.schemas.response import ResultBase
 
 
 class EnrichmentBase(BaseModel):
@@ -22,17 +23,14 @@ class EnrichmentCreate(EnrichmentBase):
 
 
 class EnrichmentUpdate(EnrichmentBase):
-    title: Annotated[str | None, Field(...)] = None
+    title: Annotated[str, Field(...)] = ""
     entity_id: Annotated[int | None, Field(...)] = None
     enrichment_class: Annotated[EnrichmentClassEnum | None, Field(..., examples=[a.value for a in list(EnrichmentClassEnum)])] = None
     data: Annotated[dict | None, Field(...)] = None
     description: Annotated[str | None, Field(...)] = None
 
 
-class Enrichment(EnrichmentBase):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
+class Enrichment(EnrichmentBase, ResultBase):
 
     model_config = ConfigDict(from_attributes=True)
 

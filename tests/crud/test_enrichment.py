@@ -293,29 +293,6 @@ def test_create_with_permissions_enrichment(db: Session, faker: Faker) -> None:
     assert count == 0
 
 
-def test_create_in_object_enrichment(db: Session, faker: Faker) -> None:
-    entity = create_random_entity(db, faker)
-    enrichment = EnrichmentCreate(
-        title=faker.sentence(),
-        entity_id=entity.id,
-        enrichment_class=random.choice(list(EnrichmentClassEnum)),
-        data=jsonable_encoder(faker.pydict()),
-        description=faker.sentence()
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.enrichment.create_in_object(db, obj_in=enrichment, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.title == enrichment.title
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_enrichment(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     entity = create_random_entity(db, faker)

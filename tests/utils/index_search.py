@@ -18,8 +18,11 @@ def index_search_results():
         pass
 
     # create index
-    client.create_index('entries', {'primaryKey': 'entry_id'})
+    client.create_index('entries', {'primaryKey': 'index_id'})
     client.index('entries').update_settings({'searchableAttributes': ['entry_text', 'parent_text']})
+    client.index('entries').update_sortable_attributes(['entry_id', 'target_type', 'target_id', 'created', 'modified', 'owner', 'popularity_count'])
+    client.index('entries').update_filterable_attributes(['entry_id', 'target_type', 'target_id', 'created', 'modified', 'owner', 'popularity_count'])
+    client.index('entries').update_ranking_rules(['words', 'sort', 'proximity', 'attribute', 'exactness'])
     # add alert data to be indexed as well, batch_size at time to not hog too much memory
     batch_size = 10000
     alert_offset = 0
@@ -30,7 +33,7 @@ def index_search_results():
         for alert in alerts:
             if alert is not None and alert.data is not None:
                 index_for_search(alert.alertgroup_subject, alert=alert)
-        
+
         alert_offset += batch_size
 
     # index all entries
@@ -41,7 +44,7 @@ def index_search_results():
             break
         for entry in entries:
             if entry is not None and entry.entry_data is not None and entry.entry_data.get('html') is not None:
-                if entry.entry_data.get('plain_text') is None: 
+                if entry.entry_data.get('plain_text') is None:
                     continue
                 parent_crud = CRUDBase.target_crud_mapping.get(entry.target_type)
                 if parent_crud is not None:
@@ -54,7 +57,7 @@ def index_search_results():
                         index_for_search(parent_obj.value, entry)
                     elif hasattr(parent_obj, "name"):
                         index_for_search(parent_obj.name, entry)
-        
+
         entry_offset += batch_size
 
 

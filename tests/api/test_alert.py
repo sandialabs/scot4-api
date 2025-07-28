@@ -39,7 +39,7 @@ def test_get_alert(client: TestClient, superuser_token_headers: dict, normal_use
     assert api_alert["data"] == alert.data
 
     r = client.get(
-        f"{settings.API_V1_STR}/alert/-1",
+        f"{settings.API_V1_STR}/alert/0",
         headers=superuser_token_headers,
     )
 
@@ -75,6 +75,31 @@ def test_create_alert(client: TestClient, superuser_token_headers: dict, normal_
     assert created_alert["owner"] == user.username
     assert created_alert["data"] == alert_data
     assert crud.alert.get(db, created_alert["id"]) is not None
+
+
+def test_create_many_alerts(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+
+    data = [
+        {"owner": user.username, "data": faker.pydict(value_types=[str])},
+        {"owner": user.username, "data": faker.pydict(value_types=[str])},
+    ]
+    r = client.post(
+        f"{settings.API_V1_STR}/alert/many",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    created_alert = r.json()
+    assert len(created_alert) == 2
+    assert created_alert[0]["owner"] == user.username
+    assert created_alert[0]["data"] == data[0]["data"]
+    assert created_alert[1]["owner"] == user.username
+    assert created_alert[1]["data"] == data[1]["data"]
+    assert crud.alert.get(db, created_alert[0]["id"]) is not None
+    assert crud.alert.get(db, created_alert[1]["id"]) is not None
+    assert created_alert[0]["id"] < created_alert[1]["id"]
 
 
 def test_update_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -117,6 +142,47 @@ def test_update_alert(client: TestClient, superuser_token_headers: dict, normal_
     assert alert_data["tlp"] != alert.tlp
 
 
+def test_update_alerts(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    alert1 = create_random_alert(db, faker, owner)
+    alert2 = create_random_alert(db, faker, owner)
+
+    data = {
+        "tlp": random.choice(list(TlpEnum)).value
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alert/many/?ids={alert1.id}&ids={alert2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alert/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alert/many/?ids={alert1.id}&ids={alert2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    alert_data = r.json()
+    assert alert_data is not None
+    assert len(alert_data) == 2
+    assert alert_data[0]["id"] == alert1.id
+    assert alert_data[0]["tlp"] == data["tlp"]
+    assert alert_data[1]["id"] == alert2.id
+    assert alert_data[1]["tlp"] == data["tlp"]
+
+
 def test_delete_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     alert = create_random_alert(db, faker, user)
@@ -147,6 +213,52 @@ def test_delete_alert(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.delete(
         f"{settings.API_V1_STR}/alert/-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_alerts(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alert1 = create_random_alert(db, faker, user)
+    alert2 = create_random_alert(db, faker, user)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alert/many/?ids={alert1.id}&ids={alert2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alert/many/?ids={alert1.id}&ids={alert2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    alert_data = r.json()
+    assert alert_data is not None
+    assert len(alert_data) == 2
+    assert alert_data[0]["id"] == alert1.id
+    assert alert_data[1]["id"] == alert2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alert/{alert1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alert/{alert2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alert/many/?ids=-1",
         headers=superuser_token_headers,
     )
 

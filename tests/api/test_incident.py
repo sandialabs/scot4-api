@@ -30,7 +30,7 @@ def test_get_incident(client: TestClient, superuser_token_headers: dict, normal_
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/incident/-1",
+        f"{settings.API_V1_STR}/incident/0",
         headers=superuser_token_headers
     )
 
@@ -85,6 +85,59 @@ def test_create_incident(client: TestClient, normal_user_token_headers: dict, db
     assert r.status_code == 422
 
 
+def test_create_incidents(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    occurred_date = faker.past_datetime()
+    discovered_date = faker.date_time_between_dates(occurred_date, datetime.now())
+
+    data = [{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "occurred_date": occurred_date.isoformat(),
+        "discovered_date": discovered_date.isoformat(),
+        "reported_date": faker.date_time_between_dates(discovered_date, datetime.now()).isoformat(),
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "data_ver": str(faker.pyfloat(1, 1, True)),
+        "entry_count": faker.pyint(1, 50),
+        "view_count": faker.pyint(1, 100)
+    },{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "occurred_date": occurred_date.isoformat(),
+        "discovered_date": discovered_date.isoformat(),
+        "reported_date": faker.date_time_between_dates(discovered_date, datetime.now()).isoformat(),
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "data_ver": str(faker.pyfloat(1, 1, True)),
+        "entry_count": faker.pyint(1, 50),
+        "view_count": faker.pyint(1, 100)
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/incident/many/",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    incident_data = r.json()
+    assert incident_data is not None
+    assert len(incident_data) == 2
+    assert incident_data[0]["id"] > 0
+    assert incident_data[0]["subject"] == data[0]["subject"]
+    assert incident_data[0]["id"] > 0
+    assert incident_data[0]["subject"] == data[0]["subject"]
+    assert incident_data[0]["id"] < incident_data[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/incident",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_update_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     incident = create_random_incident(db, faker, owner, False)
@@ -130,6 +183,54 @@ def test_update_incident(client: TestClient, superuser_token_headers: dict, norm
     assert incident_data["subject"] == data["subject"]
 
 
+def test_update_incidents(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    incident1 = create_random_incident(db, faker, owner, False)
+    incident2 = create_random_incident(db, faker, owner, False)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/incident/many/?ids={incident1.id}&ids={incident2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/incident/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/incident/many/?ids={incident1.id}&ids={incident2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/incident/many/?ids={incident1.id}&ids={incident2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    incident_data = r.json()
+    assert incident_data is not None
+    assert len(incident_data) == 2
+    assert incident_data[0]["id"] == incident1.id
+    assert incident_data[0]["subject"] == data["subject"]
+    assert incident_data[1]["id"] == incident2.id
+    assert incident_data[1]["subject"] == data["subject"]
+
+
 def test_delete_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     incident = create_random_incident(db, faker, owner, False)
@@ -157,6 +258,45 @@ def test_delete_incident(client: TestClient, superuser_token_headers: dict, norm
     )
 
     assert 400 <= r.status_code < 500
+
+
+def test_delete_incidents(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    incident1 = create_random_incident(db, faker, owner, False)
+    incident2 = create_random_incident(db, faker, owner, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/incident/many/?ids={incident1.id}&ids={incident2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/incident/many/?ids={incident1.id}&ids={incident2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    incident_data = r.json()
+    assert len(incident_data) == 2
+    assert incident_data is not None
+    assert incident_data[0]["id"] == incident1.id
+    assert incident_data[1]["id"] == incident2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/incident/{incident1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/incident/{incident2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
 
 
 def test_undelete_incident(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -235,7 +375,7 @@ def test_tag_untag_incident(client: TestClient, superuser_token_headers: dict, n
     tag2 = create_random_tag(db, faker)
     r = client.post(
         f"{settings.API_V1_STR}/incident/{incident.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag2.id}
     )
     assert r.status_code == 200
@@ -269,7 +409,7 @@ def test_source_add_remove_incident(client: TestClient, superuser_token_headers:
     source2 = create_random_source(db, faker)
     r = client.post(
         f"{settings.API_V1_STR}/incident/{incident.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source2.id}
     )
     assert r.status_code == 200

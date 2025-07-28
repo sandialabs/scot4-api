@@ -79,6 +79,7 @@ class TargetTypeEnum(enum.Enum):
     entity_class = "entity_class"
     entity_type = "entity_type"
     source = "source"
+    special_metric = "special_metric"
     stat = "stat"
     tag = "tag"
     admin = "admin"
@@ -122,6 +123,11 @@ class RemoteFlairStatusEnum(enum.Enum):
     reflair = "reflair"
 
 
+class RemoteFlairSourceEnum(enum.Enum):
+    browser = "browser"
+    scrape = "scrape"
+
+
 class ExportFormatEnum(enum.Enum):
     md = "md"
     html = "html"
@@ -129,6 +135,11 @@ class ExportFormatEnum(enum.Enum):
     pdf = "pdf"
 
 
+class SpecialMetricEnum(enum.Enum):
+    mttc = "mttc"
+    mttr = "mttr"
+
+    
 class PopularityMetricEnum(enum.Enum):
     upvote = "upvote"
     downvote = "downvote"

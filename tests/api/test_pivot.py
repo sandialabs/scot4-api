@@ -25,39 +25,30 @@ def test_get_pivot(client: TestClient, normal_user_token_headers: dict, db: Sess
     assert pivot_data["id"] == pivot.id
 
     r = client.get(
-        f"{settings.API_V1_STR}/pivot/-1",
+        f"{settings.API_V1_STR}/pivot/0",
         headers=normal_user_token_headers
     )
 
     assert r.status_code == 404
 
 
-def test_create_pivot(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_create_pivot(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
     pivot = {
         "title": faker.word(),
         "template": faker.word(),
         "description": faker.sentence()
     }
 
-    # Regular users can create pivots (for now)
-    # r = client.post(
-    #     f"{settings.API_V1_STR}/pivot",
-    #     headers=normal_user_token_headers,
-    #     json=pivot
-    # )
-
-    # assert r.status_code == 403
-
     r = client.post(
         f"{settings.API_V1_STR}/pivot",
-        headers=superuser_token_headers,
+        headers=normal_user_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/pivot",
-        headers=superuser_token_headers,
+        headers=normal_user_token_headers,
         json=pivot
     )
 
@@ -68,25 +59,51 @@ def test_create_pivot(client: TestClient, normal_user_token_headers: dict, super
     assert pivot_data["title"] == pivot["title"]
 
 
-def test_update_pivot(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_create_pivots(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
+    pivot = [{
+        "title": faker.word(),
+        "template": faker.word(),
+        "description": faker.sentence()
+    },{
+        "title": faker.word(),
+        "template": faker.word(),
+        "description": faker.sentence()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/pivot/many/",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/pivot/many/",
+        headers=normal_user_token_headers,
+        json=pivot
+    )
+
+    assert r.status_code == 200
+    pivot_data = r.json()
+    assert pivot_data is not None
+    assert len(pivot_data) == 2
+    assert pivot_data[0]["id"] > 0
+    assert pivot_data[0]["title"] == pivot[0]["title"]
+    assert pivot_data[1]["id"] > 0
+    assert pivot_data[1]["title"] == pivot[1]["title"]
+    assert pivot_data[0]["id"] < pivot_data[1]["id"]
+
+
+def test_update_pivot(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     pivot = create_random_pivot(db, faker)
 
     data = {
         "template": faker.word()
     }
 
-    # r = client.put(
-    #     f"{settings.API_V1_STR}/pivot/{pivot.id}",
-    #     headers=normal_user_token_headers,
-    #     json=data
-    # )
-
-    # Regular users can update pivots (for now)
-    # assert r.status_code == 403
-
     r = client.put(
         f"{settings.API_V1_STR}/pivot/{pivot.id}",
-        headers=superuser_token_headers,
+        headers=normal_user_token_headers,
         json=data
     )
 
@@ -96,51 +113,114 @@ def test_update_pivot(client: TestClient, normal_user_token_headers: dict, super
     assert pivot_data["id"] == pivot.id
     assert pivot_data["template"] == data["template"]
 
-    # r = client.put(
-    #     f"{settings.API_V1_STR}/pivot/{pivot.id}",
-    #     headers=normal_user_token_headers,
-    # )
+    r = client.put(
+        f"{settings.API_V1_STR}/pivot/{pivot.id}",
+        headers=normal_user_token_headers,
+    )
 
-    # assert r.status_code == 403
+    assert r.status_code == 422
 
     r = client.put(
         f"{settings.API_V1_STR}/pivot/-1",
-        headers=superuser_token_headers,
+        headers=normal_user_token_headers,
         json=data
     )
 
     assert r.status_code == 404
 
 
-def test_delete_pivot(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_update_pivots(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    pivot1 = create_random_pivot(db, faker)
+    pivot2 = create_random_pivot(db, faker)
+
+    data = {
+        "template": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/pivot/many/?ids={pivot1.id}&ids={pivot2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    pivot_data = r.json()
+    assert pivot_data is not None
+    assert len(pivot_data) == 2
+    assert pivot_data[0]["id"] == pivot1.id
+    assert pivot_data[0]["template"] == data["template"]
+    assert pivot_data[1]["id"] == pivot2.id
+    assert pivot_data[1]["template"] == data["template"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/pivot/many/?ids=-1",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_pivot(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     pivot = create_random_pivot(db, faker)
 
-    # Regular users can delete pivots (for now)
-    # r = client.delete(
-    #     f"{settings.API_V1_STR}/pivot/{pivot.id}",
-    #     headers=normal_user_token_headers
-    # )
-
-    # assert r.status_code == 403
     r = client.delete(
         f"{settings.API_V1_STR}/pivot/-1",
-        headers=superuser_token_headers
+        headers=normal_user_token_headers
     )
 
     assert r.status_code == 404
 
     r = client.delete(
         f"{settings.API_V1_STR}/pivot/{pivot.id}",
-        headers=superuser_token_headers
+        headers=normal_user_token_headers
     )
 
-    assert 200 <= r.status_code < 300
+    assert r.status_code == 200
     pivot_data = r.json()
     assert pivot_data is not None
     assert pivot_data["id"] == pivot.id
 
     r = client.get(
         f"{settings.API_V1_STR}/pivot/{pivot.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_pivots(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    pivot1 = create_random_pivot(db, faker)
+    pivot2 = create_random_pivot(db, faker)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/pivot/many/?ids=-1",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/pivot/many/?ids={pivot1.id}&ids={pivot2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 200
+    pivot_data = r.json()
+    assert pivot_data is not None
+    assert len(pivot_data) == 2
+    assert pivot_data[0]["id"] == pivot1.id
+    assert pivot_data[1]["id"] == pivot2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/pivot/{pivot1.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/pivot/{pivot2.id}",
         headers=normal_user_token_headers
     )
 

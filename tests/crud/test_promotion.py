@@ -259,24 +259,6 @@ def test_create_with_permissions_promotion(db: Session, faker: Faker) -> None:
     assert db_obj.p1_type == promotion.p1_type
 
 
-def test_create_in_object_promotion(db: Session, faker: Faker) -> None:
-    alert = create_random_alert(db, faker)
-    event = create_random_event(db, faker, create_extras=False)
-    promotion = PromotionCreate(
-        p0_id=alert.id,
-        p0_type=TargetTypeEnum.alert,
-        p1_id=event.id,
-        p1_type=TargetTypeEnum.event
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.promotion.create_in_object(db, obj_in=promotion, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.p0_id == promotion.p0_id
-
-
 def test_get_history_promotion(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     alert = create_random_alert(db, faker)

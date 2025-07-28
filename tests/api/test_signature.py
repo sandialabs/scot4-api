@@ -3,6 +3,7 @@ import random
 from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
+import pytest
 
 from app.enums import TargetTypeEnum, EntryClassEnum
 from app.core.config import settings
@@ -29,7 +30,7 @@ def test_get_signature(client: TestClient, superuser_token_headers: dict, normal
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/signature/-1",
+        f"{settings.API_V1_STR}/signature/0",
         headers=superuser_token_headers
     )
 
@@ -77,6 +78,48 @@ def test_create_signature(client: TestClient, normal_user_token_headers: dict, d
     assert signature_data["type"] == data["type"]
 
 
+def test_create_signatures(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    data = [{
+        "owner": owner.username,
+        "name": faker.word(),
+        "description": faker.sentence(),
+        "data": faker.json(),
+        "type": faker.word()
+    },{
+        "owner": owner.username,
+        "name": faker.word(),
+        "description": faker.sentence(),
+        "data": faker.json(),
+        "type": faker.word()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/signature/many",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/signature/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    signature_data = r.json()
+    assert signature_data is not None
+    assert len(signature_data) == 2
+    assert signature_data[0]["id"] >= 1
+    assert signature_data[0]["name"] == data[0]["name"]
+    assert signature_data[0]["type"] == data[0]["type"]
+    assert signature_data[1]["id"] >= 1
+    assert signature_data[1]["name"] == data[1]["name"]
+    assert signature_data[1]["type"] == data[1]["type"]
+    assert signature_data[0]["id"] < signature_data[1]["id"]
+
+
 def test_update_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
@@ -122,6 +165,54 @@ def test_update_signature(client: TestClient, superuser_token_headers: dict, nor
     assert signature_data["type"] != signature.type
 
 
+def test_update_signatures(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    signature1 = create_random_signature(db, faker, owner)
+    signature2 = create_random_signature(db, faker, owner)
+
+    data = {
+        "type": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/signature/many/?ids={signature1.id}&ids={signature2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/signature/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/signature/many/?ids={signature1.id}&ids={signature2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/signature/many/?ids={signature1.id}&ids={signature2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    signature_data = r.json()
+    assert signature_data is not None
+    assert len(signature_data) == 2
+    assert signature_data[0]["id"] == signature1.id
+    assert signature_data[0]["type"] == data["type"]
+    assert signature_data[1]["id"] == signature2.id
+    assert signature_data[1]["type"] == data["type"]
+
+
 def test_delete_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
@@ -152,6 +243,52 @@ def test_delete_signature(client: TestClient, superuser_token_headers: dict, nor
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_signatures(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    signature1 = create_random_signature(db, faker, owner)
+    signature2 = create_random_signature(db, faker, owner)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/signature/many/?ids={signature1.id}&ids={signature2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/signature/many/?ids=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/signature/many/?ids={signature1.id}&ids={signature2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    signature_data = r.json()
+    assert signature_data is not None
+    assert len(signature_data) == 2
+    assert signature_data[0]["id"] == signature1.id
+    assert signature_data[1]["id"] == signature2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/{signature1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/{signature2.id}",
         headers=superuser_token_headers
     )
 
@@ -231,14 +368,14 @@ def test_entries_signature(client: TestClient, superuser_token_headers: dict, no
     assert entry_data["result"][0]["id"] == entry.id
 
 
-def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_tag_untag_signature(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
     tag = create_random_tag(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/-1/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -246,14 +383,14 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -261,7 +398,7 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -271,7 +408,7 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/-1/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -279,14 +416,14 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -294,7 +431,7 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -303,14 +440,14 @@ def test_tag_untag_signature(client: TestClient, normal_user_token_headers: dict
     assert tag_signature["tags"] == []
 
 
-def test_source_add_remove_signature(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_source_add_remove_signature(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
     source = create_random_source(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/-1/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -318,7 +455,7 @@ def test_source_add_remove_signature(client: TestClient, normal_user_token_heade
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -326,14 +463,14 @@ def test_source_add_remove_signature(client: TestClient, normal_user_token_heade
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -343,7 +480,7 @@ def test_source_add_remove_signature(client: TestClient, normal_user_token_heade
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/-1/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -351,14 +488,14 @@ def test_source_add_remove_signature(client: TestClient, normal_user_token_heade
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
     )
 
     assert r.status_code == 422
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -366,7 +503,7 @@ def test_source_add_remove_signature(client: TestClient, normal_user_token_heade
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/{signature.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -729,6 +866,7 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     assert any(i["id"] == signature.id for i in r.json()["result"])
 
 
+@pytest.mark.skip("Sigbody api is disabled")
 def test_sigbodies_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)

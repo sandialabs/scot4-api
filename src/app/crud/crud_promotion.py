@@ -194,7 +194,7 @@ class CRUDPromotion(CRUDBase[Promotion, PromotionCreate, PromotionUpdate]):
             _object = object_crud.get(db_session, _id)
             if object_type == TargetTypeEnum.alert:
                 alert_update = AlertUpdate(
-                    alertgroup_id=_object.alertgroup_id, status=StatusEnum.promoted
+                    status=StatusEnum.promoted
                 )
                 object_crud.update(
                     db_session=db_session,

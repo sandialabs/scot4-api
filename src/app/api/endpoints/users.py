@@ -1,6 +1,7 @@
 from typing import Any, Annotated
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Body, Depends, HTTPException, Path, Query
+from pydantic.json_schema import SkipJsonSchema
 from pydantic.networks import EmailStr
 from sqlalchemy.orm import Session
 
@@ -19,12 +20,13 @@ router = APIRouter()
     "/",
     response_model=schemas.ListResponse[schemas.User],
     dependencies=[Depends(deps.admin_only)],
+    summary="Get users"
 )
 def read_users(
     db: Session = Depends(deps.get_db),
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = None,
-    sort: Annotated[str | None, Query(...)] = None,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = -1,
+    sort: Annotated[str | SkipJsonSchema[None], Query(...)] = None,
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
@@ -38,11 +40,12 @@ def read_users(
     "/usernames",
     response_model=schemas.ListResponse[str],
     dependencies=[Depends(deps.get_current_active_user)],
+    summary="Get usernames"
 )
 def read_usernames(
     db: Session = Depends(deps.get_db),
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = None,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = -1,
 ) -> Any:
     """
     Read usernames of users (admin not required)
@@ -56,11 +59,17 @@ def read_usernames(
     "/activity",
     response_model=dict[str, datetime],
     dependencies=[Depends(deps.get_current_active_user)],
+    summary="Get recent activity",
+    responses={
+        200: {
+            "content": {"application/json": {"example": {"user1": "2025-01-01T08:00:00Z", "user2": "2025-01-01T18:00:00Z"}}}
+        }
+    }
 )
 def read_activity(
     db: Session = Depends(deps.get_db),
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = None,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = -1,
 ) -> Any:
     """
     Read activity of users (admin not required)
@@ -80,7 +89,7 @@ def read_activity(
     return resultDict
 
 
-description, examples = create_schema_details(schemas.User, "Create a new User")
+description, examples = create_schema_details(schemas.UserCreate, "Create a new user (admin only)")
 
 
 @router.post("/", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=description)
@@ -92,7 +101,7 @@ def create_user(
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
-    Create a new user
+    Create a new user (admin only)
     """
     user = crud.user.get_by_username(db, username=user_in.username)
     if user:
@@ -103,7 +112,7 @@ def create_user(
     return user
 
 
-@router.put("/me", response_model=schemas.User)
+@router.put("/me", response_model=schemas.User, summary="Update own user")
 def update_user_me(
     *,
     db: Session = Depends(deps.get_db),
@@ -129,25 +138,26 @@ def update_user_me(
     return crud.user.update(db, db_obj=current_user, obj_in=user_in, audit_logger=audit_logger)
 
 
-@router.get("/whoami", response_model=schemas.User)
+@router.get("/whoami", response_model=schemas.User, summary="Get own user")
 def read_user_who_am_i(
     _: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
-    Get current user
+    Get the current authenticated user
     """
     return current_user
 
 
-@router.post("/open", response_model=schemas.User)
+@router.post("/open", response_model=schemas.User, summary="Sign up a user")
 def create_user_open(
     *,
     db: Session = Depends(deps.get_db),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
+    username: Annotated[str, Body(...)],
     password: Annotated[str, Body(...)],
     email: Annotated[EmailStr, Body(...)],
-    fullname: Annotated[str, Body(...)],
+    fullname: Annotated[str, Body(...)] = "",
 ) -> Any:
     """
     Create new user without the need to be logged in
@@ -161,7 +171,7 @@ def create_user_open(
     return crud.user.create(db, obj_in=schemas.UserCreate(password=password, email=email, fullname=fullname), audit_logger=audit_logger)
 
 
-@router.get("/{id_or_username}", response_model=schemas.User)
+@router.get("/{id_or_username}", response_model=schemas.User, summary="Get user info")
 def read_user(
     id_or_username: Annotated[int | str, Path(...)],
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -188,10 +198,10 @@ def read_user(
     return user
 
 
-description, examples = create_schema_details(schemas.UserUpdate, "Update one or more fields of a User")
+description, examples = create_schema_details(schemas.UserUpdate, "Update a user (admin only)")
 
 
-@router.put("/{id}", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=description)
+@router.put("/{id}", response_model=schemas.User, dependencies=[Depends(deps.admin_only)], description=description, summary="Update a user")
 def update_user(
     *,
     db: Session = Depends(deps.get_db),
@@ -201,7 +211,7 @@ def update_user(
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
-    Update a user
+    Update a user (admin only)
     """
     user = crud.user.get(db, id)
     if not user:
@@ -211,7 +221,10 @@ def update_user(
 
 
 @router.delete(
-    "/{id}", response_model=schemas.User, dependencies=[Depends(deps.admin_only)]
+    "/{id}",
+    response_model=schemas.User,
+    dependencies=[Depends(deps.admin_only)],
+    summary="Delete user"
 )
 def delete_user(
     *,
@@ -234,6 +247,7 @@ def delete_user(
     "/{username}/reset-failed-attempts",
     response_model=schemas.Msg,
     dependencies=[Depends(deps.admin_only)],
+    summary="Reset failed password attempts"
 )
 def reset_failed_attempts(
     username: Annotated[str, Path(...)],
@@ -242,7 +256,7 @@ def reset_failed_attempts(
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
-    Resets the given user's number of failed password attempts
+    Resets the given user's number of failed password attempts to zero
     """
     user = crud.user.reset_failed_attempts(db, username)
     if user is None:

@@ -32,6 +32,7 @@ from .settings import Settings
 from .sigbody import Sigbody
 from .signature import Signature
 from .source import Source
+from .special_metric import SpecialMetric
 from .stat import Stat
 from .storage_settings import StorageSettings
 from .tag import Tag

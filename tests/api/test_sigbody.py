@@ -13,6 +13,10 @@ from tests.utils.tag import create_random_tag
 from tests.utils.source import create_random_source
 
 
+import pytest
+pytest.skip("Sigbody api is currently disabled", allow_module_level=True)
+
+
 def test_get_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
@@ -75,6 +79,48 @@ def test_create_sigbody(client: TestClient, normal_user_token_headers: dict, db:
     assert sigbody_data["body64"] == data["body64"]
 
 
+def test_create_sigbodies(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    signature = create_random_signature(db, faker, owner)
+
+    data = [{
+        "revision": faker.pyint(),
+        "body": faker.sentence(),
+        "body64": faker.sentence(),
+        "signature_id": signature.id
+    },{
+        "revision": faker.pyint(),
+        "body": faker.sentence(),
+        "body64": faker.sentence(),
+        "signature_id": signature.id
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/sigbody/many",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/sigbody/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    sigbody_data = r.json()
+    assert sigbody_data is not None
+    assert len(sigbody_data) == 2
+    assert sigbody_data[0]["id"] >= 1
+    assert sigbody_data[0]["body"] == data[0]["body"]
+    assert sigbody_data[0]["body64"] == data[0]["body64"]
+    assert sigbody_data[1]["id"] >= 1
+    assert sigbody_data[1]["body"] == data[1]["body"]
+    assert sigbody_data[1]["body64"] == data[1]["body64"]
+    assert sigbody_data[0]["id"] < sigbody_data[1]["id"]
+
+
 def test_update_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
@@ -121,6 +167,55 @@ def test_update_sigbody(client: TestClient, superuser_token_headers: dict, norma
     assert sigbody_data["body"] != sigbody.body
 
 
+def test_update_sigbodies(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    signature = create_random_signature(db, faker, owner)
+    sigbody1 = create_random_sigbody(db, faker, signature.id)
+    sigbody2 = create_random_sigbody(db, faker, signature.id)
+
+    data = {
+        "body": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/sigbody/many/?ids={sigbody1.id}&ids={sigbody2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/sigbody/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/sigbody/many/?ids={sigbody1.id}&ids={sigbody2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/sigbody/many/?ids={sigbody1.id}&ids={sigbody2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    sigbody_data = r.json()
+    assert sigbody_data is not None
+    assert len(sigbody_data) == 2
+    assert sigbody_data[0]["id"] == sigbody1.id
+    assert sigbody_data[0]["body"] == data["body"]
+    assert sigbody_data[1]["id"] == sigbody2.id
+    assert sigbody_data[1]["body"] == data["body"]
+
+
 def test_delete_sigbody(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     signature = create_random_signature(db, faker, owner)
@@ -152,6 +247,53 @@ def test_delete_sigbody(client: TestClient, superuser_token_headers: dict, norma
 
     r = client.get(
         f"{settings.API_V1_STR}/sigbody/{sigbody.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_sigbodies(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    signature = create_random_signature(db, faker, owner)
+    sigbody1 = create_random_sigbody(db, faker, signature.id)
+    sigbody2 = create_random_sigbody(db, faker, signature.id)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/sigbody/many/?ids={sigbody1.id}&ids={sigbody2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/sigbody/many/?ids=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/sigbody/many/?ids={sigbody1.id}&ids={sigbody2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    sigbody_data = r.json()
+    assert sigbody_data is not None
+    assert len(sigbody_data) == 2
+    assert sigbody_data[0]["id"] == sigbody1.id
+    assert sigbody_data[1]["id"] == sigbody2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/sigbody/{sigbody1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/sigbody/{sigbody2.id}",
         headers=superuser_token_headers
     )
 

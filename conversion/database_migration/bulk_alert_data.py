@@ -51,7 +51,7 @@ def transform_alert(alert=None, schema_id_map=None):
         if k =='columns' or k =='search' or k=='_raw':
             # We don't care about these columns because they should not show up in an alertgroup table
             continue
-        else: 
+        else:
             # Get the schem key id from the map we created beforehand
             schema_id = schema_id_map.get(f"{k}-{alertgroup_id}")
             if schema_id is None:
@@ -59,8 +59,10 @@ def transform_alert(alert=None, schema_id_map=None):
             else:
                 data_value = alert['data'].get(k)
                 data_value_flaired = alert['data_with_flair'].get(k)
-                data_value = json.dumps(data_value)
-                data_value_flaired = json.dumps(data_value_flaired)
+                if not isinstance(data_value, str):
+                    data_value = json.dumps(data_value)
+                if not isinstance(data_value_flaired, str):
+                    data_value_flaired = json.dumps(data_value_flaired)
                 alert_data = [data_value, data_value_flaired, schema_id , alert['id']]
                 alert_datas.append(alert_data)
     return alert_datas

@@ -1,9 +1,11 @@
+import random
+
 from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 from hashlib import md5
 
-from app.enums import TargetTypeEnum
+from app.enums import TargetTypeEnum, RemoteFlairSourceEnum
 from app.core.config import settings
 
 from tests.utils.alertgroup import create_random_alertgroup_no_sig
@@ -233,7 +235,8 @@ def test_enrich_entity(client: TestClient, normal_user_token_headers: dict, db: 
 def test_post_remote_flair(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
     data = {
         "uri": faker.uri(),
-        "html": create_remote_flair_html(faker)
+        "data": create_remote_flair_html(faker),
+        "source": random.choice(list(RemoteFlairSourceEnum)).value
     }
 
     r = client.post(
@@ -244,7 +247,7 @@ def test_post_remote_flair(client: TestClient, normal_user_token_headers: dict, 
 
     assert r.status_code == 200
     assert r.json() is not None
-    assert r.json()["md5"] == md5(data["html"].encode("utf-8")).hexdigest()
+    assert r.json()["md5"] == md5(data["data"].encode("utf-8")).hexdigest()
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/remote",
@@ -254,7 +257,7 @@ def test_post_remote_flair(client: TestClient, normal_user_token_headers: dict, 
 
     assert r.status_code == 200
     assert r.json() is not None
-    assert r.json()["md5"] == md5(data["html"].encode("utf-8")).hexdigest()
+    assert r.json()["md5"] == md5(data["data"].encode("utf-8")).hexdigest()
 
 
 def test_get_remote_flair(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:

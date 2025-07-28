@@ -675,22 +675,30 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get_history(self, db_session, id, only_latest_read=True):
         """
         Get the audit history of a particular object. By default only the latest
-        'read' audit is pulled for each user.
+        and earliest 'read' audit is pulled for each user.
         """
         query = db_session.query(Audit).filter(
             (Audit.thing_type == self.model.target_type_enum().value)
             & (Audit.thing_id == id))
         if only_latest_read:
-            subquery = db_session.query(Audit, func.row_number().over(
-                partition_by=Audit.username, order_by=Audit.when_date.desc())
-                .label("row_number"))
+            subquery = db_session.query(
+                Audit,
+                func.row_number().over(
+                    partition_by=[Audit.username, Audit.what], order_by=Audit.when_date.desc()
+                ).label("row_number"),
+                func.row_number().over(
+                    partition_by=[Audit.username, Audit.what], order_by=Audit.when_date
+                ).label("row_number_rev")
+            )
             subquery = subquery.filter(
                 (Audit.thing_type == self.model.target_type_enum().value)
                 & (Audit.thing_id == id)
             ).subquery()
             audit_alias = aliased(Audit, subquery)
             query = db_session.query(audit_alias).filter(
-                (subquery.c.row_number == 1) | (audit_alias.what != 'read')
+                (subquery.c.row_number == 1)
+                | (subquery.c.row_number_rev == 1)
+                | (audit_alias.what != 'read')
             )
         return query.all()
 

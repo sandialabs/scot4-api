@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timezone
+from enum import Enum
 
 from sqlalchemy.orm import Session
 
@@ -174,10 +175,14 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
             for data_item in extra_data:
                 if data_item in ["data", "entry_data"]:
                     continue
+                item_representation = extra_data[data_item]
+                if isinstance(item_representation, Enum):
+                    item_representation = item_representation.value
+                item_representation = repr(item_representation)
                 if extra_message == "":
-                    extra_message += f":\nChanged {data_item} to {repr(extra_data[data_item])}"
+                    extra_message += f":\nChanged {data_item} to {item_representation}"
                 else:
-                    extra_message += f", changed {data_item} to {repr(extra_data[data_item])}"
+                    extra_message += f", changed {data_item} to {item_representation}"
             message += extra_message
             message = self.ellipsis_message(message)
             obj_ref_id = target_type.value + " " + str(obj.id)

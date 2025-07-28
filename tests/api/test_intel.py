@@ -28,7 +28,7 @@ def test_get_intel(client: TestClient, superuser_token_headers: dict, normal_use
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/intel/-1",
+        f"{settings.API_V1_STR}/intel/0",
         headers=superuser_token_headers
     )
 
@@ -66,6 +66,45 @@ def test_create_intel(client: TestClient, normal_user_token_headers: dict, db: S
     assert intel_data is not None
     assert intel_data["id"] > 0
     assert intel_data["subject"] == data["subject"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/intel",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_intels(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+
+    data = [{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence()
+    },{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/intel/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    intel_data = r.json()
+    assert intel_data is not None
+    assert len(intel_data) == 2
+    assert intel_data[0]["id"] > 0
+    assert intel_data[0]["subject"] == data[0]["subject"]
+    assert intel_data[1]["id"] > 0
+    assert intel_data[1]["subject"] == data[1]["subject"]
+    assert intel_data[0]["id"] < intel_data[1]["id"]
 
     r = client.post(
         f"{settings.API_V1_STR}/intel",
@@ -113,6 +152,47 @@ def test_update_intel(client: TestClient, superuser_token_headers: dict, normal_
     assert intel_data["subject"] == data["subject"]
 
 
+def test_update_intels(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    intel1 = create_random_intel(db, faker, owner, False)
+    intel2 = create_random_intel(db, faker, owner, False)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/intel/many/?ids={intel1.id}&ids={intel2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/intel/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/intel/many/?ids={intel1.id}&ids={intel2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    intel_data = r.json()
+    assert intel_data is not None
+    assert len(intel_data) == 2
+    assert intel_data[0]["id"] == intel1.id
+    assert intel_data[0]["subject"] == data["subject"]
+    assert intel_data[1]["id"] == intel2.id
+    assert intel_data[1]["subject"] == data["subject"]
+
+
 def test_delete_intel(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     intel = create_random_intel(db, faker, owner, False)
@@ -143,6 +223,52 @@ def test_delete_intel(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.get(
         f"{settings.API_V1_STR}/intel/{intel.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_intels(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    intel1 = create_random_intel(db, faker, owner, False)
+    intel2 = create_random_intel(db, faker, owner, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/intel/many/?ids={intel1.id}&ids={intel2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/intel/many/?ids=-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/intel/many/?ids={intel1.id}&ids={intel2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    intel_data = r.json()
+    assert intel_data is not None
+    assert len(intel_data) == 2
+    assert intel_data[0]["id"] == intel1.id
+    assert intel_data[1]["id"] == intel2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/intel/{intel1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/intel/{intel2.id}",
         headers=superuser_token_headers,
     )
 
@@ -229,14 +355,14 @@ def test_entries_intel(client: TestClient, superuser_token_headers: dict, normal
     assert len(entry_data["result"]) == 0
 
 
-def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_tag_untag_intel(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     intel = create_random_intel(db, faker, owner, False)
     tag = create_random_tag(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -246,7 +372,7 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/-1/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -254,7 +380,7 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -262,7 +388,7 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/-1/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -270,7 +396,7 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -278,7 +404,7 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag.id}
     )
 
@@ -287,14 +413,14 @@ def test_tag_untag_intel(client: TestClient, normal_user_token_headers: dict, db
     assert tag_intel["tags"] == []
 
 
-def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_source_add_remove_intel(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     intel = create_random_intel(db, faker, owner, False)
     source = create_random_source(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -304,7 +430,7 @@ def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: 
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/-1/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -312,7 +438,7 @@ def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: 
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -320,7 +446,7 @@ def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: 
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -330,7 +456,7 @@ def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: 
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/-1/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -338,7 +464,7 @@ def test_source_add_remove_intel(client: TestClient, normal_user_token_headers: 
 
     r = client.post(
         f"{settings.API_V1_STR}/intel/{intel.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 

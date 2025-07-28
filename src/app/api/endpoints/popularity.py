@@ -10,7 +10,7 @@ from app.utils import create_schema_details
 router = APIRouter()
 
 
-@router.get("/{id}", response_model=schemas.Popularity, summary="Get a popularity", description="Get a popularity object")
+@router.get("/{id}", response_model=schemas.Popularity, summary="Get popularity", description="Get a popularity object")
 def read_object(
     *,
     db: Session = Depends(deps.get_db),
@@ -30,7 +30,7 @@ def read_object(
 description, examples = create_schema_details(schemas.PopularityCreate, "Create a new popularity associated with a target type")
 
 
-@router.post("/", response_model=schemas.Popularity, summary="Create a new Popularity Metric", description=description)
+@router.post("/", response_model=schemas.Popularity, summary="Create a new popularity metric", description=description)
 def create_object(
     *,
     db: Session = Depends(deps.get_db),
@@ -51,7 +51,7 @@ def create_object(
 description, examples = create_schema_details(schemas.PopularityUpdate, "Update one or more fields of a Popularity")
 
 
-@router.put("/{id}", response_model=schemas.Popularity, summary="Update a popularity", description=description)
+@router.put("/{id}", response_model=schemas.Popularity, summary="Update popularity", description=description)
 def update_object(
     *,
     db: Session = Depends(deps.get_db),
@@ -80,7 +80,7 @@ def delete_object(
 
     if not _obj_group:
         raise HTTPException(404, "Popularity not found")
-    
+
     if _obj_group.owner_id != current_user.id:
         raise HTTPException(404, "Popularity not found")
 

@@ -3,7 +3,7 @@ import jinja2
 from datetime import datetime
 from typing import Union, get_args
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import coalesce
 from sqlalchemy import and_, func, inspect
 
@@ -27,6 +27,19 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
         query = self._str_filter(query, filter_dict, "value")
         query = self._tag_or_source_filter(query, filter_dict, TargetTypeEnum.tag)
         query = self._tag_or_source_filter(query, filter_dict, TargetTypeEnum.source)
+        # Ability to filter by entity class
+        classes = filter_dict.pop("classes", None)
+        not_classes = filter_dict.get("not", {}).pop("classes", None)
+        if classes is not None:
+            if isinstance(classes, list):
+                query = query.filter(Entity.classes.any(EntityClass.name.in_(classes)))
+            else:
+                query = query.filter(Entity.classes.any(EntityClass.name == classes))
+        if not_classes is not None:
+            if isinstance(not_classes, list):
+                query = query.filter(~Entity.classes.any(EntityClass.name.in_(not_classes)))
+            else:
+                query = query.filter(~Entity.classes.any(EntityClass.name == not_classes))
 
         return super().filter(query, filter_dict)
 
@@ -107,22 +120,31 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
 
             if obj_in.classes is not None:
                 # Need to check
+                new_classes = []
                 for _class in obj_in.classes:
-                    _class = (
+                    existing_class = (
                         db_session.query(EntityClass)
-                        .filter_by(name=obj_in.type_name)
+                        .filter_by(name=_class)
                         .one_or_none()
                     )
-                    if _class is None:
-                        entity_class_model = EntityClassCreate(**entity_type_create)
+                    if existing_class is None:
+                        entity_class_create = jsonable_encoder(
+                            EntityClassCreate(name=_class)
+                        )
+                        entity_class_model = EntityClassCreate(**entity_class_create)
                         db_session.add(entity_class_model)
                         db_session.flush()
                         db_session.refresh(entity_class_model)
+                        new_classes.append(entity_class_model)
+                    else:
+                        new_classes.append(existing_class)
 
             obj_in_data = jsonable_encoder(obj_in)
             del obj_in_data["type_name"]
             if "classes" in obj_in_data and obj_in_data["classes"] is None:
                 del obj_in_data["classes"]
+            else:
+                obj_in_data["classes"] = new_classes
             obj_in_data["type_id"] = type_id
             db_obj = self.model(**obj_in_data)
 
@@ -263,7 +285,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
                 }
 
                 if element_type == TargetTypeEnum.alert:
-                    appearance_dict["alertgroup_id"] = appearance.alertgroup_id,
+                    appearance_dict["alertgroup_id"] = appearance.alertgroup_id
                     appearance_dict["subject"] = appearance.alertgroup_subject
                     appearance_dict["promoted_ids"] = [x.p1_id for x in appearance.promoted_to_targets]
                 if element_type == TargetTypeEnum.signature:
@@ -337,7 +359,13 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
 
         return entity
 
-    def add_enrichment(self, db_session: Session, entity_id: int, enrichment: EnrichmentCreate):
+    def add_enrichment(
+        self, 
+        db_session: Session, 
+        entity_id: int, 
+        enrichment: EnrichmentCreate,
+        audit_logger=None
+    ):
         entity = self.get(db_session=db_session, _id=entity_id)
         if entity is None:
             return None
@@ -355,6 +383,8 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
 
         db_session.refresh(entity)
         db_session.flush()
+        if audit_logger is not None:
+            audit_logger.log("create", enrichment)
         return entity
 
     def add_entity_classes(
@@ -432,7 +462,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
         create: bool = True,
         context: str = "linked to",
         entity_type: str | None = None,
-        entity_class: list[int] = None,
+        entity_class: list[str] = [],
         audit_logger=None,
         skip_duplicate: bool = True
     ):
@@ -454,7 +484,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
             entity = query.first()
 
             if entity_class is not None and entity is not None:
-                if set(entity_class) != set([a.id for a in entity.classes]):
+                if set(entity_class) != set([a.name for a in entity.classes]):
                     entity = None
 
             if entity is None:

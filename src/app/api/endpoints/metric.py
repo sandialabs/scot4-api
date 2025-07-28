@@ -3,6 +3,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, Depends, Query, HTTPException, Body, Path
 from sqlalchemy.orm import Session
+from pydantic.json_schema import SkipJsonSchema
 
 from app import crud, models, schemas
 from app.api import deps
@@ -13,7 +14,7 @@ router = APIRouter()
 
 # Reads ALL metrics data
 # Open to all users
-@router.get("/", response_model=list[schemas.Metric])
+@router.get("/", summary="Get metrics", response_model=list[schemas.Metric])
 def read_metrics(
     *,
     db: Session = Depends(deps.get_db),
@@ -27,10 +28,10 @@ def read_metrics(
 
 # Creates a new metric
 # Admin only
-description, examples = create_schema_details(schemas.MetricCreate)
+_, examples = create_schema_details(schemas.MetricCreate)
 
 
-@router.post("/", response_model=schemas.Metric, summary="Create a metric", description=description)
+@router.post("/", response_model=schemas.Metric, summary="Create a metric")
 def create_metric(
     *,
     db: Session = Depends(deps.get_db),
@@ -61,16 +62,19 @@ def get_results(
     *,
     db: Session = Depends(deps.get_db),
     _: models.User = Depends(deps.get_current_active_user),
-    metric_ids: Annotated[list[int] | None, Query()] = None,
-    dates: Annotated[list[datetime] | None, Query(..., min_items=1, max_items=2)] = None,
-    exclude_users: Annotated[list[str] | None, Query()] = None,
+    metric_ids: Annotated[list[int] | SkipJsonSchema[None], Query()] = None,
+    dates: Annotated[list[datetime] | SkipJsonSchema[None], Query(..., min_items=1, max_items=2)] = None,
+    exclude_users: Annotated[list[str] | SkipJsonSchema[None], Query()] = None,
 ) -> Any:
+    """
+    Get results from all metrics
+    """
     return crud.metric.get_results_for_metrics(db, metric_ids, dates, exclude_users)
 
 
 # Gets single gamification data
 # Open to all users
-@router.get("/{id}", response_model=schemas.Metric)
+@router.get("/{id}", response_model=schemas.Metric, summary="Get a metric")
 def read_metric(
     *,
     db: Session = Depends(deps.get_db),

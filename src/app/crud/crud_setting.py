@@ -27,7 +27,7 @@ class CRUDSetting(CRUDBase[Settings, SettingsCreate, SettingsUpdate]):
         else:
             update_data = obj_in.model_dump(exclude_unset=True)
         for field in update_data:
-            if field in SettingsUpdate.schema()["properties"]:
+            if field in SettingsUpdate.model_json_schema()["properties"]:
                 setattr(db_obj, field, update_data[field])
         if audit_logger is not None:
             audit_logger.log("update", update_data)

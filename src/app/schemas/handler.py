@@ -2,6 +2,9 @@ from datetime import datetime
 from typing import Annotated
 
 from pydantic import BaseModel, field_validator, ValidationInfo, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
+
+from app.schemas.response import ResultBase
 
 
 class HandlerBase(BaseModel):
@@ -22,15 +25,12 @@ class HandlerCreate(HandlerBase):
 
 
 class HandlerUpdate(HandlerBase):
-    start_date: Annotated[datetime | None, Field(...)] = None
-    end_date: Annotated[datetime | None, Field(...)] = None
-    username: Annotated[str | None, Field(...)] = None
+    start_date: Annotated[datetime | SkipJsonSchema[None], Field(...)] = None
+    end_date: Annotated[datetime | SkipJsonSchema[None], Field(...)] = None
+    username: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty
-class Handler(HandlerBase):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime, Field(...)]
-    modified: Annotated[datetime, Field(...)]
+class Handler(HandlerBase, ResultBase):
 
     model_config = ConfigDict(from_attributes=True)

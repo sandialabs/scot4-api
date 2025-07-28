@@ -280,29 +280,6 @@ def test_create_with_permissions_handler(db: Session, faker: Faker) -> None:
     assert db_obj.position == handler.position
 
 
-def test_create_in_object_handler(db: Session, faker: Faker) -> None:
-    owner = create_random_user(db, faker)
-    start_date = faker.date_time_this_month()
-    handler = HandlerCreate(
-        start_date=start_date,
-        end_date=start_date + timedelta(days=7),
-        username=owner.username,
-        position=faker.word()
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.handler.create_in_object(db, obj_in=handler, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.position == handler.position
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_handler(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     start_date = faker.date_time_this_month()

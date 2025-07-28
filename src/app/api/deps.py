@@ -1,7 +1,8 @@
 import json
 from datetime import datetime, timedelta
+from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request
+from fastapi import Depends, HTTPException, Request, Query, Path
 from fastapi.encoders import jsonable_encoder
 from jose import jwt
 from pydantic import ValidationError
@@ -61,6 +62,23 @@ def api_token_mixin(request: Request, db: Session = Depends(get_db)):
 
 def get_token_data(
     mixin: str = Depends(api_token_mixin),
+    token: str = Depends(reusable_oauth2),
+) -> schemas.TokenPayload:
+    try:
+        if token:
+            payload = jwt.decode(
+                token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
+            )
+            token_data = schemas.TokenPayload(**payload)
+        else:
+            token_data = None
+    except (jwt.JWTError, ValidationError):
+        # Token validation failed; continue as if there's no token
+        token_data = None
+    return token_data
+
+
+def get_token_data_no_apikey(
     token: str = Depends(reusable_oauth2),
 ) -> schemas.TokenPayload:
     try:
@@ -247,7 +265,8 @@ class PermissionCheck:
     type_allow_whitelist = [TargetTypeEnum.entity, TargetTypeEnum.tag,
                             TargetTypeEnum.source, TargetTypeEnum.entity_class,
                             TargetTypeEnum.pivot, TargetTypeEnum.entity_type,
-                            TargetTypeEnum.none, None]
+                            TargetTypeEnum.special_metric, TargetTypeEnum.none,
+                            None]
 
     def __init__(self, target_type, permission, allow_admin=True):
         self.target_type = target_type
@@ -290,15 +309,26 @@ admin_only = PermissionCheck(TargetTypeEnum.admin, PermissionEnum.admin)
 class PermissionCheckId(PermissionCheck):
     def __call__(
         self,
-        id: int,
+        id: Annotated[int, Path(...)],
         db: Session = Depends(get_db),
         user: models.User = Depends(get_current_active_user),
         roles: list[models.Role] = Depends(get_current_roles),
     ):
         if not self.check_permissions(db, roles, user, id):
-            raise HTTPException(
-                status_code=403,
-                detail="You do not have permission to access this resource, or "
-                "it does not exist",
-            )
+            raise HTTPException(403, "You do not have permission to access this resource, or it does not exist")
+        return True
+
+
+# Same as above, except for many objects
+class PermissionCheckIds(PermissionCheck):
+    def __call__(
+        self,
+        ids: Annotated[list[int], Query(...)],
+        db: Session = Depends(get_db),
+        user: models.User = Depends(get_current_active_user),
+        roles: list[models.Role] = Depends(get_current_roles),
+    ):
+        for id in ids:
+            if not self.check_permissions(db, roles, user, id):
+                raise HTTPException(403, "You do not have permission to access this resource, or it does not exist")
         return True

@@ -27,7 +27,7 @@ def test_get_guide(client: TestClient, superuser_token_headers: dict, normal_use
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/guide/-1",
+        f"{settings.API_V1_STR}/guide/0",
         headers=superuser_token_headers
     )
 
@@ -44,7 +44,7 @@ def test_get_guide(client: TestClient, superuser_token_headers: dict, normal_use
     assert guide_get["id"] == guide.id
 
 
-def test_create_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_create_guide(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     signature = create_random_signature(db, faker, user)
 
@@ -70,6 +70,48 @@ def test_create_guide(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.post(
         f"{settings.API_V1_STR}/guide",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_guides(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    signature = create_random_signature(db, faker, user)
+
+    data = [{
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": f"Guide for {signature.name}",
+        "status": random.choice(list(GuideStatusEnum)).value
+    },{
+        "owner": user.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": f"Guide for {signature.name}",
+        "status": random.choice(list(GuideStatusEnum)).value
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/many/",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    guide_create = r.json()
+    assert guide_create is not None
+    assert len(guide_create) == 2
+    assert guide_create[0]["id"] > 0
+    assert guide_create[0]["owner"] == data[0]["owner"]
+    assert guide_create[0]["subject"] == data[0]["subject"]
+    assert guide_create[1]["id"] > 0
+    assert guide_create[1]["owner"] == data[1]["owner"]
+    assert guide_create[1]["subject"] == data[1]["subject"]
+    assert guide_create[0]["id"] < guide_create[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/many/",
         headers=normal_user_token_headers,
     )
 
@@ -122,6 +164,55 @@ def test_update_guide(client: TestClient, superuser_token_headers: dict, normal_
     assert guide_update["subject"] != guide.subject
 
 
+def test_update_guides(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    signature = create_random_signature(db, faker, user)
+    guide1 = create_random_guide(db, faker, user, signature, False)
+    guide2 = create_random_guide(db, faker, user, signature, False)
+
+    data = {
+        "subject": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/guide/many/?ids={guide1.id}&ids={guide2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/guide/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/guide/many/?ids={guide1.id}&ids={guide2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/guide/many/?ids={guide1.id}&ids={guide2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    guide_update = r.json()
+    assert guide_update is not None
+    assert len(guide_update) == 2
+    assert guide_update[0]["id"] == guide1.id
+    assert guide_update[0]["subject"] == data["subject"]
+    assert guide_update[1]["id"] == guide2.id
+    assert guide_update[1]["subject"] == data["subject"]
+
+
 def test_delete_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     signature = create_random_signature(db, faker, user)
@@ -153,6 +244,53 @@ def test_delete_guide(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.get(
         f"{settings.API_V1_STR}/guide/{guide.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_guides(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    signature = create_random_signature(db, faker, user)
+    guide1 = create_random_guide(db, faker, user, signature, False)
+    guide2 = create_random_guide(db, faker, user, signature, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/guide/many/?ids={guide1.id}&ids={guide2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/guide/many/?ids=-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/guide/many/?ids={guide1.id}&ids={guide2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    guide_update = r.json()
+    assert guide_update is not None
+    assert len(guide_update) == 2
+    assert guide_update[0]["id"] == guide1.id
+    assert guide_update[1]["id"] == guide2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/guide/{guide1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/guide/{guide2.id}",
         headers=superuser_token_headers,
     )
 

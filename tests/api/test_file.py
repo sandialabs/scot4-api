@@ -1,5 +1,7 @@
 import os
 import random
+import pyzipper
+import pytest
 
 from faker import Faker
 from fastapi.testclient import TestClient
@@ -36,7 +38,7 @@ def test_get_file(client: TestClient, superuser_token_headers: dict, normal_user
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/file/-1",
+        f"{settings.API_V1_STR}/file/0",
         headers=superuser_token_headers,
     )
 
@@ -85,6 +87,52 @@ def test_put_file(client: TestClient, superuser_token_headers: dict, normal_user
     assert r.status_code == 404
 
 
+def test_put_files(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    file1 = create_random_file(db, faker, user)
+    file2 = create_random_file(db, faker, user)
+
+    data = {
+        "description": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/file/many/?ids={file1.id}&ids={file2.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    file_data = r.json()
+    assert file_data[0]["id"] == file1.id
+    assert file_data[0]["description"] == data["description"]
+    assert file_data[1]["id"] == file2.id
+    assert file_data[1]["description"] == data["description"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/file/many/?ids={file1.id}&ids={file2.id}",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/file/many/?ids={file1.id}&ids={file2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/file/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 404
+
+
 def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     file = create_random_file(db, faker, owner)
@@ -103,7 +151,7 @@ def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_use
     tag2 = create_random_tag(db, faker)
     r = client.post(
         f"{settings.API_V1_STR}/file/{file.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag2.id}
     )
 
@@ -113,7 +161,7 @@ def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_use
 
     r = client.post(
         f"{settings.API_V1_STR}/file/-1/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag2.id}
     )
 
@@ -121,7 +169,7 @@ def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_use
 
     r = client.post(
         f"{settings.API_V1_STR}/file/{file.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -154,14 +202,14 @@ def test_tag_untag(client: TestClient, superuser_token_headers: dict, normal_use
     assert r.status_code == 422
 
 
-def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_source_add_remove(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     file = create_random_file(db, faker, owner)
     source = create_random_source(db, faker)
 
     r = client.post(
         f"{settings.API_V1_STR}/file/{file.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -171,7 +219,7 @@ def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/file/-1/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -179,7 +227,7 @@ def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/file/{file.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -187,7 +235,7 @@ def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/file/{file.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -197,7 +245,7 @@ def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/file/-1/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source.id}
     )
 
@@ -205,7 +253,7 @@ def test_source_add_remove(client: TestClient, normal_user_token_headers: dict, 
 
     r = client.post(
         f"{settings.API_V1_STR}/file/{file.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1}
     )
 
@@ -290,9 +338,8 @@ def test_download_file(client: TestClient, normal_user_token_headers: dict, db: 
     )
 
     assert r.status_code == 200
-    file_data = b""
-    for data in r.stream:
-        file_data += data
+    print(r.content)
+    file_data = r.content
     local_file_data = open(os.path.join(settings.FILE_STORAGE_LOCATION, file.file_pointer), "rb").read()
     assert file_data == local_file_data
 
@@ -303,8 +350,120 @@ def test_download_file(client: TestClient, normal_user_token_headers: dict, db: 
 
     assert r.status_code == 404
 
+    password = faker.word()
+    r = client.get(
+        f"{settings.API_V1_STR}/file/download/{file.id}?password={password}",
+        headers=normal_user_token_headers,
+    )
 
-def test_delete_files(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    assert "scot_download.zip" in r.headers["content-disposition"]
+    
+    with open("scot_download.zip", "wb") as f:
+        f.write(r.content)
+    
+    assert pyzipper.is_zipfile("scot_download.zip")
+
+    with pyzipper.AESZipFile("scot_download.zip", "r") as f:
+        assert file.filename in [a.filename for a in f.filelist]
+
+        with pytest.raises(RuntimeError):
+            f.read(file.filename)
+
+        f.setpassword(password.encode("utf-8"))
+
+        assert f.read(file.filename) == open(os.path.join(settings.FILE_STORAGE_LOCATION, file.file_pointer), "rb").read()
+
+    os.unlink("scot_download.zip")
+
+
+def test_download_files(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    file = create_random_file(db, faker, owner)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/file/download/many/?ids={file.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert file.content_type in r.headers["content-type"]
+    assert file.filename in r.headers["content-disposition"]
+    file_data = r.content
+    assert file_data == open(os.path.join(settings.FILE_STORAGE_LOCATION, file.file_pointer), "rb").read()
+
+    r = client.get(
+        f"{settings.API_V1_STR}/file/download/many/?ids=-1",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/file/download/many/?ids={file.id}&ids=-1",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    file2 = create_random_file(db, faker, owner)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/file/download/many/?ids={file.id}&ids={file2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    assert "scot_download.zip" in r.headers["content-disposition"]
+    
+    with open("scot_download.zip", "wb") as f:
+        f.write(r.content)
+    
+    assert pyzipper.is_zipfile("scot_download.zip")
+
+    with pyzipper.AESZipFile("scot_download.zip", "r") as f:
+        assert file.filename in [a.filename for a in f.filelist]
+        assert file2.filename in [a.filename for a in f.filelist]
+
+        assert f.read(file.filename) == open(os.path.join(settings.FILE_STORAGE_LOCATION, file.file_pointer), "rb").read()
+        assert f.read(file2.filename) == open(os.path.join(settings.FILE_STORAGE_LOCATION, file2.file_pointer), "rb").read()
+
+    password = faker.word()
+    r = client.get(
+        f"{settings.API_V1_STR}/file/download/many/?ids={file.id}&ids={file2.id}&password={password}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert r.headers["content-type"] == "application/zip"
+    assert "scot_download.zip" in r.headers["content-disposition"]
+    
+    with open("scot_download.zip", "wb") as f:
+        f.write(r.content)
+    
+    assert pyzipper.is_zipfile("scot_download.zip")
+
+    with pyzipper.AESZipFile("scot_download.zip", "r") as f:
+        assert file.filename in [a.filename for a in f.filelist]
+        assert file2.filename in [a.filename for a in f.filelist]
+
+        with pytest.raises(RuntimeError):
+            f.read(file.filename)
+        
+        with pytest.raises(RuntimeError):
+            f.read(file2.filename)
+
+        f.setpassword(password.encode("utf-8"))
+
+        assert f.read(file.filename) == open(os.path.join(settings.FILE_STORAGE_LOCATION, file.file_pointer), "rb").read()
+        assert f.read(file2.filename) == open(os.path.join(settings.FILE_STORAGE_LOCATION, file2.file_pointer), "rb").read()
+
+    os.unlink("scot_download.zip")
+
+
+def test_delete_file(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     file = create_random_file(db, faker, owner)
 
@@ -337,6 +496,54 @@ def test_delete_files(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.get(
         f"{settings.API_V1_STR}/file/{file.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_files(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    file1 = create_random_file(db, faker, owner)
+    file2 = create_random_file(db, faker, owner)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/file/many/?ids={file1.id}&ids={file2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/file/many/?ids=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/file/many/?ids={file1.id}&ids={file2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    file_delete = r.json()
+    assert len(file_delete) == 2
+    assert file_delete[0]["id"] == file1.id
+    assert not os.path.exists(os.path.join(settings.FILE_STORAGE_LOCATION, file1.file_pointer))
+    assert os.path.exists(os.path.join(settings.FILE_DELETED_LOCATION, file1.file_pointer))
+    assert file_delete[1]["id"] == file2.id
+    assert not os.path.exists(os.path.join(settings.FILE_STORAGE_LOCATION, file2.file_pointer))
+    assert os.path.exists(os.path.join(settings.FILE_DELETED_LOCATION, file2.file_pointer))
+
+    r = client.get(
+        f"{settings.API_V1_STR}/file/{file1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+    r = client.get(
+        f"{settings.API_V1_STR}/file/{file2.id}",
         headers=superuser_token_headers
     )
 

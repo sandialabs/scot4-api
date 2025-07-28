@@ -271,28 +271,6 @@ def test_create_with_permissions_notification(db: Session, faker: Faker) -> None
     assert db_obj.ref_id == notification.ref_id
 
 
-def test_create_in_object_notification(db: Session, faker: Faker) -> None:
-    owner = create_random_user(db, faker)
-    notification = NotificationCreate(
-        user_id=owner.id,
-        message=faker.sentence(),
-        ack=faker.pybool(),
-        ref_id=faker.word()
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.notification.create_in_object(db, obj_in=notification, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.message == notification.message
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_notification(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     notification = NotificationCreate(

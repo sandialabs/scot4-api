@@ -10,6 +10,10 @@ from tests.utils.checklist import create_random_checklist
 from tests.utils.tag import create_random_tag
 
 
+import pytest
+pytest.skip("Checklist api is currently disabled", allow_module_level=True)
+
+
 def test_get_checklist(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     checklist = create_random_checklist(db, faker)
     r = client.get(
@@ -78,6 +82,61 @@ def test_create_checklist(client: TestClient, normal_user_token_headers: dict, s
     assert r.status_code == 422
 
 
+def test_create_checklists(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker) -> None:
+    data = [{
+        "owner": faker.word(),
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": faker.sentence(12),
+        "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
+        "checklist_data": faker.pydict(value_types=[int, str, float]),
+    },{
+        "owner": faker.word(),
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": faker.sentence(12),
+        "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
+        "checklist_data": faker.pydict(value_types=[int, str, float]),
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/checklist/many/",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    create_checklist = r.json()
+    assert create_checklist is not None
+    assert len(create_checklist) == 2
+    assert create_checklist[0]["id"] is not None
+    assert create_checklist[0]["owner"] == data[0]["owner"]
+    assert create_checklist[1]["id"] is not None
+    assert create_checklist[0]["owner"] == data[0]["owner"]
+    assert create_checklist[0]["id"] < create_checklist[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/checklist/many/",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    create_checklist = r.json()
+    assert create_checklist is not None
+    assert len(create_checklist) == 2
+    assert create_checklist[0]["id"] is not None
+    assert create_checklist[0]["owner"] == data[0]["owner"]
+    assert create_checklist[1]["id"] is not None
+    assert create_checklist[0]["owner"] == data[0]["owner"]
+    assert create_checklist[0]["id"] + 1 == create_checklist[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/checklist/many/",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_update_checklist(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     checklist = create_random_checklist(db, faker)
     data = {
@@ -120,6 +179,53 @@ def test_update_checklist(client: TestClient, normal_user_token_headers: dict, s
     assert r.status_code == 422
 
 
+def test_update_checklists(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    checklist1 = create_random_checklist(db, faker)
+    checklist2 = create_random_checklist(db, faker)
+
+    data = {
+        "tlp": TlpEnum.white.value,
+        "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/checklist/many/?ids={checklist1.id}&ids={checklist2.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    get_checklist = r.json()
+    assert get_checklist is not None
+    assert len(get_checklist) == 2
+    assert get_checklist[0]["tlp"] == data["tlp"]
+    assert get_checklist[0]["checklist_data_ver"] == data["checklist_data_ver"]
+    assert get_checklist[1]["tlp"] == data["tlp"]
+    assert get_checklist[1]["checklist_data_ver"] == data["checklist_data_ver"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/checklist/many/?ids=-1",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/checklist/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/checklist/many/?ids={checklist1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_delete_checklist(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     checklist = create_random_checklist(db, faker)
 
@@ -149,6 +255,51 @@ def test_delete_checklist(client: TestClient, normal_user_token_headers: dict, s
 
     r = client.delete(
         f"{settings.API_V1_STR}/checklist/-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_checklist2(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    checklist1 = create_random_checklist(db, faker)
+    checklist2 = create_random_checklist(db, faker)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/checklist/many/?ids={checklist1.id}&ids={checklist2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/checklist/many/?ids={checklist1.id}&ids={checklist2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    delete_checklist = r.json()
+    assert delete_checklist is not None
+    assert len(delete_checklist) == 2
+    assert delete_checklist[0]["id"] == checklist1.id
+    assert delete_checklist[1]["id"] == checklist2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/checklist/{checklist1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/checklist/{checklist2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/checklist/many/?ids=-1",
         headers=superuser_token_headers,
     )
 

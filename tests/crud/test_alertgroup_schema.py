@@ -302,27 +302,6 @@ def test_create_with_permissions_alertgroup_schema(db: Session, faker: Faker) ->
     assert count == 0
 
 
-def test_create_in_object_alertgroup_schema(db: Session, faker: Faker) -> None:
-    schema_type = faker.word()
-    schema = AlertGroupSchemaColumnCreate(
-        schema_key_name=f"{faker.word()}_{schema_type}",
-        schema_key_type=schema_type,
-        schema_key_order=0
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.alert_group_schema.create_in_object(db, obj_in=schema, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.schema_key_name == schema.schema_key_name
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_alertgroup_schema(db: Session, faker: Faker) -> None:
     schema_type = faker.word()
     schema = AlertGroupSchemaColumnCreate(

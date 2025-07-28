@@ -3,6 +3,7 @@ from typing import Any, Annotated
 from dateutil import parser
 
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.enums import TargetTypeEnum
 
@@ -21,7 +22,7 @@ class AppearanceCreate(AppearanceBase):
 
 
 class AppearanceUpdate(AppearanceBase):
-    when_date: Annotated[datetime | None, Field(...)] = None
+    when_date: Annotated[datetime | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty
@@ -32,12 +33,12 @@ class Appearance(AppearanceBase):
 
 
 class AppearanceSearch(BaseModel):
-    id: Annotated[str | None, Field(...)] = None
-    when_date: Annotated[str | None, Field(...)] = None
-    value_str: Annotated[str | None, Field(...)] = None
-    value_type: Annotated[str | None, Field(...)] = None
-    target_type: Annotated[str | None, Field(...)] = None
-    target_id: Annotated[str | None, Field(...)] = None
+    id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    when_date: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    value_str: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    value_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    target_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    target_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         if attr == "id" or attr == "target_id":

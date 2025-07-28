@@ -1,9 +1,10 @@
+import random
 from hashlib import md5
 from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.enums import RemoteFlairStatusEnum
+from app.enums import RemoteFlairStatusEnum, RemoteFlairSourceEnum
 from app.schemas.flair import FlairedEntity, FlairedTarget, FlairResults
 
 
@@ -93,18 +94,19 @@ def create_random_remote_flair(db: Session, faker: Faker) -> models.RemoteFlair:
     for _ in range(faker.pyint(1,3)):
         urls.append(faker.url())
 
-    html = create_remote_flair_html(faker, ips, emails, urls)
+    data = create_remote_flair_html(faker, ips, emails, urls)
     remote_flair = schemas.RemoteFlairCreate(
-        md5=md5(html.encode("utf-8")).hexdigest(),
+        md5=md5(data.encode("utf-8")).hexdigest(),
         uri=faker.url(),
-        html=html,
+        data=data,
         status=RemoteFlairStatusEnum.ready,
         results={
             "ipv4": [{a: 1} for a in ips],
             "domain": [{a: 1} for a in urls],
             "email": [{a: 1} for a in emails],
-        }
+        },
+        source=random.choice(list(RemoteFlairSourceEnum))
     )
     dict_obj = remote_flair.model_dump()
-    dict_obj.pop("html", None)
+    dict_obj.pop("data", None)
     return crud.remote_flair.create(db, obj_in=dict_obj)

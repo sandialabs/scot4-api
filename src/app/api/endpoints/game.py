@@ -2,6 +2,7 @@ from typing import Any, Annotated
 from datetime import datetime
 from fastapi import APIRouter, Depends, Query, HTTPException, Body, Path
 from sqlalchemy.orm import Session
+from pydantic.json_schema import SkipJsonSchema
 
 from app import crud, models, schemas
 from app.api import deps
@@ -12,7 +13,7 @@ router = APIRouter()
 
 # Reads ALL gamification data
 # Open to all users
-@router.get("/", response_model=list[schemas.Game])
+@router.get("/", summary="Get game data", response_model=list[schemas.Game])
 def read_games(
     *,
     db: Session = Depends(deps.get_db),
@@ -26,10 +27,10 @@ def read_games(
 
 # Creates a new game
 # Admin only
-description, examples = create_schema_details(schemas.GameCreate)
+_, examples = create_schema_details(schemas.GameCreate)
 
 
-@router.post("/", response_model=schemas.Game, summary="Create a game", description=description)
+@router.post("/", response_model=schemas.Game, summary="Create a game")
 def create_game(
     *,
     db: Session = Depends(deps.get_db),
@@ -60,17 +61,20 @@ def get_results(
     *,
     db: Session = Depends(deps.get_db),
     _: models.User = Depends(deps.get_current_active_user),
-    game_ids: Annotated[list[int] | None, Query(...)] = None,
-    dates: Annotated[list[datetime] | None, Query(..., min_items=1, max_items=2)] = None,
-    num_top_users: Annotated[int | None, Query(...)] = None,
-    exclude_users: Annotated[list[str] | None, Query(...)] = None,
+    game_ids: Annotated[list[int] | SkipJsonSchema[None], Query(...)] = None,
+    dates: Annotated[list[datetime] | SkipJsonSchema[None], Query(..., min_items=1, max_items=2)] = None,
+    num_top_users: Annotated[int | SkipJsonSchema[None], Query(...)] = None,
+    exclude_users: Annotated[list[str] | SkipJsonSchema[None], Query(...)] = None,
 ) -> Any:
+    """
+    Returns the result statistics of all games, giving the top users in each category
+    """
     return crud.game.get_results_for_games(db, game_ids, dates, num_top_users, exclude_users)
 
 
 # Gets single gamification data
 # Open to all users
-@router.get("/{id}", response_model=schemas.Game)
+@router.get("/{id}", response_model=schemas.Game, summary="Get a game")
 def read_game(
     *,
     db: Session = Depends(deps.get_db),

@@ -10,7 +10,7 @@ class PermissionList(BaseModel):
         Field(
             ...,
             description="Provide a dictionary with the permission type as the key and a list of role ids or role names",
-            examples=[{a.value: [0, "admin"]} for a in list(PermissionEnum)]
+            examples=[{a.value: [1, "rolename"] for a in list(PermissionEnum) if a != PermissionEnum.admin}]
         )
     ] = None
 

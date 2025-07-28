@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.enums import EntityStatusEnum, TargetTypeEnum, EnrichmentClassEnum
-from app.schemas.entity import EntityBase, EntityCreate
+from app.schemas.entity import EntityCreate
 from app.schemas.link import LinkCreate
 from app.schemas.enrichment import EnrichmentCreate
 
@@ -67,7 +67,7 @@ def create_entity(value: str, type_name: str):
     value = value
     type_name = type_name
 
-    entity_create = EntityBase(
+    entity_create = EntityCreate(
         status=status, value=value, type_name=type_name, data_ver="0"
     )
 

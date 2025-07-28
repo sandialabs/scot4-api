@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, aliased
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.crud.crud_entity import entity as entity_crud
+from app.crud.crud_alert import alert as alert_crud
 from app.enums import PermissionEnum, TargetTypeEnum
 from app.models.entry import Entry
 from app.models.permission import Permission
@@ -87,6 +88,8 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
         """
         Entries are only accessible to users that can also access the parent
         object
+        Since entities don't have permissions, only the permissions of the
+        entry itself are checked for entity entries
         Note: admin permissions must be checked elsewhere
         """
 
@@ -96,9 +99,15 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
             .join(Permission, (self.model.id == Permission.target_id))\
             .filter(((self.model.target_type_enum() == Permission.target_type) & (required_permission == Permission.permission)))\
             .filter(Permission.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
-            .join(permission_alias, self.model.target_id == permission_alias.target_id)\
-            .filter(((self.model.target_type == permission_alias.target_type) & (required_permission == permission_alias.permission)))\
-            .filter(permission_alias.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
+            .join(
+                permission_alias,
+                (
+                    (self.model.target_id == permission_alias.target_id)
+                    & (self.model.target_type == permission_alias.target_type)
+                    & (required_permission == permission_alias.permission)
+                )
+                | (self.model.target_type == TargetTypeEnum.entity))\
+            .filter(permission_alias.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]) | (self.model.target_type == TargetTypeEnum.entity))\
             .group_by(self.model.id)  # We can't use DISTINCT with entries
 
     def flair_update(
@@ -124,6 +133,11 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
             entry = self.update(
                 db_session, db_obj=entry, obj_in=entry_update, audit_logger=audit_logger
             )
+            alertgroup_id = None
+            if entry.target_type == TargetTypeEnum.alert:
+                alert = alert_crud.get(db_session, entry.target_id)
+                if alert:
+                    alertgroup_id = alert.alertgroup_id
             for entity_type in entities:
                 for entity in entities[entity_type]:
                     entity_crud.link_entity_by_value(
@@ -142,6 +156,15 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
                         entity_type=entity_type,
                         audit_logger=audit_logger,
                     )
+                    if alertgroup_id:
+                        entity_crud.link_entity_by_value(
+                            db_session,
+                            entity_value=entity,
+                            target_type=TargetTypeEnum.alertgroup,
+                            target_id=alertgroup_id,
+                            entity_type=entity_type,
+                            audit_logger=audit_logger,
+                        )
         return entry
 
 

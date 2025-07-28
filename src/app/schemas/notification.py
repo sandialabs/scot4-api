@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 from app.enums import PriorityEnum, TargetTypeEnum
+from app.schemas.response import ResultBase
 
 
 class NotificationBase(BaseModel):
@@ -34,14 +36,11 @@ class NotificationBroadcast(BaseModel):
 
 class NotificationUpdate(NotificationBase):
     user_id: Annotated[int | None, Field(...)] = None
-    message: Annotated[str | None, Field(...)] = None
-    ack: Annotated[bool | None, Field(...)] = None
-    priority: Annotated[PriorityEnum | None, Field(..., examples=[a.value for a in list(PriorityEnum)])] = None
+    message: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    ack: Annotated[bool | SkipJsonSchema[None], Field(...)] = None
+    priority: Annotated[PriorityEnum | SkipJsonSchema[None], Field(..., examples=[a.value for a in list(PriorityEnum)])] = None
 
 
-class Notification(NotificationBase):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
+class Notification(NotificationBase, ResultBase):
 
     model_config = ConfigDict(from_attributes=True)

@@ -35,7 +35,7 @@ def test_get_feed(client: TestClient, normal_user_token_headers: dict, superuser
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/feed/-1",
+        f"{settings.API_V1_STR}/feed/0",
         headers=superuser_token_headers
     )
 
@@ -64,6 +64,43 @@ def test_create_feed(client: TestClient, normal_user_token_headers: dict, faker:
 
     r = client.post(
         f"{settings.API_V1_STR}/feed/",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_feeds(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session):
+    owner = create_random_user(db, faker)
+    data = [{
+        "name": faker.word(),
+        "owner": owner.username,
+        "type": faker.word(),
+        "uri": faker.url()
+    },{
+        "name": faker.word(),
+        "owner": owner.username,
+        "type": faker.word(),
+        "uri": faker.url()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/feed/many/",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    created_feed = r.json()
+    assert len(created_feed) == 2
+    assert created_feed[0]["id"] >= 0
+    assert created_feed[0]["owner"] == data[0]["owner"]
+    assert created_feed[1]["id"] >= 0
+    assert created_feed[1]["owner"] == data[1]["owner"]
+    assert created_feed[0]["id"] < created_feed[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/feed/many/",
         headers=normal_user_token_headers
     )
 
@@ -112,6 +149,59 @@ def test_update_feed(client: TestClient, normal_user_token_headers: dict, superu
 
     r = client.put(
         f"{settings.API_V1_STR}/feed/-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+
+def test_update_feeds(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    feed1 = create_random_feed(db, faker, owner)
+    feed2 = create_random_feed(db, faker, owner)
+    data = {
+        "status": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/feed/many/?ids={feed1.id}&ids={feed2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    feed_data = r.json()
+    assert len(feed_data) == 2
+    assert feed_data[0]["id"] == feed1.id
+    assert feed_data[0]["status"] == data["status"]
+    assert feed_data[1]["id"] == feed2.id
+    assert feed_data[1]["status"] == data["status"]
+
+    owner = create_random_user(db, faker)
+    feed1 = create_random_feed(db, faker, owner)
+    feed2 = create_random_feed(db, faker, owner)
+    data = {
+        "status": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/feed/many/?ids={feed1.id}&ids={feed2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/feed/many/?ids={feed1.id}&ids={feed2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/feed/many/?ids=-1",
         headers=superuser_token_headers,
         json=data
     )

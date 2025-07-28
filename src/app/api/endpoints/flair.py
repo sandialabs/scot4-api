@@ -14,17 +14,18 @@ from app.utils import send_flair_enrichment_request, index_for_search, send_refl
 router = APIRouter()
 
 
-description, examples = create_schema_details(schemas.FlairUpdateResult)
+description, _ = create_schema_details(schemas.FlairUpdateResult, "Return a flair result back to the flair engine, setting the basic, flaired, and plain text of an entry or setting the data of the chosen alerts or remote flair item.")
 
 
 @router.post(
     "/flairupdate",
     response_model=Union[schemas.AlertGroupDetailed, schemas.Entry, schemas.Alert, schemas.RemoteFlair, dict],
-    description=description
+    description=description,
+    summary="Return flair data"
 )
 def flair_update(
     *,
-    payload: Annotated[schemas.FlairUpdateResult, Body(..., openapi_examples=examples)],
+    payload: Annotated[schemas.FlairUpdateResult, Body(...)],
     db: Session = Depends(deps.get_db),
     _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
@@ -109,7 +110,7 @@ def flair_update(
             raise HTTPException(404, f"{payload.target.type.value} objects do not support flair updates")
 
 
-@router.post("/enrich/{entity_id}", response_model=schemas.Entity)
+@router.post("/enrich/{entity_id}", response_model=schemas.Entity, summary="Enrich entity")
 def enrich_entity(
     *,
     db: Session = Depends(deps.get_db),
@@ -120,7 +121,8 @@ def enrich_entity(
     enriched_data: Annotated[dict, Body(...)],
 ):
     """
-    Endpoint for the enricher to submit flair enrichment data
+    Endpoint for the enricher to submit flair enrichment data, adding enrichments
+    and/or entity classes to the entity
     """
     # Check for entity existence
     flair_entity = crud.entity.get(db, entity_id)
@@ -144,24 +146,24 @@ def enrich_entity(
     return crud.entity.update(db, db_obj=flair_entity, obj_in={"data": new_flair_data}, audit_logger=audit_logger)
 
 
-description, examples = create_schema_details(schemas.RemoteFlairCreate, "Creates a Remote Flair Job from the browser plugin")
+description, _ = create_schema_details(schemas.RemoteFlairCreate, "Creates a remote flair job from the browser plugin")
 
 
 @router.post(
     "/remote",
     response_model=schemas.RemoteFlair,
-    summary="Create a Remote Flair job",
+    summary="Create a remote flair job",
     description=description
 )
 def post_remote_flair(
     *,
     db: Session = Depends(deps.get_db),
-    obj: Annotated[schemas.RemoteFlairCreate, Body(..., openapi_examples=examples)],
+    obj: Annotated[schemas.RemoteFlairCreate, Body(...)],
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     background_tasks: BackgroundTasks,
 ):
     # check to see if html has been flaired already and ignore md5 security bandit error
-    _md5 = md5(obj.html.encode("utf-8")).hexdigest()  # nosec
+    _md5 = md5(obj.data.encode("utf-8")).hexdigest()  # nosec
     _obj = crud.remote_flair.get_md5(db, _md5)
 
     # if we get reflair and _obj then update md5 and clear results
@@ -171,27 +173,26 @@ def post_remote_flair(
         obj.md5 = _md5
         obj.results = {}
         dict_obj = obj.model_dump()
-        dict_obj.pop("html", None)
+        dict_obj.pop("data", None)
         _obj = crud.remote_flair.update(db, db_obj=_obj, obj_in=dict_obj)
-        background_tasks.add_task(send_reflair_request, _obj.id, TargetTypeEnum.remote_flair, obj.html)
+        background_tasks.add_task(send_reflair_request, _obj.id, TargetTypeEnum.remote_flair, obj.data)
     # if not then flair it
     elif _obj is None:
         obj.status = RemoteFlairStatusEnum.processing
         obj.md5 = _md5
         dict_obj = obj.model_dump()
         # remove html so it doesn't get added to the db
-        dict_obj.pop("html", None)
+        dict_obj.pop("data", None)
         _obj = crud.remote_flair.create(db, obj_in=dict_obj, audit_logger=audit_logger)
-        background_tasks.add_task(send_reflair_request, _obj.id, TargetTypeEnum.remote_flair, obj.html)
-    
+        background_tasks.add_task(send_reflair_request, _obj.id, TargetTypeEnum.remote_flair, obj.data)
     return _obj
 
 
 @router.get(
     "/remote/{id}",
     response_model=schemas.RemoteFlair,
-    summary="Get Remote Flair Job",
-    description="Get results from a Remote Flair Job"
+    summary="Get remote flair job",
+    description="Get results from a remote flair job"
 )
 def get_remote_flair(
     *,

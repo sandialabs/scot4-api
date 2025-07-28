@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, Column, Enum, Text, Integer, VARCHAR
 
 from app.db.base_class import Base
-from app.enums import RemoteFlairStatusEnum
+from app.enums import RemoteFlairStatusEnum, RemoteFlairSourceEnum
 from app.models.mixins import TimestampMixin
 
 
@@ -12,4 +12,5 @@ class RemoteFlair(Base, TimestampMixin):
     md5 = Column(VARCHAR(length=32), unique=True)  # cant by type text because MYSQL complains when trying to make it unique
     uri = Column(Text(length=2048))
     status = Column(Enum(RemoteFlairStatusEnum))
+    source = Column(Enum(RemoteFlairSourceEnum))
     results = Column(JSON)

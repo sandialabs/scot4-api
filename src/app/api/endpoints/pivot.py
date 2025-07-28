@@ -21,13 +21,13 @@ router = APIRouter()
 
 
 # Create get, post, put, and delete endpoints
-generic_export(router, crud.pivot, TargetTypeEnum.pivot)
 generic_get(router, crud.pivot, TargetTypeEnum.pivot, schemas.Pivot)
-generic_delete(router, crud.pivot, TargetTypeEnum.pivot, schemas.Pivot)
-generic_history(router, crud.pivot, TargetTypeEnum.pivot)
-generic_post(router, crud.pivot, TargetTypeEnum.pivot, schemas.Pivot, schemas.PivotCreate)
+generic_post(router, crud.pivot, TargetTypeEnum.pivot, schemas.Pivot, schemas.PivotCreate, permissions=False)
 generic_put(router, crud.pivot, TargetTypeEnum.pivot, schemas.Pivot, schemas.PivotUpdate)
+generic_delete(router, crud.pivot, TargetTypeEnum.pivot, schemas.Pivot)
 generic_search(router, crud.pivot, TargetTypeEnum.pivot, schemas.PivotSearch, schemas.Pivot)
+generic_history(router, crud.pivot, TargetTypeEnum.pivot)
+generic_export(router, crud.pivot, TargetTypeEnum.pivot)
 
 
 description, examples = create_schema_details(schemas.pivot.PivotAddEntityClasses, "Add Entity Types")
@@ -36,7 +36,7 @@ description, examples = create_schema_details(schemas.pivot.PivotAddEntityClasse
 @router.put(
     "/{id}/entity_class",
     response_model=schemas.Pivot,
-    summary="Add Entity Class",
+    summary="Add entity class to pivot",
     description=description,
     # dependencies=[Depends(deps.admin_only)]  # all users can update pivots for now
 )
@@ -47,6 +47,10 @@ def add_entity_classes(
     id: Annotated[int, Path(...)],
     request: Annotated[schemas.pivot.PivotAddEntityClasses, Body(..., openapi_examples=examples)]
 ) -> Any:
+    """
+    Add entity classes to a pivot, either by name or by id, causing that pivot
+    to appear when viewing entities of those entity classes
+    """
     _obj = crud.pivot.get(db, id)
     if not _obj:
         raise HTTPException(404, f"Pivot {id} not found")
@@ -63,7 +67,7 @@ description, examples = create_schema_details(schemas.pivot.PivotAddEntityTypes,
 @router.put(
     "/{id}/entity_type",
     response_model=schemas.Pivot,
-    summary="Add Entity Types to pivot",
+    summary="Add entity type to pivot",
     description=description,
     # dependencies=[Depends(deps.admin_only)]  # all users can update pivots for now
 )
@@ -74,6 +78,10 @@ def add_entity_types(
     id: Annotated[int, Path(...)],
     request: Annotated[schemas.pivot.PivotAddEntityTypes, Body(..., openapi_examples=examples)],
 ) -> Any:
+    """
+    Add entity types to a pivot, either by name or by id, causing that pivot
+    to appear when viewing entities of those entity types
+    """
     _obj = crud.pivot.get(db, id)
     if not _obj:
         raise HTTPException(404, f"Pivot {id} not found")

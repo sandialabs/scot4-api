@@ -4,6 +4,7 @@ from typing import Any, Annotated, Tuple
 from dateutil import parser
 
 from pydantic import BaseModel, Json, field_validator, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 
 class AuditBase(BaseModel):
@@ -16,7 +17,7 @@ class AuditBase(BaseModel):
     src_ip: Annotated[str | None, Field(...)] = None
     user_agent: Annotated[str | None, Field(...)] = None
     audit_data_ver: Annotated[str | None, Field(...)] = None
-    audit_data: Annotated[Json | None, Field(...)] = None
+    audit_data: Annotated[Json | None, Field(..., examples=[{}])] = None
 
     @field_validator("audit_data", mode="before")
     def convert_data_to_json(cls, v):
@@ -30,9 +31,8 @@ class AuditCreate(AuditBase):
 
 
 class AuditUpdate(AuditBase):
-    when_date: Annotated[datetime | None, Field(...)] = None
-    username: Annotated[str | None, Field(...)] = None
-    what: Annotated[str | None, Field(...)] = None
+    when_date: Annotated[datetime | SkipJsonSchema[None], Field(...)] = None
+    what: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty
@@ -43,12 +43,12 @@ class Audit(AuditBase):
 
 
 class AuditSearch(BaseModel):
-    id: Annotated[str | None, Field(...)] = None
-    when_date: Annotated[str | None, Field(...)] = None
-    username: Annotated[str | None, Field(...)] = None
-    what: Annotated[str | None, Field(...)] = None
-    thing_type: Annotated[str | None, Field(...)] = None
-    thing_id: Annotated[str | None, Field(...)] = None
+    id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    when_date: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    username: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    what: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    thing_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    thing_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         if attr == "id" or attr == "thing_id":

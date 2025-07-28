@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import Any, Annotated
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.schemas import EntityClass, EntityType
-from app.schemas.response import SearchBase
+from app.schemas.response import SearchBase, ResultBase
 
 
 class PivotBase(BaseModel):
@@ -13,29 +14,26 @@ class PivotBase(BaseModel):
 
 
 class PivotCreate(PivotBase):
-    title: Annotated[str | None, Field(...)] = ""
-    template: Annotated[str | None, Field(...)] = ""
+    title: Annotated[str, Field(...)]
+    template: Annotated[str, Field(...)] = ""
     description: Annotated[str | None, Field(...)] = ""
 
 
 class PivotUpdate(PivotBase):
-    title: Annotated[str | None, Field(...)] = None
-    template: Annotated[str | None, Field(...)] = None
-    description: Annotated[str | None, Field(...)] = None
+    title: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    template: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    description: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
 
 class PivotAddEntityClasses(BaseModel):
-    entity_classes: Annotated[list[str | int], Field(...)]
+    entity_classes: Annotated[list[str | int], Field(..., examples=[["classname", 1]])]
 
 
 class PivotAddEntityTypes(BaseModel):
-    entity_types: Annotated[list[str | int], Field(...)]
+    entity_types: Annotated[list[str | int], Field(..., examples=[["typename", 1]])]
 
 
-class Pivot(PivotBase):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
+class Pivot(PivotBase, ResultBase):
     pivot_value: Annotated[str | None, Field(...)] = None
     entity_classes: Annotated[list[EntityClass] | None, Field(...)] = None
     entity_types: Annotated[list[EntityType] | None, Field(...)] = None
@@ -44,9 +42,9 @@ class Pivot(PivotBase):
 
 
 class PivotSearch(SearchBase):
-    title: Annotated[str | None, Field(...)] = None
-    template: Annotated[str | None, Field(...)] = None
-    description: Annotated[str | None, Field(...)] = None
+    title: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    template: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    description: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         if attr == "title" or attr == "template" or attr == "description":

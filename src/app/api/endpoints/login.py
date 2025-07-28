@@ -58,7 +58,7 @@ def login_password(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/login/local", response_model=schemas.Token)
+@router.post("/login/local", summary="Local login", response_model=schemas.Token)
 def login_local(
     response: Response,
     db: Session = Depends(deps.get_db),
@@ -71,7 +71,7 @@ def login_local(
     return login_password(response, db, form_data, [AuthTypeEnum.local], audit_logger)
 
 
-@router.post("/login/ldap", response_model=schemas.Token)
+@router.post("/login/ldap", summary="LDAP login", response_model=schemas.Token)
 def login_ldap(
     response: Response,
     db: Session = Depends(deps.get_db),
@@ -84,7 +84,7 @@ def login_ldap(
     return login_password(response, db, form_data, [AuthTypeEnum.ldap], audit_logger)
 
 
-@router.post("/login/access-token", response_model=schemas.Token)
+@router.post("/login/access-token", summary="Get access token", response_model=schemas.Token)
 def login_access_token(
     response: Response,
     db: Session = Depends(deps.get_db),
@@ -98,7 +98,7 @@ def login_access_token(
     return login_password(response, db, form_data, None, audit_logger)
 
 
-@router.get("/login/oauth-url")
+@router.get("/login/oauth-url", summary="Get OAuth request url")
 def login_oauth_url(auth_type: Annotated[AuthTypeEnum, Query(...)], db: Session = Depends(deps.get_db)) -> Any:
     """
     Gets an oauth url for the specified auth type
@@ -151,7 +151,7 @@ def login_token(
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/login/aad-callback")
+@router.get("/login/aad-callback", summary="Callback endpoing for AAD")
 def login_aad_callback(
     code: Annotated[str, Query(...)],
     state: Annotated[str, Query(...)],
@@ -159,6 +159,9 @@ def login_aad_callback(
     db: Session = Depends(deps.get_db),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger)
 ) -> Any:
+    """
+    Login using an Azure authorization code, usually retrieved as a result of an OAuth flow
+    """
     return login_token(db, response, AuthTypeEnum.aad, {"code": code, "state": state}, audit_logger)
 
 
@@ -167,7 +170,7 @@ def test_token(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
-    Test access token
+    Test access token for validity
     """
     return current_user
 
@@ -181,7 +184,7 @@ def logout(
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ) -> Any:
     """
-    Update your own user info
+    Log out the current user
     """
     response.delete_cookie(key="access_token")
     if current_user:

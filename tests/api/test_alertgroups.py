@@ -5,7 +5,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.enums import TargetTypeEnum, StatusEnum
+from app.enums import TargetTypeEnum, StatusEnum, TlpEnum
 from app.core.config import settings
 
 from tests.utils.alert import create_random_alert
@@ -14,279 +14,6 @@ from tests.utils.user import create_random_user
 from tests.utils.entity import create_random_entity
 from tests.utils.tag import create_random_tag
 from tests.utils.source import create_random_source
-
-
-def test_get_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=normal_user_token_headers
-    )
-
-    assert r.status_code == 403
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/-1",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 404
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert alertgroup_data is not None
-    assert alertgroup_data["id"] == alertgroup.id
-
-
-def test_create_alertgroup(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alerts = []
-    for _ in range(2):
-        alerts.append(create_random_alert(db, faker, user))
-
-    data = {
-        "owner": user.username,
-        "alerts": [],
-    }
-
-    r = client.post(
-        f"{settings.API_V1_STR}/alertgroup",
-        headers=normal_user_token_headers,
-        json=data
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert alertgroup_data is not None
-    assert alertgroup_data["id"] > 0
-    assert alertgroup_data["owner"] == data["owner"]
-
-    r = client.post(
-        f"{settings.API_V1_STR}/alertgroup",
-        headers=superuser_token_headers,
-        json=data
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert alertgroup_data is not None
-    assert alertgroup_data["id"] > 0
-    assert alertgroup_data["owner"] == data["owner"]
-
-
-def test_update_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    owner = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, owner)
-
-    data = {
-        "subject": faker.sentence()
-    }
-
-    r = client.put(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=normal_user_token_headers,
-        json=data
-    )
-
-    assert r.status_code == 403
-
-    r = client.put(
-        f"{settings.API_V1_STR}/alertgroup/-1",
-        headers=superuser_token_headers,
-        json=data
-    )
-
-    assert r.status_code == 404
-
-    r = client.put(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=superuser_token_headers,
-        json=data
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert alertgroup_data is not None
-    assert alertgroup_data["id"] == alertgroup.id
-    assert alertgroup_data["subject"] == data["subject"]
-    assert alertgroup_data["subject"] != alertgroup.subject
-
-
-def test_delete_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
-
-    r = client.delete(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=normal_user_token_headers,
-    )
-
-    assert r.status_code == 403
-
-    r = client.delete(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=superuser_token_headers,
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert alertgroup_data is not None
-    assert alertgroup_data["id"] == alertgroup.id
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=superuser_token_headers,
-    )
-
-    assert r.status_code == 404
-
-    r = client.delete(
-        f"{settings.API_V1_STR}/alertgroup/-1",
-        headers=superuser_token_headers,
-    )
-
-    assert r.status_code == 404
-
-
-def test_undelete_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
-
-    r = client.delete(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-
-    r = client.post(
-        f"{settings.API_V1_STR}/alertgroup/undelete?target_id=-1",
-        headers=normal_user_token_headers
-    )
-
-    assert r.status_code == 422
-
-    r = client.post(
-        f"{settings.API_V1_STR}/alertgroup/undelete?target_id={alertgroup.id}",
-        headers=normal_user_token_headers
-    )
-
-    assert r.status_code == 422
-
-    r = client.post(
-        f"{settings.API_V1_STR}/alertgroup/undelete?target_id={alertgroup.id}",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert alertgroup_data is not None
-    assert alertgroup_data["id"] == alertgroup.id
-
-
-def test_entities_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
-    entity = create_random_entity(db, faker, TargetTypeEnum.alertgroup, alertgroup.id)
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/entity",
-        headers=normal_user_token_headers
-    )
-
-    assert r.status_code == 403
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/-1/entity",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["resultCount"] == 0
-    assert entity_data["totalCount"] == 0
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/entity",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["resultCount"] == 1
-    assert entity_data["totalCount"] == 1
-    assert entity_data["result"][0]["id"] == entity.id
-
-
-def test_history_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
-
-    data = {
-        "subject": faker.sentence()
-    }
-
-    r = client.put(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
-        headers=superuser_token_headers,
-        json=data,
-    )
-    assert r.status_code == 200
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/history",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    alertgroup_data = r.json()
-    assert any(i["audit_data"]["subject"] == data["subject"] for i in alertgroup_data)
-    assert alertgroup_data[0]["audit_data"]["subject"] == data["subject"]
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/history",
-        headers=normal_user_token_headers
-    )
-
-    assert r.status_code == 403
-
-
-def test_reflair_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
-    user = create_random_user(db, faker)
-    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/reflair",
-        headers=normal_user_token_headers
-    )
-
-    assert r.status_code == 403
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/-1/reflair",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 404
-
-    r = client.get(
-        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/reflair",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    alertgroup_flair = r.json()
-    assert alertgroup_flair is not None
-    assert alertgroup_flair["id"] == alertgroup.id
 
 
 def test_search_alertgroups(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -582,6 +309,345 @@ def test_search_alertgroups(client: TestClient, superuser_token_headers: dict, n
     )
 
     assert r.status_code == 422
+
+
+def test_get_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/0",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert alertgroup_data["id"] == alertgroup.id
+
+
+def test_create_alertgroup(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alerts = []
+    for _ in range(2):
+        alerts.append(create_random_alert(db, faker, user))
+
+    data = {
+        "owner": user.username,
+        "alerts": [],
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert alertgroup_data["id"] > 0
+    assert alertgroup_data["owner"] == data["owner"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert alertgroup_data["id"] > 0
+    assert alertgroup_data["owner"] == data["owner"]
+
+
+def test_create_alertgroups(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+
+    data = [
+        {"owner": user.username, "tlp": random.choice(list(TlpEnum)).value},
+        {"owner": user.username, "tlp": random.choice(list(TlpEnum)).value},
+    ]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert len(alertgroup_data) == 2
+    assert alertgroup_data[0]["id"] > 0
+    assert alertgroup_data[0]["owner"] == data[0]["owner"]
+    assert alertgroup_data[1]["id"] > 0
+    assert alertgroup_data[1]["owner"] == data[1]["owner"]
+    assert alertgroup_data[0]["id"] < alertgroup_data[1]["id"]
+
+
+def test_update_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, owner)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert alertgroup_data["id"] == alertgroup.id
+    assert alertgroup_data["subject"] == data["subject"]
+    assert alertgroup_data["subject"] != alertgroup.subject
+
+
+def test_update_alertgroups(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    alertgroup1 = create_random_alertgroup_no_sig(db, faker, owner)
+    alertgroup2 = create_random_alertgroup_no_sig(db, faker, owner)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/many/?ids={alertgroup1.id}&ids={alertgroup2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/many/?ids={alertgroup1.id}&ids={alertgroup2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert len(alertgroup_data) == 2
+    assert alertgroup_data[0]["id"] == alertgroup1.id
+    assert alertgroup_data[0]["subject"] == data["subject"]
+    assert alertgroup_data[1]["id"] == alertgroup2.id
+    assert alertgroup_data[1]["subject"] == data["subject"]
+
+
+def test_delete_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert alertgroup_data["id"] == alertgroup.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alertgroup/-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_undelete_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup/undelete?target_id=-1",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup/undelete?target_id={alertgroup.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/alertgroup/undelete?target_id={alertgroup.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert alertgroup_data is not None
+    assert alertgroup_data["id"] == alertgroup.id
+
+
+def test_entities_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
+    entity = create_random_entity(db, faker, TargetTypeEnum.alertgroup, alertgroup.id)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/entity",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/-1/entity",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    entity_data = r.json()
+    assert entity_data is not None
+    assert entity_data["resultCount"] == 0
+    assert entity_data["totalCount"] == 0
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/entity",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    entity_data = r.json()
+    assert entity_data is not None
+    assert entity_data["resultCount"] == 1
+    assert entity_data["totalCount"] == 1
+    assert entity_data["result"][0]["id"] == entity.id
+
+
+def test_history_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+    assert r.status_code == 200
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/history",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    alertgroup_data = r.json()
+    assert any(i["audit_data"]["subject"] == data["subject"] for i in alertgroup_data)
+    assert alertgroup_data[0]["audit_data"]["subject"] == data["subject"]
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/history",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+
+def test_reflair_alertgroup(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    user = create_random_user(db, faker)
+    alertgroup = create_random_alertgroup_no_sig(db, faker, user)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/reflair",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/-1/reflair",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/{alertgroup.id}/reflair",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    alertgroup_flair = r.json()
+    assert alertgroup_flair is not None
+    assert alertgroup_flair["id"] == alertgroup.id
 
 
 def test_read_alert_group_alerts(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:

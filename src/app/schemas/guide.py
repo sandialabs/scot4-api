@@ -1,10 +1,11 @@
 from datetime import datetime
 from typing import Any, Annotated
 from pydantic import BaseModel, Json, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
 from app.enums import GuideStatusEnum, TlpEnum
-from app.schemas.response import SearchBase
+from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
 from app.schemas.user_links import FavoriteLink
 
@@ -14,36 +15,33 @@ class GuideBase(BaseModel):
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
     subject: Annotated[str | None, Field(...)] = None
     status: Annotated[GuideStatusEnum | None, Field(..., examples=[a.value for a in list(GuideStatusEnum)])] = GuideStatusEnum.current
-    application: Annotated[dict | None, Field(...)] = None
+    application: Annotated[dict | None, Field(..., examples=[{}])] = None
     data_ver: Annotated[str | None, Field(...)] = None
-    data: Annotated[dict | Json | None, Field(...)] = None
+    data: Annotated[dict | None, Field(..., examples=[{}])] = None
 
 
 class GuideCreate(GuideBase):
-    owner: Annotated[str | None, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
+    owner: Annotated[str, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
 
 
 class GuideUpdate(GuideBase):
-    owner: Annotated[str | None, Field(...)] = None
-    tlp: Annotated[TlpEnum | None, Field(..., examples=[a.value for a in list(TlpEnum)])] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
 
 
 # pretty
-class Guide(GuideBase, PopularityVoted, FavoriteLink):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime | None, Field(...)] = datetime.now()
-    modified: Annotated[datetime | None, Field(...)] = datetime.now()
+class Guide(PopularityVoted, FavoriteLink, GuideBase, ResultBase):
     entry_count: Annotated[int, Field(...)]
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class GuideSearch(SearchBase):
-    owner: Annotated[str | None, Field(...)] = None
-    tlp: Annotated[str | None, Field(...)] = None
-    subject: Annotated[str | None, Field(...)] = None
-    status: Annotated[str | None, Field(...)] = None
-    entry_count: Annotated[str | None, Field(...)] = None
+    owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    subject: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    entry_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         if attr == "owner" or attr == "subject":

@@ -6,16 +6,19 @@ from app import crud
 from app.enums import TargetTypeEnum
 from app.schemas.appearance import AppearanceCreate
 
+try:
+    from tests.utils.utils import select_random_target_type
+except ImportError:
+    # needed to make initial_data.py function properly
+    from utils import select_random_target_type
+
 
 def create_random_appearance(db: Session, faker: Faker, target_id: int | None = None, target_type_enum: TargetTypeEnum | None = None):
     """
     Create a random alertgroup with alerts and a schema included.
     """
     if target_type_enum is None:
-        target_list = list(TargetTypeEnum)
-        target_list.remove(TargetTypeEnum.none)
-        target_list.remove(TargetTypeEnum.remote_flair)
-        target_type_enum = random.choice(target_list)
+        target_type_enum = select_random_target_type()
 
     appearance_create = AppearanceCreate(
         when_date=faker.iso8601(),

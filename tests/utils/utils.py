@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from tabulate import tabulate
 
 from app.core.config import settings
+from app.enums import TargetTypeEnum
 
 try:
     from tests.utils.entity import create_entity
@@ -240,3 +241,11 @@ def generate_html_list(words):
         text.append(f"<li>{word}</li>")
     text.append("</ul>")
     return "\n".join(text)
+
+
+def select_random_target_type() -> TargetTypeEnum:
+    _target_list = list(TargetTypeEnum)
+    _target_list.remove(TargetTypeEnum.none)
+    _target_list.remove(TargetTypeEnum.remote_flair)
+    _target_list.remove(TargetTypeEnum.admin)
+    return random.choice(_target_list)

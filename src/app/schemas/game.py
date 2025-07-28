@@ -16,10 +16,16 @@ class GameUpdate(GameBase):
     pass
 
 
+result_example = {
+    "alice": 3,
+    "bob": 2
+}
+
+
 class GameResult(BaseModel):
     name: Annotated[str | None, Field(...)] = None
     tooltip: Annotated[str | None, Field(...)] = None
-    results: Annotated[Json[dict] | dict | None, Field(...)] = {}
+    results: Annotated[Json[dict] | dict | None, Field(..., examples=[result_example])] = {}
 
 
 # pretty

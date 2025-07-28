@@ -33,7 +33,7 @@ class FlairEntryRequest(BaseModel):
 
 
 class FlairUpdateResult(BaseModel):
-    target: Annotated[FlairedTarget, Field(...)]
+    target: Annotated[FlairedTarget, Field(..., examples=[{"type": "alert", "id": 1}])]
     text_flaired: Annotated[str | None, Field(...)] = None
     text: Annotated[str | None, Field(...)] = None
     text_plain: Annotated[str | None, Field(...)] = None

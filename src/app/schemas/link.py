@@ -2,8 +2,10 @@ from datetime import datetime
 from typing import Any, Annotated
 
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 from app.enums import TargetTypeEnum
+from app.schemas.response import ResultBase
 
 
 class LinkBase(BaseModel):
@@ -20,26 +22,23 @@ class LinkCreate(LinkBase):
 
 
 class LinkUpdate(LinkBase):
-    v0_type: Annotated[TargetTypeEnum | None, Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = TargetTypeEnum.none
-    v0_id: Annotated[int | None, Field(...)] = None
-    v1_type: Annotated[TargetTypeEnum | None, Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = TargetTypeEnum.none
-    v1_id: Annotated[int | None, Field(...)] = None
+    v0_type: Annotated[TargetTypeEnum | SkipJsonSchema[None], Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = TargetTypeEnum.none
+    v0_id: Annotated[int | SkipJsonSchema[None], Field(...)] = None
+    v1_type: Annotated[TargetTypeEnum | SkipJsonSchema[None], Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = TargetTypeEnum.none
+    v1_id: Annotated[int | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty
-class Link(LinkBase):
-    id: Annotated[int, Field(...)]
-    created: Annotated[datetime | None, Field(...)] = None
-    modified: Annotated[datetime | None, Field(...)] = None
+class Link(LinkBase, ResultBase):
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class LinkSearch(BaseModel):
-    v0_type: Annotated[str | None, Field(...)] = None
-    v0_id: Annotated[str | None, Field(...)] = None
-    v1_id: Annotated[str | None, Field(...)] = None
-    v1_type: Annotated[str | None, Field(...)] = None
+    v0_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    v0_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    v1_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    v1_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
     def type_mapping(self, attr: str, value: str) -> Any:
         if attr == "v0_id" or attr == "v1_id":

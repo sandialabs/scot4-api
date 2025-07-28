@@ -26,28 +26,29 @@ class UserLinks(Base, TimestampMixin):
     @property
     def name(self):
         model = self.get_model_by_target_type(self.target_type)
-        if self.target_type == TargetTypeEnum.entity:
-            obj = object_session(self).scalar(select(model).where(model.id == self.target_id))
-            if obj is not None:
-                return f"{obj.type_name}: {obj.value}"
-        if hasattr(model, "subject"):
-            obj = object_session(self).scalar(select(model).where(model.id == self.target_id))
-            if obj is not None:
-                return obj.subject
-        elif hasattr(model, "name"):
-            obj = object_session(self).scalar(select(model).where(model.id == self.target_id))
-            if obj is not None:
-                return obj.name
-
-        if self.parent_target_type is not None:
-            model = self.get_model_by_target_type(self.parent_target_type)
+        if model is not None:
+            if self.target_type == TargetTypeEnum.entity:
+                obj = object_session(self).scalar(select(model).where(model.id == self.target_id))
+                if obj is not None:
+                    return f"{obj.type_name}: {obj.value}"
             if hasattr(model, "subject"):
-                obj = object_session(self).scalar(select(model).where(model.id == self.parent_target_id))
+                obj = object_session(self).scalar(select(model).where(model.id == self.target_id))
                 if obj is not None:
                     return obj.subject
             elif hasattr(model, "name"):
-                obj = object_session(self).scalar(select(model).where(model.id == self.parent_target_id))
+                obj = object_session(self).scalar(select(model).where(model.id == self.target_id))
                 if obj is not None:
                     return obj.name
+
+            if self.parent_target_type is not None:
+                model = self.get_model_by_target_type(self.parent_target_type)
+                if hasattr(model, "subject"):
+                    obj = object_session(self).scalar(select(model).where(model.id == self.parent_target_id))
+                    if obj is not None:
+                        return obj.subject
+                elif hasattr(model, "name"):
+                    obj = object_session(self).scalar(select(model).where(model.id == self.parent_target_id))
+                    if obj is not None:
+                        return obj.name
 
         return None

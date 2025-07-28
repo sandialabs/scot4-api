@@ -53,7 +53,7 @@ def test_get_appearance(client: TestClient, normal_user_token_headers: dict, db:
     assert created_appearance["id"] == appearance.id
 
     r = client.get(
-        f"{settings.API_V1_STR}/appearance/-1",
+        f"{settings.API_V1_STR}/appearance/0",
         headers=normal_user_token_headers,
     )
 
@@ -83,7 +83,7 @@ def test_search_appearance(client: TestClient, normal_user_token_headers: dict, 
         headers=normal_user_token_headers,
     )
 
-    assert r.status_code == 422
+    assert r.status_code == 405
 
     r = client.get(
         f"{settings.API_V1_STR}/appearance/?id={random_appearance.id}",

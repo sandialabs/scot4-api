@@ -28,14 +28,14 @@ def test_get_dispatch(client: TestClient, normal_user_token_headers: dict, super
     assert get_dispatch["id"] == dispatch.id
 
     r = client.get(
-        f"{settings.API_V1_STR}/dispatch/-1",
+        f"{settings.API_V1_STR}/dispatch/0",
         headers=normal_user_token_headers,
     )
 
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/dispatch/-1",
+        f"{settings.API_V1_STR}/dispatch/0",
         headers=superuser_token_headers,
     )
 
@@ -83,6 +83,61 @@ def test_create_dispatch(client: TestClient, normal_user_token_headers: dict, su
     assert r.status_code == 422
 
 
+def test_create_dispatches(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker) -> None:
+    data = [{
+        "owner": faker.word(),
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": faker.sentence(12),
+        "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
+        "dispatch_data": faker.pydict(value_types=[int, str, float]),
+    },{
+        "owner": faker.word(),
+        "tlp": random.choice(list(TlpEnum)).value,
+        "subject": faker.sentence(12),
+        "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
+        "dispatch_data": faker.pydict(value_types=[int, str, float]),
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/dispatch/many",
+        headers=normal_user_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    create_dispatch = r.json()
+    assert create_dispatch is not None
+    assert len(create_dispatch) == 2
+    assert create_dispatch[0]["id"] is not None
+    assert create_dispatch[0]["owner"] == data[0]["owner"]
+    assert create_dispatch[1]["id"] is not None
+    assert create_dispatch[1]["owner"] == data[1]["owner"]
+    assert create_dispatch[0]["id"] < create_dispatch[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/dispatch/many",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    create_dispatch = r.json()
+    assert create_dispatch is not None
+    assert len(create_dispatch) == 2
+    assert create_dispatch[0]["id"] is not None
+    assert create_dispatch[0]["owner"] == data[0]["owner"]
+    assert create_dispatch[1]["id"] is not None
+    assert create_dispatch[1]["owner"] == data[1]["owner"]
+    assert create_dispatch[0]["id"] + 1 == create_dispatch[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/dispatch/many",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_update_dispatch(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
     dispatch = create_random_dispatch(db, faker, user, False)
@@ -118,6 +173,45 @@ def test_update_dispatch(client: TestClient, normal_user_token_headers: dict, su
     assert r.status_code == 422
 
 
+def test_update_dispatches(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    user = create_random_user(db, faker)
+    dispatch1 = create_random_dispatch(db, faker, user, False)
+    dispatch2 = create_random_dispatch(db, faker, user, False)
+    data = {
+        "tlp": TlpEnum.white.value,
+        "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/dispatch/many/?ids={dispatch1.id}&ids={dispatch2.id}",
+        headers=superuser_token_headers,
+        json=data,
+    )
+
+    assert r.status_code == 200
+    get_dispatch = r.json()
+    assert get_dispatch is not None
+    assert len(get_dispatch) == 2
+    assert get_dispatch[0]["id"] == dispatch1.id
+    assert get_dispatch[0]["tlp"] == data["tlp"]
+    assert get_dispatch[1]["id"] == dispatch2.id
+    assert get_dispatch[1]["tlp"] == data["tlp"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/dispatch/many/?ids=-1",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/dispatch/many/?ids=-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_delete_dispatch(client: TestClient, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     user = create_random_user(db, faker)
     dispatch = create_random_dispatch(db, faker, user, False)
@@ -141,6 +235,45 @@ def test_delete_dispatch(client: TestClient, superuser_token_headers: dict, fake
 
     r = client.delete(
         f"{settings.API_V1_STR}/dispatch/-1",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_dispatches(client: TestClient, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    user = create_random_user(db, faker)
+    dispatch1 = create_random_dispatch(db, faker, user, False)
+    dispatch2 = create_random_dispatch(db, faker, user, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/dispatch/many/?ids={dispatch1.id}&ids={dispatch2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    delete_dispatch = r.json()
+    assert delete_dispatch is not None
+    assert len(delete_dispatch) == 2
+    assert delete_dispatch[0]["id"] == dispatch1.id
+    assert delete_dispatch[1]["id"] == dispatch2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/dispatch/{dispatch1.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/dispatch/{dispatch2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/dispatch/many/?ids=-1",
         headers=superuser_token_headers,
     )
 
@@ -193,7 +326,7 @@ def test_tag_untag_dispatch(client: TestClient, normal_user_token_headers: dict,
 
     r = client.post(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1},
     )
 
@@ -201,7 +334,7 @@ def test_tag_untag_dispatch(client: TestClient, normal_user_token_headers: dict,
 
     r = client.post(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}/tag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag1.id},
     )
 
@@ -232,7 +365,7 @@ def test_tag_untag_dispatch(client: TestClient, normal_user_token_headers: dict,
 
     r = client.post(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": -1},
     )
 
@@ -240,7 +373,7 @@ def test_tag_untag_dispatch(client: TestClient, normal_user_token_headers: dict,
 
     r = client.post(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag1.id},
     )
 
@@ -295,7 +428,7 @@ def test_source_add_remove_dispatch(client: TestClient, superuser_token_headers:
     source2 = create_random_source(db, faker)
     r = client.post(
         f"{settings.API_V1_STR}/dispatch/{dispatch.id}/add-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source2.id}
     )
 

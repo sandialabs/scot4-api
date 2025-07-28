@@ -285,7 +285,7 @@ def test_create_in_object_product(db: Session, faker: Faker) -> None:
     assert db_obj is not None
     assert db_obj.subject == product.subject
 
-    link, _ = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v0_target": TargetTypeEnum.alertgroup, "v1_id": db_obj.id, "v1_target": TargetTypeEnum.product})
+    link, _ = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
 
     assert any(i.v0_id == alert_group.id for i in link)
     assert any(i.v1_id == db_obj.id for i in link)

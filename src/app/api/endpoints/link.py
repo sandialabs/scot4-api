@@ -13,7 +13,7 @@ router = APIRouter()
 # Create get, post, put, and delete endpoints
 generic_get(router, crud.link, TargetTypeEnum.none, schemas.Link, "Link")
 # TODO: Permissions on who can link what to what?
-generic_post(router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkCreate, "Link")
+generic_post(router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkCreate, "Link", False, False)
 generic_put(router, crud.link, TargetTypeEnum.none, schemas.Link, schemas.LinkUpdate, "Link")
 generic_delete(router, crud.link, TargetTypeEnum.none, schemas.Link, "Link")
 generic_search(router, crud.link, TargetTypeEnum.none, schemas.LinkSearch, schemas.Link, "Link")
@@ -35,7 +35,7 @@ def delete_links_between_objects(
     v0_id: Annotated[int, Body(...)],
     v1_type: Annotated[TargetTypeEnum, Body(...)],
     v1_id: Annotated[int, Body(...)],
-    bidirectional: Annotated[bool | None, Body()] = False,
+    bidirectional: Annotated[bool, Body()] = False,
 ) -> Any:
     """
     Deletes all links from object (v0_type, v0_id) to object (v1_type, v1_id).

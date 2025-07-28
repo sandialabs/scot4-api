@@ -6,7 +6,7 @@ from app import crud
 from app.api.deps import AuditLogger, get_audit_logger, get_current_active_user, get_db, PermissionCheckId
 from app.core.config import settings
 from app.enums import PermissionEnum, TargetTypeEnum
-from app.schemas import Permission, PermissionCreate, PermissionSetMass, User
+from app.schemas import Permission, PermissionCreate, PermissionSetMass, User, Role
 from app.utils import create_schema_details
 
 router = APIRouter()
@@ -15,7 +15,7 @@ router = APIRouter()
 description, examples = create_schema_details(PermissionCreate)
 
 
-@router.post("/grant", response_model=Permission, description=description)
+@router.post("/grant", response_model=Permission, summary="Grant a permission", description=description)
 async def grant_permission(
     permission_grant: Annotated[PermissionCreate, Body(..., openapi_examples=examples)],
     user: User = Depends(get_current_active_user),
@@ -46,7 +46,7 @@ async def grant_permission(
         raise HTTPException(422, str(e))
 
 
-@router.post("/revoke", status_code=204, description=description)
+@router.post("/revoke", status_code=204, summary="Revoke a permission", description=description)
 async def revoke_permission(
     permission_revoke: Annotated[PermissionCreate, Body(..., openapi_examples=examples)],
     user: User = Depends(get_current_active_user),
@@ -82,10 +82,11 @@ async def revoke_permission(
         raise HTTPException(404, "Permission not found")
 
 
-description, examples = create_schema_details(PermissionSetMass)
+description, examples = create_schema_details(PermissionSetMass,
+    "Set all permissions of an item, overriding the previous permissions")
 
 
-@router.post("/set", description=description)
+@router.post("/set", summary="Set object permissions", description=description)
 async def set_permission(
     mass_permission: Annotated[PermissionSetMass, Body(..., openapi_examples=examples)],
     user: User = Depends(get_current_active_user),
@@ -147,7 +148,7 @@ async def set_permission(
     return crud.permission.get_permission_roles(db, mass_permission.target_type, mass_permission.target_id)
 
 
-@router.get("/getroles")
+@router.get("/getroles", response_model=dict[PermissionEnum, list[Role]], summary="Get object permissions")
 async def get_permission_roles(
     target_type: Annotated[TargetTypeEnum, Query(...)],
     target_id: Annotated[int, Query(...)],

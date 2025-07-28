@@ -36,7 +36,7 @@ def test_get_vuln_feed(client: TestClient, normal_user_token_headers: dict, supe
     assert r.status_code == 403
 
     r = client.get(
-        f"{settings.API_V1_STR}/vuln_feed/-1",
+        f"{settings.API_V1_STR}/vuln_feed/0",
         headers=superuser_token_headers
     )
     assert r.status_code == 404
@@ -65,6 +65,45 @@ def test_create_vuln_feed(client: TestClient, normal_user_token_headers: dict, f
 
     r = client.post(
         f"{settings.API_V1_STR}/vuln_feed/",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_vuln_feeds(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    data = [{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "view_count": faker.pyint()
+    },{
+        "owner": owner.username,
+        "tlp": random.choice(list(TlpEnum)).value,
+        "status": random.choice(list(StatusEnum)).value,
+        "subject": faker.sentence(),
+        "view_count": faker.pyint()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/vuln_feed/many/",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    created_vuln_feed = r.json()
+    assert len(created_vuln_feed) == 2
+    assert created_vuln_feed[0]["id"] >= 0
+    assert created_vuln_feed[0]["owner"] == data[0]["owner"]
+    assert created_vuln_feed[1]["id"] >= 0
+    assert created_vuln_feed[1]["owner"] == data[1]["owner"]
+    assert created_vuln_feed[0]["id"] < created_vuln_feed[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/vuln_feed/many/",
         headers=normal_user_token_headers,
     )
 
@@ -115,6 +154,53 @@ def test_update_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
     assert vuln_feed_data["subject"] != vuln_feed.subject
 
 
+def test_update_vuln_feeds(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    vuln_feed1 = create_random_vuln_feed(db, faker, owner, False)
+    vuln_feed2 = create_random_vuln_feed(db, faker, owner, False)
+
+    data = {
+        "subject": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids={vuln_feed1.id}&ids={vuln_feed2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids={vuln_feed1.id}&ids={vuln_feed2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids={vuln_feed1.id}&ids={vuln_feed2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    vuln_feed_data = r.json()
+    assert len(vuln_feed_data) == 2
+    assert vuln_feed_data[0]["id"] == vuln_feed1.id
+    assert vuln_feed_data[0]["subject"] == data["subject"]
+    assert vuln_feed_data[1]["id"] == vuln_feed2.id
+    assert vuln_feed_data[1]["subject"] == data["subject"]
+
+
 def test_delete_vuln_feed(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
     owner = create_random_user(db, faker)
     vuln_feed = create_random_vuln_feed(db, faker, owner, False)
@@ -137,6 +223,37 @@ def test_delete_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
 
     r = client.delete(
         f"{settings.API_V1_STR}/vuln_feed/-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_vuln_feeds(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    vuln_feed1 = create_random_vuln_feed(db, faker, owner, False)
+    vuln_feed2 = create_random_vuln_feed(db, faker, owner, False)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids={vuln_feed1.id}&ids={vuln_feed2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids={vuln_feed1.id}&ids={vuln_feed2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    vuln_feed_data = r.json()
+    assert len(vuln_feed_data) == 2
+    assert vuln_feed_data[0]["id"] == vuln_feed1.id
+    assert vuln_feed_data[1]["id"] == vuln_feed2.id
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/vuln_feed/many/?ids=-1",
         headers=superuser_token_headers
     )
 
@@ -262,7 +379,7 @@ def test_tag_untag_vuln_feed(client: TestClient, normal_user_token_headers: dict
 
     r = client.post(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}/untag",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": tag1.id},
     )
 
@@ -346,7 +463,7 @@ def test_source_vuln_feed(client: TestClient, normal_user_token_headers: dict, s
 
     r = client.post(
         f"{settings.API_V1_STR}/vuln_feed/{vuln_feed.id}/remove-source",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={"id": source1.id},
     )
 

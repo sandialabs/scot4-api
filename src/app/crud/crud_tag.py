@@ -8,7 +8,6 @@ from app.enums import TargetTypeEnum, PermissionEnum
 from app.models.link import Link
 from app.models.tag import Tag
 from app.models.role import Role
-from app.models.user import User
 from app.schemas.appearance import AppearanceCreate
 from app.schemas.tag import TagCreate, TagUpdate
 
@@ -31,7 +30,7 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
 
     # Custom filtering for tags
     def filter(self, query, filter_dict):
-        query = self._str_filter(query, filter_dict, "name")
+        query = self._str_filter(query, filter_dict, "name", True)
         query = self._str_filter(query, filter_dict, "description")
 
         return super().filter(query, filter_dict)

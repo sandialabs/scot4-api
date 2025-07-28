@@ -31,6 +31,7 @@ from .crud_setting import setting
 from .crud_sigbody import sigbody
 from .crud_signature import signature
 from .crud_source import source
+from .crud_special_metric import special_metric
 from .crud_stat import stat
 from .crud_storage_setting import storage_setting
 from .crud_tag import tag

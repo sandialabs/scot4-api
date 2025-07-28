@@ -102,6 +102,7 @@ class Base:
         "entity_classes": TargetTypeEnum.entity_class,
         "entity_types": TargetTypeEnum.entity_type,
         "sources": TargetTypeEnum.source,
+        "special_metrics": TargetTypeEnum.special_metric,
         "stats": TargetTypeEnum.stat,
         "tags": TargetTypeEnum.tag,
         "threat_model_items": TargetTypeEnum.threat_model_item,
@@ -124,9 +125,11 @@ class Base:
         """
         Gets a model from a target type enum
         """
-        table_name = list(cls.target_type_mapping.keys())[list(cls.target_type_mapping.values()).index(target_type)]
-        if table_name is not None:
-            registry_instance = getattr(cls, "registry")
-            for mapper_ in registry_instance.mappers:
-                if (mapper_.class_.__tablename__ == table_name):
-                    return mapper_.class_
+        _target_type_mapping = list(cls.target_type_mapping.values())
+        if target_type in _target_type_mapping: 
+            table_name = list(cls.target_type_mapping.keys())[_target_type_mapping.index(target_type)]
+            if table_name is not None:
+                registry_instance = getattr(cls, "registry")
+                for mapper_ in registry_instance.mappers:
+                    if (mapper_.class_.__tablename__ == table_name):
+                        return mapper_.class_

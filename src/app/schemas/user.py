@@ -8,13 +8,13 @@ from app.schemas.role import Role
 
 class UserBase(BaseModel):
     username: Annotated[str, Field(...)]
-    failed_attempts: Annotated[int | None, Field(...)] = 0
-    is_active: Annotated[bool | None, Field(...)] = True
+    failed_attempts: Annotated[int, Field(...)] = 0
+    is_active: Annotated[bool, Field(...)] = True
     pw_hash: Annotated[str | None, Field(...)] = None
-    fullname: Annotated[str | None, Field(...)] = "user"
+    fullname: Annotated[str, Field(...)] = "user"
     email: Annotated[str | None, Field(...)] = None
     preferences: Annotated[Json | None, Field(...)] = None
-    is_superuser: Annotated[bool | None, Field(...)] = False
+    is_superuser: Annotated[bool, Field(...)] = False
 
     @field_validator("preferences", mode="before")
     def convert_data_to_json(cls, v):
@@ -25,18 +25,20 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: Annotated[str | None, Field(...)] = None
-    roles: Annotated[list[str] | None, Field(...)] = []
+    roles: Annotated[list[str], Field(...)] = []
 
 
 class UserUpdate(UserBase):
     username: Annotated[str | None, Field(...)] = None
     password: Annotated[str | None, Field(...)] = None
+    failed_attempts: Annotated[int | None, Field(...)] = None
+    fullname: Annotated[str | None, Field(...)] = None
 
 
 # API User
 class User(UserBase):
     id: Annotated[int, Field(...)]
-    roles: Annotated[list[Role] | None, Field(...)] = []
+    roles: Annotated[list[Role], Field(...)] = []
     last_login: Annotated[datetime | None, Field(...)] = None
     last_activity: Annotated[datetime | None, Field(...)] = None
 

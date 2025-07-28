@@ -234,27 +234,6 @@ def test_create_with_permissions_setting(db: Session, faker: Faker) -> None:
     assert db_obj.time_zone == setting.time_zone
 
 
-def test_create_in_object_setting(db: Session, faker: Faker) -> None:
-    setting = SettingsCreate(
-        site_name=faker.word(),
-        environment_level=faker.word(),
-        it_contact=faker.email(),
-        time_zone=faker.timezone()
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.setting.create_in_object(db, obj_in=setting, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.site_name == setting.site_name
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v0_target": TargetTypeEnum.alertgroup, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_setting(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     setting = SettingsCreate(

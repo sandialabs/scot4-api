@@ -1,5 +1,6 @@
 from typing import Any, Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Body
+from pydantic.json_schema import SkipJsonSchema
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -9,11 +10,37 @@ from app.utils import create_schema_details
 router = APIRouter()
 
 
+@router.get(
+    "/{id}",
+    response_model=schemas.Role,
+    dependencies=[Depends(deps.admin_only)],
+    summary="Get a role"
+)
+def read_role(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: Annotated[int, Path(...)],
+    audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
+) -> Any:
+    """
+    Get role by ID.
+    """
+    _role = crud.role.get(db, id, audit_logger)
+    if not _role:
+        raise HTTPException(404, "Role not found")
+
+    return _role
+
+
 description, examples = create_schema_details(schemas.RoleUpdate)
 
 
 @router.put(
-    "/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)], description=description
+    "/{id}",
+    response_model=schemas.Role,
+    dependencies=[Depends(deps.admin_only)],
+    description=description,
+    summary="Update a role"
 )
 def update_role(
     *,
@@ -36,7 +63,7 @@ def update_role(
 description, examples = create_schema_details(schemas.RoleCreate)
 
 
-@router.post("/", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)], description=description)
+@router.post("/", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)], description=description, summary="Create a role")
 def create_role(
     *,
     db: Session = Depends(deps.get_db),
@@ -50,29 +77,12 @@ def create_role(
     return crud.role.create(db, obj_in=role, audit_logger=audit_logger)
 
 
-@router.get("/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)])
-def read_role(
-    *,
-    db: Session = Depends(deps.get_db),
-    id: Annotated[int, Path(...)],
-    audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
-) -> Any:
-    """
-    Get role by ID.
-    """
-    _role = crud.role.get(db, id, audit_logger)
-    if not _role:
-        raise HTTPException(404, "Role not found")
-
-    return _role
-
-
-@router.get("/", response_model=schemas.ListResponse[schemas.Role], dependencies=[Depends(deps.get_current_active_user)])
+@router.get("/", response_model=schemas.ListResponse[schemas.Role], dependencies=[Depends(deps.get_current_active_user)], summary="Get roles")
 def get_roles(
     *,
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = None,
-    sort: Annotated[str | None, Query(...)] = None,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = -1,
+    sort: Annotated[str | SkipJsonSchema[None], Query(...)] = None,
     db: Session = Depends(deps.get_db),
 ) -> Any:
     """
@@ -82,7 +92,7 @@ def get_roles(
     return {"totalCount": count, "resultCount": len(roles), "result": roles}
 
 
-@router.delete("/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)])
+@router.delete("/{id}", response_model=schemas.Role, dependencies=[Depends(deps.admin_only)], summary="Delete a role")
 def delete_role(
     *,
     db: Session = Depends(deps.get_db),
@@ -100,16 +110,16 @@ def delete_role(
     return crud.role.remove(db, _id=id, audit_logger=audit_logger)
 
 
-@router.post("/assign", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)])
+@router.post("/assign", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)], summary="Assign a role")
 async def assign_role(
     username: Annotated[str, Query(...)],
-    role_name: Annotated[str | None, Query(...)] = None,
-    role_id: Annotated[int | None, Query(...)] = None,
+    role_name: Annotated[str | SkipJsonSchema[None], Query(...)] = None,
+    role_id: Annotated[int | SkipJsonSchema[None], Query(...)] = None,
     db: Session = Depends(deps.get_db),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ):
     """
-    Assign a role to a user
+    Assign a role to a user, either by id or by name
     """
     # Need exactly one of role_name or role_id
     if (role_name is None and role_id is None) or (
@@ -139,16 +149,16 @@ async def assign_role(
     return {"msg": f"Success: role {role.name} was assigned to {user.username}"}
 
 
-@router.post("/remove", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)])
+@router.post("/remove", response_model=schemas.Msg, dependencies=[Depends(deps.admin_only)], summary="Remove a role")
 async def remove_role(
     username: Annotated[str, Query(...)],
-    role_name: Annotated[str | None, Query(...)] = None,
-    role_id: Annotated[int | None, Query(...)] = None,
+    role_name: Annotated[str | SkipJsonSchema[None], Query(...)] = None,
+    role_id: Annotated[int | SkipJsonSchema[None], Query(...)] = None,
     db: Session = Depends(deps.get_db),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
 ):
     """
-    Remove a role from a user
+    Remove a role from a user, either by id or by name
     """
     # Need exactly one of role_name or role_id
     if (role_name is None and role_id is None) or (

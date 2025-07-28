@@ -7,13 +7,16 @@ from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
 from app.schemas.entry import EntryCreate
 from app.schemas.flair import FlairedEntity, FlairedTarget, FlairResults
 
+
 try:
+    from tests.utils.utils import select_random_target_type
     from tests.utils.utils import generate_html_entry
     from tests.utils.user import create_random_user
 except ImportError:
     # needed to make initial_data.py function properly
     from utils import generate_html_entry
     from user import create_random_user
+    from utils import select_random_target_type
 
 
 def create_random_entry(
@@ -31,10 +34,7 @@ def create_random_entry(
     if owner is None:
         owner = create_random_user(db, faker)
     if target_type is None:
-        target_list = list(TargetTypeEnum)
-        target_list.remove(TargetTypeEnum.none)
-        target_list.remove(TargetTypeEnum.remote_flair)
-        target_type = random.choice(target_list)
+        target_type = select_random_target_type()
     if target_id is None:
         target_id = faker.pyint()
     if entry_class is None:

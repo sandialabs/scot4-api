@@ -1,5 +1,5 @@
 from typing import Any, Annotated
-from fastapi import APIRouter, Depends, HTTPException, Body, Path
+from fastapi import APIRouter, Depends, HTTPException, Body, Path, Query
 from sqlalchemy.orm import Session
 from pydantic import ValidationError
 
@@ -35,6 +35,27 @@ generic_upvote_and_downvote(router, crud.alert, TargetTypeEnum.alert, schemas.Al
 
 
 description, examples = create_schema_details(schemas.AlertUpdate)
+
+
+@router.put(
+    "/many",
+    response_model=list[schemas.Alert],
+    summary="Update many alerts",
+    description=description
+)
+def update_alerts(
+    *,
+    db: Session = Depends(deps.get_db),
+    audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
+    current_user: models.User = Depends(deps.get_current_active_user),
+    current_roles: list[models.Role] = Depends(deps.get_current_roles),
+    ids: Annotated[list[int], Query(...)],
+    obj: Annotated[schemas.AlertUpdate, Body(..., openapi_examples=examples)],
+) -> Any:
+    _objs = []
+    for id in ids:
+        _objs.append(update_alert(db=db, audit_logger=audit_logger, current_user=current_user, current_roles=current_roles, id=id, obj=obj))
+    return _objs
 
 
 # Custom PUT so that you can modify alerts if you have access to the alertgroup

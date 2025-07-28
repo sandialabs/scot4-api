@@ -2,6 +2,7 @@ from typing import Annotated
 from fastapi import APIRouter, Body, Path, Query
 from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, Body
+from pydantic.json_schema import SkipJsonSchema
 
 from app import crud, schemas, models
 from app.api import deps
@@ -16,9 +17,9 @@ def read_object(
     *,
     db: Session = Depends(deps.get_db),
     link_type: Annotated[UserLinkEnum, Query(...)],
-    skip: Annotated[int | None, Query(...)] = 0,
-    limit: Annotated[int | None, Query(...)] = 100,
-    sort: Annotated[str | None, Query(...)] = None,
+    skip: Annotated[int, Query(...)] = 0,
+    limit: Annotated[int, Query(...)] = 100,
+    sort: Annotated[str | SkipJsonSchema[None], Query(...)] = None,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> schemas.ListResponse[schemas.UserLinks]:
     _result, _count = crud.user_links.query_with_filters(db, None, {"link_type": link_type, "owner_id": current_user.id}, sort, skip, limit)
@@ -45,7 +46,7 @@ def read_object(
 description, examples = create_schema_details(schemas.UserLinksCreate, "Create a new user link associated with a target type")
 
 
-@router.post("/", response_model=schemas.UserLinks, summary="Create a new User Link", description=description)
+@router.post("/", response_model=schemas.UserLinks, summary="Create a new user link", description=description)
 def create_object(
     *,
     db: Session = Depends(deps.get_db),
@@ -89,7 +90,7 @@ def delete_object(
 
     if not _obj_group:
         raise HTTPException(404, "User Link not found")
-    
+
     if _obj_group.owner_id != current_user.id:
         raise HTTPException(404, "User Link not found")
 

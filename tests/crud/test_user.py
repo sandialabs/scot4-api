@@ -221,27 +221,6 @@ def test_create_with_permissions_user(db: Session, faker: Faker) -> None:
     assert db_obj.email == user.email
 
 
-def test_create_in_object_user(db: Session, faker: Faker) -> None:
-    email = faker.safe_email()
-    user = UserCreate(
-        username=email,
-        email=email,
-        password=faker.password()
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.user.create_in_object(db, obj_in=user, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.username == user.username
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v0_target": TargetTypeEnum.alertgroup, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_user(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
     email = faker.safe_email()

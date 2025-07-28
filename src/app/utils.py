@@ -9,7 +9,7 @@ import random
 from os import environ
 
 from pathlib import Path
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 from pydantic.fields import PydanticUndefined
 from datetime import datetime, timedelta, timezone
 from typing import Union, Tuple, Any
@@ -31,20 +31,30 @@ def index_for_search(parent_subject: str, entry: Entry = None, alert: Alert = No
             client = meilisearch.Client(settings.SEARCH_HOST, settings.SEARCH_API_KEY)
             if entry is not None:
                 client.index('entries').add_documents([{
+                    'index_id': 'e' + str(entry.id),
                     'parent_text': parent_subject,
                     'entry_id': entry.id,
                     'target_id': entry.target_id,
                     'target_type': entry.target_type.value,
-                    'entry_text': entry.entry_data['plain_text']
+                    'entry_text': entry.entry_data['plain_text'],
+                    'created': entry.created.timestamp(),
+                    'modified': entry.modified.timestamp(),
+                    'owner': entry.owner,
+                    'popularity_count': entry.popularity_count
                 }])
             elif alert is not None:
                 client.index('entries').add_documents([{
+                    'index_id': 'a' + str(alert.id),
                     'parent_text': parent_subject,
                     'entry_id': alert.id,
                     'target_id': alert.alertgroup_id,
                     'target_type': TargetTypeEnum.alertgroup.value,
-                    'entry_text': dict(alert.data) if alert.data else None
-                }])  # or should the be the parse data?
+                    'entry_text': dict(alert.data) if alert.data else None,
+                    'created': alert.created.timestamp(),
+                    'modified': alert.modified.timestamp(),
+                    'owner': alert.owner,
+                    'popularity_count': alert.popularity_count
+                }])
     except Exception:
         logging.exception(traceback.format_exc())
 
@@ -91,7 +101,7 @@ def send_new_regex_request(entity_value: str, entity_type: str) -> None:
                 data=json.dumps({
                     "name": entity_value,
                     "description": "User Defined Flair",
-                    "match": f"\\b{entity_value}\\b",
+                    "match": f"{entity_value}",
                     "entity_type": entity_type,
                     "regex_type": "udef",
                     "re_order": 30,
@@ -369,7 +379,7 @@ def sanitize_html(html: str, flaired_alert: bool = False):
 
 
 def escape_sql_like(like_string: str):
-    return like_string.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+    return like_string.replace('\\', '\\\\').replace('%', '\\%')
 
 
 def is_bool(value: str) -> bool:
@@ -390,6 +400,62 @@ def filter_fixup(value: str) -> str:
     return value.strip().replace("\\", "")
 
 
+def get_json_type(fieldType: type | dict, defs: dict = {}):
+    schema = fieldType
+    if not isinstance(schema, dict):
+        schema = TypeAdapter(fieldType).json_schema()
+    typing = None
+    format_type = None
+    choices = None
+    if "$defs" in schema:
+        defs = schema["$defs"]
+    if "$ref" in schema:
+        # Type is just a reference to something in defs
+        if not schema["$ref"].startswith("#/$defs/"):
+            return None, None, None
+        type_name = schema["$ref"].lstrip("#/$defs/")
+        ref_type = defs.get(type_name.split("/", 1)[0])
+        while ref_type and "/" in type_name:
+            type_name = type_name.split("/", 1)[1]
+            ref_type = defs.get(type_name.split("/", 1)[0])
+        return get_json_type(ref_type, defs)
+    if "enum" in schema:
+        choices = schema["enum"]
+        typing = "string"
+    if "format" in schema:
+        format_type = schema["format"]
+    if "type" in schema:
+        typing = schema["type"]
+    elif "anyOf" in schema:
+        typing = []
+        format_type = []
+        choices = []
+        for type_choice in schema["anyOf"]:
+            a_type, a_format, a_choices = get_json_type(type_choice, defs)
+            typing.append(a_type)
+            if a_format and isinstance(a_format, list):
+                format_type.extend(a_format)
+            elif a_format:
+                format_type.append(a_format)
+            if a_choices:
+                choices.extend(a_choices)
+        typing = list(set(typing))
+        format_type = list(set(format_type))
+        choices = list(set(choices))
+    # Deal with array stuff
+    if typing == "array" and "items" in schema:
+        arr_type, arr_format, arr_choices = get_json_type(schema["items"], defs)
+        if isinstance(arr_type, list):
+            typing = [f"array[{t}]" for t in arr_type]
+        else:
+            typing = f"array[{arr_type}]"
+        if format_type is None:
+            format_type = arr_format
+        if choices is None:
+            choices = arr_choices
+    return typing, format_type, choices
+
+
 def create_schema_details(schema: BaseModel, prepend_description: str = "", append_description: str = "") -> Tuple[str, dict[str, dict]]:
     """
     Dynamically create schema descriptions and examples
@@ -405,7 +471,7 @@ def create_schema_details(schema: BaseModel, prepend_description: str = "", appe
         },
         f"{key_name}_required": {
             "summary": "Required Example",
-            "description": "Only Required Fields",
+            "description": "Only required fields",
             "value": {}
         }
     }
@@ -430,29 +496,54 @@ def create_schema_details(schema: BaseModel, prepend_description: str = "", appe
         description += f"  - Required: `{field_value.is_required()}`\n\n"
 
         # display the field type str, int, etc do some cleanup on the string
-        annotation = str(field_value.annotation).replace("pydantic.types.", "")\
-            .replace("<class '", "")\
-            .replace("<enum '", "")\
-            .replace("'>", "")\
-            .replace("datetime.", "")\
-            .replace("app.", "")\
-            .replace("enums.", "")\
-            .replace("schemas.", "")\
-            .replace("pydantic.networks.", "")
-        description += f"  - Type: `{annotation}`\n\n"
+        # annotation = str(field_value.annotation).replace("pydantic.types.", "")\
+        #     .replace("<class '", "")\
+        #     .replace("<enum '", "")\
+        #     .replace("'>", "")\
+        #     .replace("datetime.", "")\
+        #     .replace("app.", "")\
+        #     .replace("enums.", "")\
+        #     .replace("schemas.", "")\
+        #     .replace("pydantic.networks.", "")
+        # description += f"  - Type: `{annotation}`\n\n"
 
-        # if a field has a default value
-        if field_value.default is not None and field_value.default != PydanticUndefined:
-            # special case for enums
-            description += f"  - Default Value: `{field_value.default}`\n\n"
-            if field_value.is_required():
-                examples[f"{key_name}_required"]["value"][field_name] = field_value.default
-            examples[f"{key_name}_basic"]["value"][field_name] = field_value.default
+        # Convert actual python type to json-compatible type
+        annotation, str_format, choices = get_json_type(field_value.annotation)
+        if isinstance(annotation, list):
+            j_type = (f"`{annotation[0]}`"
+                + "".join([f" or `{annotation[i]}`" for i in range(1, len(annotation))]))
+        else:
+            j_type = f"`{annotation}`"
+        description += f"  - Type: {j_type}\n"
+        if str_format:
+            if isinstance(str_format, list):
+                str_format = (f"`{str_format[0]}`"
+                    + "".join([f" or `{str_format[i]}`" for i in range(1, len(str_format))]))
+            else:
+                str_format = f"`{str_format}`"
+            description += f"    - String Format: {str_format}\n"
+        if choices:
+            choices = (f"`{choices[0]}`"
+                    + "".join([f", `{choices[i]}`" for i in range(1, len(choices))]))
+            description += f"    - Choices: {choices}\n"
+        description += "\n"
+
         # if a field has an example
-        elif field_value.examples:
+        if field_value.examples:
             if field_value.is_required():
                 examples[f"{key_name}_required"]["value"][field_name] = field_value.examples[0]
             examples[f"{key_name}_basic"]["value"][field_name] = field_value.examples[0]
+        # if a field has a default value
+        elif field_value.default is not None and field_value.default not in [PydanticUndefined, ""]:
+            # For the "owner" field, the default is the username of the current user
+            if field_name == "owner" and field_value.default == settings.FIRST_SUPERUSER_USERNAME:
+                description += f"  - Default Value: username of creator\n\n"
+            # special case for update - don't print a default value
+            elif not schema.__name__.lower().endswith("update"):
+                description += f"  - Default Value: `{field_value.default}`\n\n"
+            if field_value.is_required():
+                examples[f"{key_name}_required"]["value"][field_name] = field_value.default
+            examples[f"{key_name}_basic"]["value"][field_name] = field_value.default
         # otherwise generate some fake data to fill everything else out
         else:
             # if no default value make some up
@@ -477,16 +568,18 @@ def create_schema_details(schema: BaseModel, prepend_description: str = "", appe
                 if field_value.is_required():
                     examples[f"{key_name}_required"]["value"][field_name] = annotation
                 examples[f"{key_name}_basic"]["value"][field_name] = annotation
-
-        if field_value.examples:
-            for i, example in enumerate(field_value.examples):
-                examples[f"{key_name}_{field_name}_{i}"] = {
-                    "summary": f"Field {field_name} #{i} Example",
-                    "description": f"Using Field {field_name} #{i} with other basic Fields",
-                    "value": {
-                        field_name: example
-                    }
-                }
+        # Drop extra examples? They get kind of large
+        # if field_value.examples:
+        #     for i, example in enumerate(field_value.examples):
+        #         if i == 0:
+        #             continue # Skip first examples, already covered
+        #         examples[f"{key_name}_{field_name}_{i}"] = {
+        #             "summary": f"Field {field_name} #{i} Example",
+        #             "description": f"Using Field {field_name} #{i} with other basic Fields",
+        #             "value": {
+        #                 field_name: example
+        #             }
+        #         }
     # merge the other examples (if any) with the basic one
     delete_keys = []
     for key, value in examples.items():
@@ -532,10 +625,13 @@ def get_search_filters(search_schema: BaseModel) -> dict:
         elif value.startswith("[") and value.endswith("]"):
             try:
                 v = value[1:-1].split(",")
-                if is_not:
-                    filter_dict["not"][key] = [search_schema.type_mapping(key, a.strip()) for a in v]
+                if len(v) > 0:
+                    if is_not:
+                        filter_dict["not"][key] = [search_schema.type_mapping(key, a.strip()) for a in v]
+                    else:
+                        filter_dict[key] = [search_schema.type_mapping(key, a.strip()) for a in v]
                 else:
-                    filter_dict[key] = [search_schema.type_mapping(key, a.strip()) for a in v]
+                    do_normal = True
             except Exception:
                 do_normal = True
         # !n - not an item

@@ -245,30 +245,6 @@ def test_create_with_permissions_permission(db: Session, faker: Faker) -> None:
     assert db_obj.permission == permission.permission
 
 
-def test_create_in_object_permission(db: Session, faker: Faker) -> None:
-    role = create_random_role(db, faker)
-    owner = create_user_with_role(db, role, faker)
-    alert = create_random_alert(db, faker, owner)
-    permission = PermissionCreate(
-        role_id=role.id,
-        target_type=TargetTypeEnum.alert,
-        target_id=alert.id,
-        permission=PermissionEnum.read
-    )
-
-    alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
-
-    db_obj = crud.permission.create_in_object(db, obj_in=permission, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
-
-    assert db_obj is not None
-    assert db_obj.role_id == permission.role_id
-
-    link, count = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
-
-    assert count == 0
-    assert len(link) == 0
-
-
 def test_get_history_permission(db: Session, faker: Faker) -> None:
     role = create_random_role(db, faker)
     owner = create_user_with_role(db, role, faker)

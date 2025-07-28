@@ -34,8 +34,44 @@ def test_get_entity(client: TestClient, normal_user_token_headers: dict, faker: 
     assert entity_data["status"] == entity.status.value
 
     r = client.get(
-        f"{settings.API_V1_STR}/entity/-1",
+        f"{settings.API_V1_STR}/entity/0",
         headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 404
+
+
+def test_update_entities(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
+    entity1 = create_random_entity(db, faker)
+    entity2 = create_random_entity(db, faker)
+    data = {
+        "value": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entity/many/?ids={entity1.id}&ids={entity2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    entity_data = r.json()
+    assert entity_data[0]["id"] == entity1.id
+    assert entity_data[0]["value"] == data["value"]
+    assert entity_data[1]["id"] == entity2.id
+    assert entity_data[1]["value"] == data["value"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entity/many/?ids={entity1.id}&ids={entity2.id}",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entity/many/?ids=-1",
+        headers=normal_user_token_headers,
+        json=data
     )
 
     assert r.status_code == 404
@@ -93,6 +129,39 @@ def test_delete_entity(client: TestClient, superuser_token_headers: dict, faker:
 
     r = client.delete(
         f"{settings.API_V1_STR}/entity/-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_entities(client: TestClient, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    entity1 = create_random_entity(db, faker)
+    entity2 = create_random_entity(db, faker)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/entity/many/?ids={entity1.id}&ids={entity2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+
+    r = client.get(
+        f"{settings.API_V1_STR}/entity/{entity1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/entity/{entity2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/entity/many/?ids=-1",
         headers=superuser_token_headers
     )
 
@@ -593,6 +662,43 @@ def test_create_entity(client: TestClient, normal_user_token_headers: dict, fake
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_entities(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
+    data = {"entities": [{
+        "entry_count": faker.pyint(1, 20),
+        "status": random.choice(list(EntityStatusEnum)).value,
+        "value": faker.word(),
+        "type_name": faker.word(),
+        "data_ver": str(faker.pyfloat(1, 1, True))
+    },{
+        "entry_count": faker.pyint(1, 20),
+        "status": random.choice(list(EntityStatusEnum)).value,
+        "value": faker.word(),
+        "type_name": faker.word(),
+        "data_ver": str(faker.pyfloat(1, 1, True))
+    }]}
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entity/many/",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    created_entity = r.json()
+    assert created_entity is not None
+    assert len(created_entity) == 2
+    assert created_entity[0]["value"] == data["entities"][0]["value"]
+    assert created_entity[1]["value"] == data["entities"][1]["value"]
+    assert created_entity[0]["id"] < created_entity[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entity/many/",
         headers=normal_user_token_headers
     )
 

@@ -25,7 +25,7 @@ def test_get_link(client: TestClient, normal_user_token_headers: dict, db: Sessi
     assert link_data["id"] == link.id
 
     r = client.get(
-        f"{settings.API_V1_STR}/link/-1",
+        f"{settings.API_V1_STR}/link/0",
         headers=normal_user_token_headers
     )
 
@@ -58,6 +58,48 @@ def test_create_link(client: TestClient, normal_user_token_headers: dict, db: Se
 
     r = client.post(
         f"{settings.API_V1_STR}/link",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+
+def test_create_links(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    v0_type, v0_id = get_type_object(db, faker)
+    v1_type, v1_id = get_type_object(db, faker)
+
+    data = [{
+        "v0_type": v0_type.value,
+        "v0_id": v0_id,
+        "v1_type": v1_type.value,
+        "v1_id": v1_id
+    },{
+        "v0_type": v0_type.value,
+        "v0_id": v0_id,
+        "v1_type": v1_type.value,
+        "v1_id": v1_id
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/link/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    link_data = r.json()
+    assert link_data is not None
+    assert len(link_data) == 2
+    assert link_data[0]["id"] > 0
+    assert link_data[0]["v0_id"] == data[0]["v0_id"]
+    assert link_data[0]["v1_id"] == data[0]["v1_id"]
+    assert link_data[1]["id"] > 0
+    assert link_data[1]["v0_id"] == data[1]["v0_id"]
+    assert link_data[1]["v1_id"] == data[1]["v1_id"]
+    assert link_data[0]["id"] < link_data[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/link/many/",
         headers=normal_user_token_headers
     )
 
@@ -100,6 +142,45 @@ def test_update_link(client: TestClient, normal_user_token_headers: dict, db: Se
     assert r.status_code == 404
 
 
+def test_update_link(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    link1 = create_random_link(db, faker)
+    link2 = create_random_link(db, faker)
+
+    data = {
+        "context": faker.word()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/link/many/?ids={link1.id}&ids={link2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    link_data = r.json()
+    assert link_data is not None
+    assert len(link_data) == 2
+    assert link_data[0]["id"] == link1.id
+    assert link_data[0]["context"] == data["context"]
+    assert link_data[1]["id"] == link2.id
+    assert link_data[1]["context"] == data["context"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/link/many/?ids={link1.id}&ids={link2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/link/many/?ids=-1",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+
 def test_delete_link(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     link = create_random_link(db, faker)
 
@@ -122,6 +203,43 @@ def test_delete_link(client: TestClient, normal_user_token_headers: dict, db: Se
 
     r = client.delete(
         f"{settings.API_V1_STR}/link/-1",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_links(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    link1 = create_random_link(db, faker)
+    link2 = create_random_link(db, faker)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/link/many/?ids={link1.id}&ids={link2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 200
+    link_data = r.json()
+    assert link_data is not None
+    assert link_data[0]["id"] == link1.id
+    assert link_data[1]["id"] == link2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/link/{link1.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/link/{link2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/link/many/?ids=-1",
         headers=normal_user_token_headers
     )
 

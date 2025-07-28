@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
+from pydantic.json_schema import SkipJsonSchema
 
 
 class FeedTypeBase(BaseModel):
@@ -12,7 +13,7 @@ class FeedTypeCreate(FeedTypeBase):
 
 
 class FeedTypeUpdate(FeedTypeBase):
-    type: Annotated[str | None, Field(...)] = None
+    type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
 
 
 # pretty

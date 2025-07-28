@@ -11,6 +11,10 @@ from tests.utils.source import create_random_source
 from tests.utils.threat_model_item import create_random_threat_model_item
 
 
+import pytest
+pytest.skip("Threat model item api is currently disabled", allow_module_level=True)
+
+
 def test_get_threat_model_item(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     threat_model_item = create_random_threat_model_item(db, faker)
 
@@ -68,6 +72,45 @@ def test_create_threat_model_item(client: TestClient, normal_user_token_headers:
     assert threat_model_item_data["type"] == data["type"]
 
 
+def test_create_threat_model_items(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    data = [{
+        "title": faker.sentence(),
+        "type": faker.word(),
+        "description": faker.sentence(),
+        "data": faker.json()
+    },{
+        "title": faker.sentence(),
+        "type": faker.word(),
+        "description": faker.sentence(),
+        "data": faker.json()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/threat_model_item/many",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.post(
+        f"{settings.API_V1_STR}/threat_model_item/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    threat_model_item_data = r.json()
+    assert threat_model_item_data is not None
+    assert len(threat_model_item_data) == 2
+    assert threat_model_item_data[0]["id"] >= 1
+    assert threat_model_item_data[0]["title"] == data[0]["title"]
+    assert threat_model_item_data[0]["type"] == data[0]["type"]
+    assert threat_model_item_data[1]["id"] >= 1
+    assert threat_model_item_data[1]["title"] == data[1]["title"]
+    assert threat_model_item_data[1]["type"] == data[1]["type"]
+    assert threat_model_item_data[0]["id"] < threat_model_item_data[1]["id"]
+
+
 def test_update_threat_model_item(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     threat_model_item = create_random_threat_model_item(db, faker)
 
@@ -114,6 +157,56 @@ def test_update_threat_model_item(client: TestClient, superuser_token_headers: d
     assert threat_model_item_data["type"] == data["type"]
 
 
+def test_update_threat_model_items(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    threat_model_item1 = create_random_threat_model_item(db, faker)
+    threat_model_item2 = create_random_threat_model_item(db, faker)
+
+    data = {
+        "title": faker.sentence(),
+        "type": faker.word(),
+        "description": faker.sentence(),
+        "data": faker.json()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids={threat_model_item1.id}&ids={threat_model_item2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 403
+
+    r = client.put(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids=-1",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids={threat_model_item1.id}&ids={threat_model_item2.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.put(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids={threat_model_item1.id}&ids={threat_model_item2.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    threat_model_item_data = r.json()
+    assert threat_model_item_data is not None
+    assert len(threat_model_item_data) == 2
+    assert threat_model_item_data[0]["id"] == threat_model_item1.id
+    assert threat_model_item_data[0]["type"] == data["type"]
+    assert threat_model_item_data[1]["id"] == threat_model_item2.id
+    assert threat_model_item_data[1]["type"] == data["type"]
+
+
 def test_delete_threat_model_item(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     threat_model_item = create_random_threat_model_item(db, faker)
 
@@ -143,6 +236,51 @@ def test_delete_threat_model_item(client: TestClient, superuser_token_headers: d
 
     r = client.get(
         f"{settings.API_V1_STR}/threat_model_item/{threat_model_item.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+
+def test_delete_threat_model_items(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    threat_model_item1 = create_random_threat_model_item(db, faker)
+    threat_model_item2 = create_random_threat_model_item(db, faker)
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids={threat_model_item1.id}&ids={threat_model_item2.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 403
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.delete(
+        f"{settings.API_V1_STR}/threat_model_item/many/?ids={threat_model_item1.id}&ids={threat_model_item2.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    threat_model_item_data = r.json()
+    assert threat_model_item_data is not None
+    assert len(threat_model_item_data) == 2
+    assert threat_model_item_data[0]["id"] == threat_model_item1.id
+    assert threat_model_item_data[1]["id"] == threat_model_item2.id
+
+    r = client.get(
+        f"{settings.API_V1_STR}/threat_model_item/{threat_model_item1.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 404
+
+    r = client.get(
+        f"{settings.API_V1_STR}/threat_model_item/{threat_model_item2.id}",
         headers=superuser_token_headers
     )
 

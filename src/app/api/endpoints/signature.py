@@ -26,33 +26,20 @@ from .generic import (
 router = APIRouter()
 
 # Create get, post, put, delete, entries, tag, and source endpoints
-generic_export(router, crud.signature, TargetTypeEnum.signature)
 generic_get(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_post(router, crud.signature, TargetTypeEnum.signature, schemas.Signature, schemas.SignatureCreate)
 generic_put(router, crud.signature, TargetTypeEnum.signature, schemas.Signature, schemas.SignatureUpdate)
 generic_delete(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
+generic_search(router, crud.signature, TargetTypeEnum.signature, schemas.SignatureSearch, schemas.Signature)
 generic_undelete(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_entries(router, TargetTypeEnum.signature)
 generic_tag_untag(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_source_add_remove(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_entities(router, TargetTypeEnum.signature)
 generic_history(router, crud.signature, TargetTypeEnum.signature)
-generic_search(router, crud.signature, TargetTypeEnum.signature, schemas.SignatureSearch, schemas.Signature)
+generic_export(router, crud.signature, TargetTypeEnum.signature)
 generic_upvote_and_downvote(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
 generic_user_links(router, crud.signature, TargetTypeEnum.signature, schemas.Signature)
-
-
-@router.get(
-    "/{id}/sigbodies",
-    response_model=list[schemas.Sigbody],
-    summary="Get a signature's signature bodies",
-    dependencies=[Depends(deps.PermissionCheckId(TargetTypeEnum.signature, PermissionEnum.read))],
-)
-def get_signature_sigbodies(
-    id: Annotated[int, Path(...)],
-    db: Session = Depends(deps.get_db)
-) -> Any:
-    return crud.sigbody.get_sigbodies_for_signature(db, id)
 
 
 @router.get(
@@ -65,6 +52,9 @@ def get_signature_links(
     id: Annotated[int, Path(...)],
     db: Session = Depends(deps.get_db)
 ) -> Any:
+    """
+    Get all objects linked to this signature
+    """
     results, count = crud.signature.retrieve_signature_links(db, id)
     return {"totalCount": count, "resultCount": len(results), "result": results}
 

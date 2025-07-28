@@ -36,6 +36,43 @@ def test_create_entity_class(client: TestClient, normal_user_token_headers: dict
     assert r.status_code == 422
 
 
+def test_create_entity_classes(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
+    data = [{
+        "display_name": faker.word(),
+        "name": f"{faker.word()}_{faker.pyint()}",
+        "icon": faker.word(),
+        "description": faker.sentence()
+    },{
+        "display_name": faker.word(),
+        "name": f"{faker.word()}_{faker.pyint()}",
+        "icon": faker.word(),
+        "description": faker.sentence()
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entity_class/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    entity_class_data = r.json()
+    assert entity_class_data is not None
+    assert len(entity_class_data) == 2
+    assert entity_class_data[0]["id"] > 0
+    assert entity_class_data[0]["name"] == data[0]["name"]
+    assert entity_class_data[1]["id"] > 0
+    assert entity_class_data[1]["name"] == data[1]["name"]
+    assert entity_class_data[0]["id"] < entity_class_data[1]["id"]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entity_class/many",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_update_entity_class(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
     entity_class = create_random_entity_class(db, faker)
 
@@ -71,11 +108,50 @@ def test_update_entity_class(client: TestClient, normal_user_token_headers: dict
     assert r.status_code == 422
 
 
+def test_update_entity_classes(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
+    entity_class1 = create_random_entity_class(db, faker)
+    entity_class2 = create_random_entity_class(db, faker)
+
+    data = {
+        "description": faker.sentence()
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entity_class/many/?ids={entity_class1.id}&ids={entity_class2.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    get_entity_class = r.json()
+    assert get_entity_class is not None
+    assert len(get_entity_class) == 2
+    assert get_entity_class[0]["id"] == entity_class1.id
+    assert get_entity_class[0]["description"] == data["description"]
+    assert get_entity_class[1]["id"] == entity_class2.id
+    assert get_entity_class[1]["description"] == data["description"]
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entity_class/many/?ids=-1",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 404
+
+    r = client.put(
+        f"{settings.API_V1_STR}/entity_class/many/?ids=-1",
+        headers=normal_user_token_headers,
+    )
+
+    assert r.status_code == 422
+
+
 def test_get_entity_class(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     entity_class = create_random_entity_class(db, faker)
 
     r = client.get(
-        f"{settings.API_V1_STR}/entity_class/-1",
+        f"{settings.API_V1_STR}/entity_class/0",
         headers=normal_user_token_headers
     )
 

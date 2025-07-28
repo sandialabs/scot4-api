@@ -4,6 +4,7 @@ from typing import Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.enums import TargetTypeEnum, UserLinkEnum
+from app.schemas.response import ResultBase
 
 
 class UserLinksBase(BaseModel):
@@ -22,18 +23,39 @@ class UserLinksUpdate(BaseModel):
 
 
 # pretty
-class UserLinks(UserLinksBase):
-    id: Annotated[int, Field(...)]
+class UserLinks(UserLinksBase, ResultBase):
     name: Annotated[str | None, Field(...)] = None
     parent_target_id: Annotated[int | None, Field(...)] = None
     parent_target_type: Annotated[TargetTypeEnum | None, Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = None
-    created: Annotated[datetime | None, Field(...)] = None
-    modified: Annotated[datetime | None, Field(...)] = None
 
     model_config = ConfigDict(from_attributes=True)
 
 
+def move_properties_to_end(schema: dict[str, any]):
+    props = schema.get("properties", {})
+    for field in FavoriteLink.model_fields:
+        val = props.pop(field, None)
+        if val:
+            props[field] = val
+
+
 # inherit to return user links
 class FavoriteLink(BaseModel):
-    favorite: Annotated[bool | None, Field(...)] = False
-    subscribed: Annotated[bool | None, Field(...)] = False
+    favorite: bool = False
+    subscribed: bool = False
+
+    # Function to move the properties of the Favorite/Subscription mixin to the end of the schema
+    # Makes the auto-documentation look prettier
+    @classmethod
+    def __get_pydantic_json_schema__(cls, core_schema, handler):
+        if hasattr(super(), "__get_pydantic_json_schema__"):
+            json_schema = super().__get_pydantic_json_schema__(core_schema, handler)
+        else:
+            json_schema = handler(core_schema)
+            json_schema = handler.resolve_ref_schema(json_schema)
+        props = json_schema.get("properties", {})
+        for field in FavoriteLink.model_fields:
+            val = props.pop(field, None)
+            if val is not None:
+                props[field] = val
+        return json_schema
