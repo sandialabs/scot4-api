@@ -4,6 +4,7 @@ pydantic_core==2.23.4
 pydantic_settings==2.4.0
 pydantic==2.9.2
 mysqlclient==2.2.7
+mysql-connector-python==9.4.0 # DEPRECATED, kept for compatibility
 meilisearch==0.31.4
 msal==1.30.0
 python-dateutil==2.9.0.post0
