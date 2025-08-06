@@ -39,9 +39,9 @@ async def db_middleware(request: Request, call_next) -> None:
                         request.state.audit_logger.save_audits(db_session)
                         db_session.commit()
         except TimeoutError:
-            return PlainTextResponse(503, "Timeout when connecting to database")
+            return PlainTextResponse("Timeout when connecting to database", status_code=503)
         except DatabaseError:
-            return PlainTextResponse(500, "Error when connecting to database")
+            raise
 
     return response
 
