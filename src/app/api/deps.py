@@ -174,7 +174,7 @@ class AuditLogger:
             # permissions (Role) - contains all permissions the role is a
             #       part of (only for cascade purposes)
             excluded_fields = ["schema_column", "entity_type", "tag_type",
-                               "permissions"]
+                               "permissions", "entity"]
             data = json.dumps(
                 jsonable_encoder(thing.as_dict(exclude_keys=excluded_fields))
             )

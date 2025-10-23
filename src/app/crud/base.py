@@ -215,13 +215,19 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
             column_obj = filter_dict.pop(column, None)
             if column_obj is not None:
                 # does this even make sense? raise exception or just treat it like range?
-                if isinstance(column_obj, tuple) or isinstance(column_obj, list):
+                if isinstance(column_obj, tuple):
                     condition = []
                     for item in column_obj:
                         if escape:
                             condition.append(model.like(f"%{escape_sql_like(item)}%"))
                         else:
                             condition.append(model.like(f"%{item}%"))
+                    query = query.filter(or_(*condition))
+                # If it's a list, disable string contains querying
+                elif isinstance(column_obj, list):
+                    condition = []
+                    for item in column_obj:
+                        condition.append(model == item)
                     query = query.filter(or_(*condition))
                 else:
                     if escape:

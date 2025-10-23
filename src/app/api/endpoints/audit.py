@@ -73,6 +73,7 @@ def search_audits(
     - Non-numeric/non-date fields can't use the range filters, for example `subject` or `description`. If range filters are provided the system will treat them as a list filter instead.
     - If none of the range or list filters work it will attempt to do a normal search
     - Datetimes are parsed using the [dateutil module](https://dateutil.readthedocs.io/en/stable/parser.html#dateutil.parser.parse)
+        - Some fields (e.g. event subjects and entity values) default to "contains" string searches, where any item containing the searched string will match (so searching for `example.com` would match both `example.com` and `foo.example.com`). Searching these fields with list searches (with square brackets) disables this feature for all list items, but "range" searches (with parentheses) search normally. For example, searching `[example.com]` wouldn't match `foo.example.com` but searching `(example.com)` would match.
     """
     try:
         filter_dict = get_search_filters(search_schema)

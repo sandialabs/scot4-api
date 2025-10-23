@@ -384,7 +384,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
         db_session.refresh(entity)
         db_session.flush()
         if audit_logger is not None:
-            audit_logger.log("create", enrichment)
+            audit_logger.log("create", enrichment, log_thing=False)
         return entity
 
     def add_entity_classes(

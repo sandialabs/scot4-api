@@ -20,7 +20,7 @@ class Base:
     def __tablename__(cls) -> str:
         return cls.__name__.lower()
 
-    def as_dict(self, exclude_keys=["entity_type", "tag_type", "entity_types", "entity_classes", "permissions"], pretty_keys: bool = False, enum_value: bool = False):
+    def as_dict(self, exclude_keys=["entity_type", "tag_type", "entity_types", "entity_classes", "permissions", "entity"], pretty_keys: bool = False, enum_value: bool = False):
         """
         Serializes this model to a dictionary as accurately as possible
         Contains logic to prevent infinite recursion for circular references

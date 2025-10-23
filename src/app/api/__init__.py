@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.exception_handlers import http_exception_handler
 from fastapi.openapi.docs import (
     get_redoc_html,
     get_swagger_ui_html
@@ -10,6 +11,7 @@ from fastapi.openapi.docs import (
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import PlainTextResponse
+from starlette.exceptions import HTTPException
 from sqlalchemy.exc import TimeoutError, DatabaseError
 
 from app.api.endpoints import router
@@ -23,7 +25,10 @@ async def db_middleware(request: Request, call_next) -> None:
     """
     ROUTE_PREFIX_WHITELIST = ("/api/v1/firehose")
     if request.url.path.startswith(ROUTE_PREFIX_WHITELIST):
-        return await call_next(request)
+        try:
+            return await call_next(request)
+        except HTTPException as e:
+            return await http_exception_handler(request, e)
     else:
         try:
             with SessionLocal() as db_session:
@@ -41,7 +46,7 @@ async def db_middleware(request: Request, call_next) -> None:
         except TimeoutError:
             return PlainTextResponse("Timeout when connecting to database", status_code=503)
         except DatabaseError:
-            raise
+            return PlainTextResponse("Error when connecting to database", status_code=500)
 
     return response
 
@@ -51,31 +56,32 @@ def create_app() -> FastAPI:
     :return:
     """
     # Set up logging format
-    # dictConfig({
-    #    "version": 1,
-    #    "disable_existing_loggers": False,
-    #    "formatters": {
-    #        "access": {
-    #            "()": "uvicorn.logging.AccessFormatter",
-    #            "fmt": '%(asctime)s - %(levelprefix)s %(client_addr)s - \"%(request_line)s\" %(status_code)s',
-    #            "use_colors": True
-    #        },
-    #    },
-    #    "handlers": {
-    #        "access": {
-    #            "formatter": "access",
-    #            "class": "logging.StreamHandler",
-    #            "stream": "ext://sys.stdout",
-    #        },
-    #    },
-    #    "loggers": {
-    #        "uvicorn.access": {
-    #            "handlers": ["access"],
-    #            "level": "INFO",
-    #            "propagate": False
-    #        },
-    #    },
-    # })
+    dictConfig({
+       "version": 1,
+       "disable_existing_loggers": False,
+       "formatters": {
+           "access": {
+               "()": "uvicorn.logging.AccessFormatter",
+               "fmt": "%(levelprefix)s %(asctime)s.%(msecs)03d - %(client_addr)s - \"%(request_line)s\" %(status_code)s",
+               "datefmt": "%Y-%m-%dT%H:%M:%S",
+               "use_colors": True
+           },
+       },
+       "handlers": {
+           "access": {
+               "formatter": "access",
+               "class": "logging.StreamHandler",
+               "stream": "ext://sys.stdout",
+           },
+       },
+       "loggers": {
+           "uvicorn.access": {
+               "handlers": ["access"],
+               "level": "INFO",
+               "propagate": False
+           },
+       },
+    })
 
     app = FastAPI(
         debug=settings.DEBUG,
@@ -95,6 +101,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["Content-Disposition"],  # allows for frontend to get download file names
     )
 
     app.add_middleware(

@@ -14,16 +14,8 @@ from app.models.notification import Notification
 from app.schemas import TokenPayload
 
 router = APIRouter()
-
-# Close all connections on SIGINT, SIGTERM (more graceful shutdown)
+shutdown_signal_set = False
 shutdown = False
-
-
-def signal_shutdown(*args):
-    global shutdown
-    shutdown = True
-    for task in asyncio.all_tasks():
-        task.cancel()
 
 
 @router.get('/', summary="Stream audit events")
@@ -36,9 +28,24 @@ async def stream_audits(
     Stream a list of changes to SCOT data in real time (e.g. creation and
     modification events), as well as notifications for the user
     """
-    if signal.getsignal(signal.SIGINT) != signal_shutdown:
-        signal.signal(signal.SIGINT, signal_shutdown)
-        signal.signal(signal.SIGTERM, signal_shutdown)
+    # Close all connections on SIGINT, SIGTERM (more graceful shutdown)
+    def get_shutdown_signal(signal_type):
+        oldsignal = signal.getsignal(signal_type)
+        if oldsignal == signal.SIG_IGN or oldsignal == signal.SIG_DFL:
+            oldsignal = None
+
+        def signal_shutdown(*args):
+            global shutdown
+            shutdown = True
+            if oldsignal:
+                oldsignal(*args)
+        return signal_shutdown
+
+    global shutdown_signal_set
+    if not shutdown_signal_set:
+        signal.signal(signal.SIGINT, get_shutdown_signal(signal.SIGINT))
+        signal.signal(signal.SIGTERM, get_shutdown_signal(signal.SIGTERM))
+        shutdown_signal_set = True
 
     async def event_generator():
         audit_checkpoint = None
@@ -103,6 +110,6 @@ async def stream_audits(
                         yield json.dumps({'what': 'create', 'when': record[1].strftime('%Y-%m-%d %H:%M:%s'), 'element_type': 'notification', 'element_id': record[0], 'username': current_user.username})
                 await asyncio.sleep(2)
         except asyncio.CancelledError as e:
-            pass
+            raise
 
     return EventSourceResponse(event_generator())

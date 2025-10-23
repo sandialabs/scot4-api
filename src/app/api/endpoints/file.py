@@ -122,11 +122,12 @@ def _download(db: Session, audit_logger: deps.AuditLogger, ids: list[int], passw
 
         # if only one file to download and no password was provided send the file
         if len(ids) == 1 and password is None:
+            filename = quote(fileobj.filename.encode("utf-8"))
             return StreamingResponse(
                 filestream,
                 media_type=fileobj.content_type,
                 headers={
-                    "content-disposition": f"attachment; filename*=UTF-8''{quote(fileobj.filename.encode('utf-8'))}"
+                    "content-disposition": f'attachment; filename="{filename}"'
                 },
             )
         # otherwise add file to zip

@@ -808,20 +808,10 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     assert r.status_code == 200
     assert any(i["id"] == signature.id for i in r.json()["result"])
 
-    # test with a list, even though its bad will return something
-    name = r"[(AAQ) Process [Executed] out of <drive>:\\ProgramData\\]"
-    name2 = "[(AAQ) Process [Executed] out of <drive>:\\ProgramData\\]"
-    signature = create_random_signature(db, faker, owner, name)
-    r = client.get(
-        f"{settings.API_V1_STR}/signature/?name={name2}",
-        headers=superuser_token_headers
-    )
-
-    assert r.status_code == 200
-    assert any(i["id"] != signature.id for i in r.json()["result"])
-
     # test with a list, with escape characters
+    name = r"[(AAQ) Process [Executed] out of <drive>:\\ProgramData\\]"
     name2 = "\\[(AAQ) Process [Executed] out of <drive>:\\ProgramData\\]"
+    signature = create_random_signature(db, faker, owner, name)
     r = client.get(
         f"{settings.API_V1_STR}/signature/?name={name2}",
         headers=superuser_token_headers
