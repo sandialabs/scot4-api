@@ -1,0 +1,59 @@
+        <h1>SCOT Dispatch {{ dispatch.id }}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ dispatch.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ dispatch.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ dispatch.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ dispatch.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ dispatch.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ dispatch.view_count }} / {{ dispatch.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in dispatch.tags %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in dispatch.sources %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>

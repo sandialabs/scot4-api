@@ -2,10 +2,10 @@ from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
 from app.enums import GuideStatusEnum, TlpEnum
-from app.models.mixins import EntryMixin, TimestampMixin, PopularityMixin, UserLinksMixin
+from app.models.mixins import EntryMixin, TimestampMixin, PopularityMixin, UserLinksMixin, TagMixin, SourceMixin
 
 
-class Guide(Base, TimestampMixin, EntryMixin, PopularityMixin, UserLinksMixin):
+class Guide(Base, TimestampMixin, EntryMixin, PopularityMixin, UserLinksMixin, TagMixin, SourceMixin):
     __tablename__ = "guides"
 
     id = Column("guide_id", Integer, primary_key=True)

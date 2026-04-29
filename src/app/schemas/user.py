@@ -1,9 +1,10 @@
 import json
 from datetime import datetime
 from pydantic import BaseModel, field_validator, ConfigDict, Json, Field
+from pydantic.json_schema import SkipJsonSchema
 from typing import Annotated
 
-from app.schemas.role import Role
+from app.schemas.role import Role, RoleNoAuth
 
 
 class UserBase(BaseModel):
@@ -41,5 +42,16 @@ class User(UserBase):
     roles: Annotated[list[Role], Field(...)] = []
     last_login: Annotated[datetime | None, Field(...)] = None
     last_activity: Annotated[datetime | None, Field(...)] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+# User missing sensitive info like password hash
+class UserSafe(UserBase):
+    id: Annotated[int, Field(...)]
+    roles: Annotated[list[RoleNoAuth], Field(...)] = []
+    last_login: Annotated[datetime | None, Field(...)] = None
+    last_activity: Annotated[datetime | None, Field(...)] = None
+    pw_hash: SkipJsonSchema[Annotated[str | None, Field(default=None, exclude=True)]] = None
 
     model_config = ConfigDict(from_attributes=True)

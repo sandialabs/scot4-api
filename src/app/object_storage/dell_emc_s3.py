@@ -44,37 +44,33 @@ class DellEMCS3StorageProvider(BaseStorageProvider):
         "provider_name": "",
         "key": "",
         "host": "https://yourhosthere",
-        "secret": "",
+        "secret": "",  # nosec B105
         "port": "",
         "root_bucket": "",
         "no_proxy": "",
         "http_proxy": "",
         "deleted_items_location": "",
         "emc_namespace": ""
-
-
-
     }
 
     config_name_pretty = {
         "provider_name": "Provider Name",
         "key": "API Access Key",
         "host": "Storage Account Endpoint",
-        "secret": "API Secret Access Key",
+        "secret": "API Secret Access Key",  # nosec B105
         "port": "Storage Account Endpoint Port",
         "root_bucket": "Base Bucket Path",
         "no_proxy": "No Proxy env variable",
         "http_proxy": "HTTP proxy env variable",
         "deleted_items_location": "Deleted Items Bucket",
         "emc_namespace": "EMC Namespace"
-
     }
 
     config_help = {
         "provider_name": "A name that identifies this authentication instance",
         "key": "API Access Key",
         "host": "Storage Account Endpoint",
-        "secret": "API Secret Access Key",
+        "secret": "API Secret Access Key",  # nosec B105
         "port": "Storage Account Endpoint Port",
         "root_bucket": "The path of the base bucket where objects will be stored under",
         "no_proxy": "Set the NO_PROXY environment variable for this object storage connection",

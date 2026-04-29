@@ -196,7 +196,7 @@ def send_new_account_email(email_to: str, username: str, password: str) -> None:
 
 def generate_password_reset_token(email: str) -> str:
     delta = timedelta(hours=settings.EMAIL_RESET_TOKEN_EXPIRE_HOURS)
-    now = datetime.utcnow()
+    now = datetime.now(timezone.utc)
     expires = now + delta
     return jwt.encode({"exp": expires.timestamp(), "nbf": now, "sub": email}, settings.SECRET_KEY, algorithm="HS256")
 
@@ -261,7 +261,7 @@ svg_attributes = ['accent-height', 'accumulate', 'additive', 'alignment-baseline
                   'lengthadjust', 'letter-spacing', 'kernelmatrix', 'kernelunitlength', 'lighting-color',
                   'local', 'marker-end', 'marker-mid', 'marker-start', 'markerheight', 'markerunits',
                   'markerwidth', 'maskcontentunits', 'maskunits', 'max', 'mask', 'media', 'method', 'mode',
-                  'min', 'name', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation',
+                  'min', 'name', 'noflair', 'numoctaves', 'offset', 'operator', 'opacity', 'order', 'orient', 'orientation',
                   'origin', 'overflow', 'paint-order', 'path', 'pathlength', 'patterncontentunits',
                   'patterntransform', 'patternunits', 'points', 'preservealpha', 'preserveaspectratio',
                   'primitiveunits', 'r', 'rx', 'ry', 'radius', 'refx', 'refy', 'repeatcount', 'repeatdur',
@@ -326,6 +326,8 @@ def sanitize_attribute_filter_flaired_alert(element: str, attribute: str, value:
             return None
     if element == 'span' and attribute == 'class' and "entity" in value:
         return "entity"
+    elif element == 'span' and attribute == 'class' and "noflair" in value:
+        return "noflair"
     elif element == 'span' and attribute == 'class' and "entity" not in value:
         return None
     elif element == 'span' and (attribute == 'data-entity-type' or attribute == 'data-entity-value'):
@@ -340,9 +342,11 @@ def sanitize_attribute_filter(element: str, attribute: str, value: str) -> str:
     if (attribute == 'href' or attribute == 'src') and value.startswith('data:'):
         if attribute != 'src' or element != 'img' or not value.startswith('data:image/'):
             return None
-    if element == 'span' and attribute == 'class' and "entity" in value:
-        return "entity"
-    elif element == 'span' and attribute == 'class' and "entity" not in value:
+    if element == 'span' and attribute == 'class' and 'entity' in value:
+        return 'entity'
+    elif element == 'span' and attribute == 'class' and 'noflair' in value:
+        return 'noflair'
+    elif element == 'span' and attribute == 'class':
         return None
     elif element == 'span' and (attribute == 'data-entity-type' or attribute == 'data-entity-value'):
         return value
@@ -595,12 +599,12 @@ def create_schema_details(schema: BaseModel, prepend_description: str = "", appe
     return f"{description}\n{append_description}", examples
 
 
-def get_search_filters(search_schema: BaseModel) -> dict:
+def get_search_filters(search_schema: BaseModel, ignore_fields: list[str] = []) -> dict:
     filter_dict = {"not": {}}
     key: str
     value: str
     for key, value in search_schema.model_dump().items():
-        if value is None:
+        if value is None or key in ignore_fields:
             continue
         # remove any extra whitespace
         value = value.strip()
@@ -646,6 +650,23 @@ def get_search_filters(search_schema: BaseModel) -> dict:
             filter_dict[key] = search_schema.type_mapping(key, value.strip())
 
     return filter_dict
+
+
+def get_appearance_filters(search_schema: BaseModel, id: str | None, name: str | None) -> tuple[dict, bool]:
+    # used to create the and filters for tag and sources appearance table filters
+    if id and name:
+        raise Exception("Submit either id or name, not both")
+
+    and_ = False
+    # check for 'and' filters
+    if id is not None and id.startswith("{") and id.endswith("}"):
+        id = f"[{id[1:-1]}]"
+        and_ = True
+    elif name is not None and name.startswith("{") and name.endswith("}"):
+        name = f"[{name[1:-1]}]"
+        and_ = True
+
+    return get_search_filters(search_schema(id=id, name=name)), and_
 
 
 """

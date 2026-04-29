@@ -1,0 +1,29 @@
+<h2>Entities embedded</h2>
+<table class="entity_table">
+    <tr>
+        <th>reference</th>
+        <th>Entity</th>
+        <th>Status</th>
+        <th>EntityType</th>
+        <th>Tags</th>
+        <th>Count</th>
+    </tr>
+    {% for entity in entities %}
+    <tr>
+        {% set strindex = loop.index|string %}
+        {% set at="entity_"+ strindex %}
+        <td id={{ at }}>{{ loop.index }}</td>
+        </td>
+        <td>{{ entity.value }}</td>
+        <td>{{ entity.status.value }}</td>
+        <td>{{ entity.type_name }}</td>
+        <td>
+            {% for tag in entity.tags %}
+            {{ tag.name }}&nbsp;
+            {% endfor %}
+        </td>
+        <td>{{ entity.entity_count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+

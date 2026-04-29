@@ -1,315 +1,282 @@
 import uuid
 import json
-from os import path, remove
+from os import path, remove, getcwd
 from typing import Union, Any
+from copy import deepcopy
 
 from sqlalchemy.orm import Session
+from fastapi import Depends
 from tabulate import tabulate
 from tempfile import gettempdir
 from markdownify import markdownify
 from xhtml2pdf import pisa
-from pdf2docx import Converter
+from html4docx import HtmlToDocx
+from docx import Document
+from bs4 import BeautifulSoup
+
+from jinja2 import Environment, PackageLoader, select_autoescape
+from weasyprint import HTML
+# from objprint import op
 
 from app import crud
-from app.models import Entry, Alert, Entity, Signature
+from app.api import deps
+from app.models import Entry, Alert, Entity, Signature, Role
 from app.enums import TargetTypeEnum, ExportFormatEnum
 
 
-def fmt_table(obj: list[dict]):
-    table = ""
-    if obj != []:
-        if isinstance(obj[0], dict):
-            table = tabulate(obj, headers="keys", tablefmt="unsafehtml")
-        else:
-            table = ", ".join(obj)
-    return table
+def export_object(
+    db: Session, 
+    _obj: Any, 
+    target_type: TargetTypeEnum, 
+    format: ExportFormatEnum, 
+    pretty_name: str, 
+    roles: list[Role]
+) -> str:
+    '''
+    Export a object to a requested filetype
+        1. all objects first get an html representation via jinja templates
+        2. get entities and use beautiful soup to "flair"
+        3. weasyprint converts html to pdf, markdownify to md, htm4docs and docx to docx
+        4. send to the requestor
+    '''
+    html = ''
 
+    # limit the depth of the object printer
+    # op.config(depth=3)
+    # print("------ exporting object -------")
+    # op(_obj)
+    # print("-------------------------------")
 
-def fmt_sources_tags(obj: Any, obj_dict: dict):
-    if hasattr(obj, "sources"):
-        obj_dict["sources"] = ", ".join([a.name for a in obj.sources])
-    if hasattr(obj, "tags"):
-        obj_dict["tags"] = ", ".join([a.name for a in obj.tags])
+    entities, count = crud.entity.retrieve_element_entities(
+        db_session=db, source_id=_obj.id, source_type=target_type
+    )
+    # print(f"====== {count} entities =====")
+    # for index, e in enumerate(entities):
+    #     print(f"{index} => {e.value}")
+    # op(entities)
+    # print("=====================")
 
+    # the _obj.entries ignore permissions
+    # greg recommends using crud.entry.get_by_type to replace that in object
 
-def fmt_promoted_to_from(obj: Any, obj_dict: dict):
-    if hasattr(obj, "promoted_to_targets"):
-        obj_dict["promoted to"] = ", ".join([f"{a.p1_type.value}: {a.p1_id}" for a in obj.promoted_to_targets])
-        del obj_dict["promoted to targets"]
-    if hasattr(obj, "promoted_from_sources"):
-        obj_dict["promoted from"] = ", ".join([f"{a.p0_type.value}: {a.p0_id}" for a in obj.promoted_from_sources])
-        del obj_dict["promoted from sources"]
+    entries, entry_count = crud.entry.get_by_type(
+        db, 
+        roles=roles,
+        _id=_obj.id, 
+        _type=target_type
+    )
 
-
-def fmt_alert(alert: Alert):
-    alert_obj = alert.as_dict(pretty_keys=True, enum_value=True)
-    fmt_promoted_to_from(alert, alert_obj)
-    # no need to keep the alertgroup stuff around
-    del alert_obj["alertgroup"]
-    # make alert data its own column in cell
-    for cell in alert.data_cells:
-        # skip sparkline
-        if "sparkline" in cell:
-            continue
-        try:
-            alert_obj[cell] = fmt_table(json.loads(alert.data[cell]))
-        except Exception:
-            alert_obj[cell] = alert.data[cell]
-    return alert_obj
-
-
-def fmt_entries(db: Session, obj: Union[list[Entry], list[dict]], from_entry: bool = False):
-    journal = ""
-    if obj != []:
-        for entry in obj:
-            if not from_entry:
-                if isinstance(entry, dict):
-                    journal += f"<h5>[{entry['id']}] {entry['owner']} @ {entry['modified']} - {entry['tlp']}</h5>"
-                else:
-                    journal += f"<h5>[{entry.id}] {entry.owner} @ {entry.modified} - {entry.tlp}</h5>"
-            if isinstance(entry, dict):
-                entry_data = entry.get("entry data", {})
-            else:
-                entry_data = entry.entry_data or {}
-            if "html" in entry_data.keys():
-                journal += f"<div>{entry_data['html']}</div>"
-            if "markdown" in entry_data.keys():
-                journal = "<div><table><thead><tr>"
-                rows = entry_data['markdown'].splitlines()
-                for column in rows[0].split("|")[1:-1]:
-                    journal += f"<td>{column.strip()}</td>"
-                journal += "</tr><thead><tbody>"
-                for row in rows[2:]:
-                    journal += "<tr>"
-                    for column in row.split("|")[1:-1]:
-                        journal += f"<td>{column.strip()}</td>"
-                    journal += "</tr>"
-                journal += "</tbody></table></div>"
-
-            for source in entry_data.get("promotion_sources", []):
-                if hasattr(crud, source["type"]):
-                    crud_type = getattr(crud, source["type"])
-                    crud_obj = crud_type.get(db, source["id"])
-                    if hasattr(crud_obj, "entries"):
-                        journal += f"<p>Promoted from {source['type']} {source['id']}</p>{fmt_entries(db, crud_obj.entries, True)}"
-                    elif source["type"] == "alert":
-                        journal += f"<p>Promoted from {source['type']} {source['id']}</p>{fmt_alert(crud_obj)}"
-            if isinstance(entry, dict):
-                for child_entry in entry.get("child entries", []):
-                    journal += f"<h5>[{child_entry['id']}] {child_entry['owner']} @ {child_entry['modified']} - {child_entry['tlp']}</h5>"
-                    journal += f"<div>{child_entry['entry data']['html']}</div>"
-            else:
-                for child_entry in entry.child_entries:
-                    journal += f"<h5>[{child_entry.id}] {child_entry.owner} @ {child_entry.modified} - {child_entry.tlp}</h5>"
-                    journal += f"<div>{child_entry.entry_data['html']}</div>"
-    else:
-        journal = ""
-    return journal
-
-
-def fmt_signatures(db: Session, obj: list[Signature], from_guide: bool = False):
-    sigs = []
-    guides = ""
-    for signature in obj:
-        signature_obj = signature.as_dict(pretty_keys=True, enum_value=True)
-        fmt_sources_tags(signature, signature_obj)
-        del signature_obj["entries"]
-        del signature_obj["data"]
-        if not from_guide:
-            for guide in signature_obj.get("associated guides", []):
-                guides += f"<p>Associated Guide ${guide['id']}</p>{fmt_entries(db, guide.get('entries'))}"
-        del signature_obj["associated guides"]
-        for cell in signature.data:
-            signature_obj[cell] = signature.data[cell]
-        sigs.append(signature_obj)
-    return sigs, guides
-
-
-def fmt_column_table(obj: dict):
-    table = "<table>"
-    if obj:
-        for key, value in obj.items():
-            table += f"<tr><td>{key}</td><td>{value}</td></tr>"
-    return table + "</table>"
-
-
-def fmt_enrichments(obj: list[dict]):
-    if obj != []:
-        for enrichment in obj:
-            tmp_data = ""
-            if "data" in enrichment.keys():
-                if "markdown" in enrichment["data"].keys():
-                    table = "<table><thead><tr>"
-                    rows = enrichment['data']['markdown'].splitlines()
-                    for column in rows[0].split("|")[1:-1]:
-                        table += f"<td>{column.strip()}</td>"
-                    table += "</tr><thead><tbody>"
-                    for row in rows[2:]:
-                        table += "<tr>"
-                        for column in row.split("|")[1:-1]:
-                            table += f"<td>{column.strip()}</td>"
-                        table += "</tr>"
-                    table += "</tbody></table>"
-                    tmp_data += f"<div>{table}</div>"
-                if "plaintext" in enrichment["data"].keys():
-                    tmp_data += enrichment["data"]['plaintext']
-                if "timeline" in enrichment["data"].keys():
-                    tmp_data += f"<p>Timeline</p>{fmt_table(enrichment['data']['timeline'])}"
-                if "counts" in enrichment["data"].keys():
-                    tmp_data += f"<p>Counts</p>{fmt_column_table(enrichment['data']['counts'])}"
-                if "unxformed" in enrichment["data"].keys():
-                    enrichment["data"]["unxformed"] = fmt_column_table(enrichment["data"]["unxformed"])
-                if enrichment["enrichment class"] == "jsontree":
-                    tmp_data = fmt_column_table(enrichment["data"])
-            enrichment["data"] = tmp_data
-        return tabulate(obj, headers="keys", tablefmt="unsafehtml")
-    else:
-        return ""
-
-
-def export_object(db: Session, _obj: Any, target_type: TargetTypeEnum, format: ExportFormatEnum, pretty_name: str) -> str:
-    # convert it to a dict for easier conversion
-    entries = {}
-    _obj_dict = _obj.as_dict(pretty_keys=True, enum_value=True)
-    # update the classes object to table if any
-    if hasattr(_obj, "classes"):
-        _obj_dict["classes"] = fmt_table(_obj_dict["classes"])
-
-    # format tags/sources and promoted objects to tables
-    fmt_sources_tags(_obj, _obj_dict)
-    fmt_promoted_to_from(_obj, _obj_dict)
-
-    # do table specific formatting
     if target_type == TargetTypeEnum.alertgroup:
-        # convert the alerts to their own table
-        entries["Alerts"] = []
-        del _obj_dict["alerts"]
-        for alert in _obj.alerts:
-            entries["Alerts"].append(fmt_alert(alert))
-        # format any signatures and guides
-        entries["Signatures"], guides = fmt_signatures(db, _obj.associated_signatures)
-        if guides != "":
-            entries["Guides"] = guides
-        del _obj_dict["associated signatures"]
-    elif target_type == TargetTypeEnum.entity:
-        # add entity appearances
-        _obj_dict["enrichments"] = fmt_enrichments(_obj.enrichments)
-        _obj_dict["classes"] = fmt_table(_obj.classes)
-        entries["Appearances"] = []
-        appearances = crud.entity.retrieve_entity_links_for_flair_pane(db, _obj.id, 0, None)
-        appearances["alert_appearances"] = fmt_table(appearances["alert_appearances"])
-        appearances["event_appearances"] = fmt_table(appearances["event_appearances"])
-        appearances["intel_appearances"] = fmt_table(appearances["intel_appearances"])
-        appearances["dispatch_appearances"] = fmt_table(appearances["dispatch_appearances"])
-        appearances["product_appearances"] = fmt_table(appearances["product_appearances"])
-        appearances["incident_appearances"] = fmt_table(appearances["incident_appearances"])
-    elif target_type == TargetTypeEnum.guide:
-        # format signatures and ignore guide
-        entries["Signatures"], _ = fmt_signatures(db, crud.guide.get_signatures_for(db, _obj.id), True)
-        _obj_dict["data"] = fmt_column_table(_obj_dict["data"])
-    elif target_type == TargetTypeEnum.pivot:
-        # make sure to get the entity types and classes
-        entity_types = []
-        for entity_type in _obj.entity_types:
-            entity_dict = entity_type.as_dict(pretty_keys=True, enum_value=True)
-            del entity_dict["entities"]
-            entity_types.append(entity_dict)
-        entries["Entity Types"] = fmt_table(entity_types)
-        entries["Entity Classes"] = fmt_table([a.as_dict(pretty_keys=True, enum_value=True) for a in _obj.entity_classes])
-    elif target_type == TargetTypeEnum.entry:
-        # remove any child entries from table as it will only be in journal section
-        entries["Journal"] = fmt_entries(db, [_obj], True)
-        del _obj_dict["entry data"]
-        del _obj_dict["child entries"]
-    elif target_type == TargetTypeEnum.signature:
-        # ignore the signature and get guide information
-        _, guides = fmt_signatures(db, [_obj])
-        _obj_dict["data"] = fmt_column_table(_obj.data)
-        del _obj_dict["associated guides"]
-        if guides != "":
-            entries["Guides"] = guides
+        html = export_alertgroup(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.event:
+        html = export_event(db, _obj, entries, entities)
     elif target_type == TargetTypeEnum.incident:
-        _obj_dict["data"] = fmt_column_table(_obj.data)
+        html = export_incident(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.dispatch:
+        html = export_dispatch(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.intel:
+        html = export_intel(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.product:
+        html = export_product(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.vuln_feed:
+        html = export_vulnfeed(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.vuln_track:
+        html = export_vulntrack(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.signature:
+        html = export_signature(db, _obj, entries, entities)
+    elif target_type == TargetTypeEnum.guide:
+        html = export_guide(db, _obj, entries, entities)
+    else:
+        raise Exception(f"Unsuported Export of {str(target_type)}")
 
-    # if the object has entries add them to the Journal Section
-    if hasattr(_obj, "entries"):
-        journal = fmt_entries(db, _obj.entries)
-        if str != "":
-            entries["Journal"] = journal
-        del _obj_dict["entries"]
+    flair_html = flair(html, entities)
 
-    # get any assoicated entities
+    filename, mediatype = export_html_to_format(flair_html, format)
+    return filename, mediatype
+
+
+def export_alertgroup(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("alertgroup")
+    content = template.render(
+        alertgroup=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_event(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    alerts = get_promoted_alerts(_obj)
+    template = get_template("event")
+    content = template.render(
+        event=_obj,
+        alerts=alerts,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_incident(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("incident")
+    content = template.render(
+        incident=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_dispatch(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("dispatch")
+    content = template.render(
+        dispatch=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_intel(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("intel")
+    content = template.render(
+        intel=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_product(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("product")
+    content = template.render(
+        product=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_signature(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("signature")
+    content = template.render(
+        signature=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_guide(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("guide")
+    content = template.render(
+        guide=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_vulnfeed(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("vulnfeed")
+    content = template.render(
+        vulnfeed=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def export_vulntrack(db: Session, _obj: Any, entries: Any, entities: Any) -> str:
+    template = get_template("vulntrack")
+    content = template.render(
+        vulntrack=_obj,
+        entries=entries,
+        entities=entities
+    )
+    return content
+
+
+def get_promoted_alerts(_obj: Any):
+    return getattr(_obj, 'alerts', [])
+
+
+def get_entities(_obj: Any, target_type: TargetTypeEnum):
     _entities, count = crud.entity.retrieve_element_entities(
         db_session=db, source_id=_obj.id, source_type=target_type
     )
-    if count > 0:
-        entries["Entities"] = []
-        for entity in _entities:
-            # maker sure everything is either a table or dict
-            entity_dict = entity.as_dict(pretty_keys=True, enum_value=True)
-            entity_dict["classes"] = fmt_table(entity_dict["classes"])
-            entity_dict["enrichments"] = fmt_enrichments(entity_dict["enrichments"])
-            entity_dict["summaries"] = fmt_table(entity_dict["summaries"])
-            entity_dict["entries"] = fmt_entries(db, entity.entries)
-            fmt_sources_tags(entity, entity_dict)
-            entries["Entities"].append(entity_dict)
+    return _entities
 
-    # start creating the basic HTML document most of the css styles are to make sure things fit on a letter page format
-    # can cause issues with tables as things tend to get squished
-    html = ("<!DOCTYPE html><html><head><style>"
-            "table {word-wrap: anywhere; -pdf-keep-in-frame-mode: shrink;}"
-            "@page {size: letter portrait; @frame header_frame {-pdf-frame-content: header_content;text-align: center; font-size: 12px; margin-top: 5px;}"
-            "@frame content_frame {margin: 0.5in;}}</style></head><body>")
-    # create a table for the selected item data
-    html += f"<h1>{pretty_name}</h1>{tabulate([_obj_dict], headers='keys', tablefmt='unsafehtml')}"
-    if len(entries.keys()) != 0:
-        for entry in entries:
-            # for each key in the entries dict create a new section
-            html += f"<h2>{entry}</h2>"
-            # if the data is a list of dicts then it should be generated as a table
-            if isinstance(entries[entry], list):
-                html += tabulate(entries[entry], headers="keys", tablefmt="unsafehtml")
-            # if the data is a dict then make it a one row table
-            elif isinstance(entries[entry], dict):
-                html += tabulate([entries[entry]], headers="keys", tablefmt="unsafehtml")
-            # otherwise just print whats available, most likely this is already HTML formatted text
-            else:
-                html += entries[entry]
-    # end the HTML document
-    html += "</body></html>"
-    # get the site settings for creating the classification header
-    settings = crud.setting.get(db)
-    # a temporary file to hold the document to send along with the the response
-    tmp_file = path.join(gettempdir(), f"{uuid.uuid4()}.tmp")
-    with open(tmp_file, "w+b") as tmp:
-        # convert the HTML to markdown
-        if format == ExportFormatEnum.md:
-            # insert header
-            media_type = "text/markdown"
-            tmp.write(f"> <center>SCOT 4.3: {settings.site_name} - {settings.environment_level}</center>\n\n{markdownify(html)}".encode())
-        # save the HTML
-        elif format == ExportFormatEnum.html:
-            media_type = "text/html"
-            # insert header
-            index = html.find("<body>")
-            html = html[:index] + f"<div id='header_content' style='text-align: center; font-size: 12px;'>SCOT 4.3: {settings.site_name} - {settings.environment_level}</div>" + html[index:]
-            tmp.write(html.encode())
-        # convert the HTML to PDF do this also for WORD DOCX as its easier to convert from PDF later
-        elif format == ExportFormatEnum.pdf or format == ExportFormatEnum.docx:
-            media_type = "application/pdf"
-            # insert header
-            index = html.find("<body>")
-            html = html[:index] + f"<div id='header_content' style='text-align: center; font-size: 12px;'>SCOT 4.3: {settings.site_name} - {settings.environment_level}</div>" + html[index:]
-            pisa.CreatePDF(html, dest=tmp)
 
-    # convert from PDF to DOCX
-    if format == ExportFormatEnum.docx:
-        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-        docx_file = f"{tmp_file}.docx"
-        cv = Converter(tmp_file)
-        cv.convert(docx_file)
-        cv.close()
-        remove(tmp_file)
-        tmp_file = docx_file
+def from_json_filter(input: str):
+    return json.loads(input)
+
+
+def get_template(type: str):
+    # print(getcwd())
+    template_location = "templates"  # Directory with templates under app
+    jinja_env = Environment(
+        loader=PackageLoader("app", template_location),
+        autoescape=select_autoescape()
+    )
+    jinja_env.filters['from_json'] = from_json_filter
+    template = jinja_env.get_template(f"{type}.html")
+    return template
+
+
+def export_html_to_format(content: str, format: ExportFormatEnum):
+    # get weasy to do it
+    media_type = ""
+    html = HTML(string=content)
+    tmp_root = path.join(gettempdir(), f"{uuid.uuid4()}")
+    tmp_ext = "tmp"
+    tmp_file = ".".join([tmp_root, tmp_ext])
+    if format == ExportFormatEnum.pdf:
+        html.write_pdf(tmp_file)
+        media_type = "application/pdf"
+    elif format == ExportFormatEnum.html:
+        with open(tmp_file, "w+b") as tmp:
+            tmp.write(content.encode())
+        media_type = "application/html"
+    elif format == ExportFormatEnum.md:
+        with open(tmp_file, "w+b") as tmp:
+            tmp.write(f"{markdownify(content)}".encode())
+        media_type = "text/markdown"
+    elif format == ExportFormatEnum.docx:
+        doc = Document()
+        parser = HtmlToDocx()
+        parser.add_html_to_document(content, doc)
+        tmp_file = f"{tmp_root}.docx"
+        doc.save(tmp_file)
+    else:
+        raise Exception(f"Unsuported Export format {str(format)}")
 
     return tmp_file, media_type
+
+
+def flair(html: str, entities: Any) -> str:
+    edict = {}
+    for i, e in enumerate(entities):
+        key = e.value
+        edict[key] = i + 1
+
+    soup = BeautifulSoup(html, features="lxml")
+    flair_spans = soup.find_all('span', {"class":"entity"})
+    # print(flair_spans)
+
+    # iterate on flair_spans, apending a <a href="#entity_x">
+    for fs in flair_spans:
+        entity_val = fs['data-entity-value']
+
+        fnum = 0
+        if entity_val in edict:
+            fnum = edict[entity_val]
+
+        footnote = soup.new_tag("a", href=f"#entity_{fnum}")
+        superscript = soup.new_tag("sup")
+        superscript.append(f"{fnum}")
+        footnote.append(superscript)
+        fs.extend(footnote)
+    flaired = soup.prettify()
+    # print(flaired)
+    return flaired

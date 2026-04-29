@@ -77,7 +77,7 @@ def create_role(
     return crud.role.create(db, obj_in=role, audit_logger=audit_logger)
 
 
-@router.get("/", response_model=schemas.ListResponse[schemas.Role], dependencies=[Depends(deps.get_current_active_user)], summary="Get roles")
+@router.get("/", response_model=schemas.ListResponse[schemas.RoleNoAuth], dependencies=[Depends(deps.get_current_active_user)], summary="Get roles")
 def get_roles(
     *,
     skip: Annotated[int, Query(...)] = 0,

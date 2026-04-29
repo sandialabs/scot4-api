@@ -15,6 +15,9 @@ role_auth_table = Table(
 )
 
 
+medium_text_length = 16777215
+
+
 class AuthStorage(Base):
     """
     This holds generic storage for authentication methods
@@ -23,7 +26,7 @@ class AuthStorage(Base):
 
     id = Column("auth_storage_id", Integer, primary_key=True)
     key = Column("key", Text)
-    value = Column("value", Text)
+    value = Column("value", Text(medium_text_length))
     auth_settings_id = Column(
         "auth_settings_id", Integer, ForeignKey("auth_settings.auth_settings_id")
     )

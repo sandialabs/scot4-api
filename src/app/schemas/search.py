@@ -7,6 +7,9 @@ from app.schemas.response import SearchBase
 
 class SearchRequest(BaseModel):
     text: Annotated[str, Field(...)]
+    limit: Annotated[int, Field(...)] = 100
+    offset: Annotated[int, Field(...)] = 0
+    crop_length: Annotated[int, Field(...)] = 30
     entry_id: Annotated[str | None, Field(...)] = None
     created: Annotated[str | None, Field(...)] = None
     modified: Annotated[str | None, Field(...)] = None

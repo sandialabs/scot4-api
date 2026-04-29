@@ -17,7 +17,7 @@ class LdapAuthentication(BaseAuthentication):
         "provider_name": "",
         "server": "",
         "bind_user": "",
-        "bind_password": "",
+        "bind_password": "",  # nosec B105
         "test_user": "",
         "test_group": "",
         "username_attribute": "",
@@ -37,7 +37,7 @@ class LdapAuthentication(BaseAuthentication):
         "provider_name": "Provider Name",
         "server": "Server",
         "bind_user": "Bind User",
-        "bind_password": "Bind Password",
+        "bind_password": "Bind Password",  # nosec B105
         "test_user": "Test User",
         "test_group": "Test Group",
         "username_attribute": "Username Attribute",
@@ -57,7 +57,7 @@ class LdapAuthentication(BaseAuthentication):
         "provider_name": "A name that identifies this authentication instance",
         "server": "The address of the LDAP server",
         "bind_user": "The user to bind as for lookups",
-        "bind_password": "The password for the bind user",
+        "bind_password": "The password for the bind user",  # nosec B105
         "test_user": "A user that can be looked up to test user queries",
         "test_group": "A group that can be looked up to test group queries",
         "username_attribute": "The ldap attribute containing a user's"

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>
+        SCOT Intel Export {{ intel.id }} : {{ intel.subject }}
+    </title>
+{% endblock %}
+
+
+{% block export_header %}
+    {% include 'intel_header.html' %}
+{% endblock %}
+
+{% block promoted_items %}
+    {% if dispatches %}
+    <h2>Promoted from Dispatch</h2>
+        <h3>{{ dispatches[0]["dispatch_subject"] }}<h3>
+        <h4>Promoted from Dispatch {{ dispatches[0]["dispatch_id"] }}</h4>
+        <table class="alert_table">
+            <tr>
+                {% for col in dispatches[0]["data_flaired"] %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+            {% for dispatch in dispatches %}
+            <tr>
+                {% for col in dispatch["data_flaired"] %}
+                <td>
+                    {% set cell_array = dispatch["data_flaired"][col] %}
+                    {{ cell_array }}<br>
+                </td>
+                {% endfor %}
+            </tr> 
+            {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}
+
+{% block journal %}
+    {% include 'journal.html' %}
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

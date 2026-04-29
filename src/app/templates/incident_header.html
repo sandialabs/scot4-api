@@ -1,0 +1,67 @@
+    <h1>SCOT Incident {{ incident.id }}</h1>
+    <table class="header_table">
+        <tr>
+            <th>
+                Owner
+            </th>
+            <td>
+                {{ incident.owner }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Occurred
+            </th>
+            <td>
+                {{ incident.occurred_date }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Discovered
+            </th>
+            <td>
+                {{ incident.discovered_date }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Reported
+            </th>
+            <td>
+                {{ incident.reported_date }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                TLP
+            </th>
+            <td>
+                {{ incident.tlp.value }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Views / Popularity
+            </th>
+            <td>
+                {{ incident.view_count }} / {{ incident.popularity_count }}
+            </td>
+        </tr>
+        <tr>
+            <th>Tags:</th>
+            <td colspan=4>
+                {% for t in incident.tags %}
+                {{ t.name }} &nbsp;
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Sources:</th>
+            <td colspan=4>
+                {% for t in incident.sources %}
+                {{ t.name }} &nbsp;
+                {% endfor %}
+            </td>
+        </tr>
+    </table>

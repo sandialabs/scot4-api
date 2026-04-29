@@ -2,7 +2,7 @@ import json
 import random
 from faker import Faker
 from typing import Any
-from datetime import datetime
+from datetime import datetime, timezone
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
@@ -33,7 +33,7 @@ def create_audit(db: Session, faker: Faker, user: schemas.User, db_obj: Any, sou
 
     data = json.dumps(jsonable_encoder(db_obj.as_dict()))
     audit = schemas.AuditCreate(
-        when_date=datetime.utcnow(),
+        when_date=datetime.now(timezone.utc),
         username=user.username,
         what=what,
         thing_type=thing_type,

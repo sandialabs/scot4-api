@@ -79,7 +79,7 @@ def read_activity(
         db,
         None,
         {
-            "last_activity": (datetime.utcnow() - timedelta(minutes=30), datetime.utcnow() + timedelta(seconds=30))
+            "last_activity": (datetime.now(timezone.utc) - timedelta(minutes=30), datetime.now(timezone.utc) + timedelta(seconds=30))
         },
         "last_activity",
         skip,
@@ -112,7 +112,7 @@ def create_user(
     return user
 
 
-@router.put("/me", response_model=schemas.User, summary="Update own user")
+@router.put("/me", response_model=schemas.UserSafe, summary="Update own user")
 def update_user_me(
     *,
     db: Session = Depends(deps.get_db),
@@ -138,7 +138,7 @@ def update_user_me(
     return crud.user.update(db, db_obj=current_user, obj_in=user_in, audit_logger=audit_logger)
 
 
-@router.get("/whoami", response_model=schemas.User, summary="Get own user")
+@router.get("/whoami", response_model=schemas.UserSafe, summary="Get own user")
 def read_user_who_am_i(
     _: Session = Depends(deps.get_db),
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -149,7 +149,7 @@ def read_user_who_am_i(
     return current_user
 
 
-@router.post("/open", response_model=schemas.User, summary="Sign up a user")
+@router.post("/open", response_model=schemas.UserSafe, summary="Sign up a user")
 def create_user_open(
     *,
     db: Session = Depends(deps.get_db),
@@ -171,7 +171,7 @@ def create_user_open(
     return crud.user.create(db, obj_in=schemas.UserCreate(password=password, email=email, fullname=fullname), audit_logger=audit_logger)
 
 
-@router.get("/{id_or_username}", response_model=schemas.User, summary="Get user info")
+@router.get("/{id_or_username}", response_model=schemas.UserSafe, summary="Get user info")
 def read_user(
     id_or_username: Annotated[int | str, Path(...)],
     current_user: models.User = Depends(deps.get_current_active_user),

@@ -1,0 +1,59 @@
+        <h1>SCOT Intel {{ intel.id }}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ intel.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ intel.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ intel.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ intel.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ intel.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ intel.view_count }} / {{ intel.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in intel.tags %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in intel.sources %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>

@@ -7,6 +7,7 @@ from sqlalchemy.orm import (
 )
 from app.enums import TargetTypeEnum, PopularityMetricEnum, UserLinkEnum
 
+from app.db.base_class import utc_now
 # BUG server-default https://github.com/sqlalchemy/alembic/issues/768
 
 # Shim class to make sure all of our timestamps are returned from the database
@@ -41,14 +42,14 @@ class UTCDateTime(types.TypeDecorator):
 
 
 class TimestampMixin(object):
-    created = Column("created_date", UTCDateTime, default=datetime.utcnow)
+    created = Column("created_date", UTCDateTime, default=utc_now)
 
     modified = Column(
         "modified_date",
         UTCDateTime,
         nullable=False,
-        onupdate=datetime.utcnow,
-        default=datetime.utcnow,
+        onupdate=utc_now,
+        default=utc_now,
     )
 
 
@@ -200,6 +201,26 @@ class GuidesForMixin(object):
                             & (Link.v0_id == self.id),
                             secondaryjoin=(Link.v1_type == TargetTypeEnum.guide)
                             & (Link.v1_id == Guide.id),
+                            viewonly=True)
+
+
+class ThreatModelForMixin(object):
+    """
+    Inherit from this mixin to indicate that this object can be forward-linked
+    to threat model items. Creates a new attribute called "associated_threat_model_items" with a list of
+    threat model items linked to this object.
+    """
+
+    @declared_attr
+    def associated_threat_model_items(self):
+        # Avoid circular dependencies
+        from app.models.threat_model_item import ThreatModelItem
+        from app.models.link import Link
+        return relationship("ThreatModelItem", secondary="links",
+                            primaryjoin=(Link.v0_type == self.target_type_enum())
+                            & (Link.v0_id == self.id),
+                            secondaryjoin=(Link.v1_type == TargetTypeEnum.threat_model_item)
+                            & (Link.v1_id == ThreatModelItem.id),
                             viewonly=True)
 
 

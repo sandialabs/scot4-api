@@ -2,7 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.crud.base import CRUDBase
-from app.models import Guide, Role, Permission, Signature, Link, User
+from app.models import Guide, Role, Permission, Signature, Link
 from app.enums import TargetTypeEnum, PermissionEnum
 from app.schemas.guide import GuideCreate, GuideUpdate
 from app.crud.crud_signature import signature
@@ -13,6 +13,8 @@ class CRUDGuide(CRUDBase[Guide, GuideCreate, GuideUpdate]):
     # Subject is filtered by string fragment
     def filter(self, query, filter_dict):
         query = self._str_filter(query, filter_dict, "subject")
+        query = self._tag_or_source_filter(query, filter_dict, TargetTypeEnum.tag)
+        query = self._tag_or_source_filter(query, filter_dict, TargetTypeEnum.source)
 
         return super().filter(query, filter_dict)
 

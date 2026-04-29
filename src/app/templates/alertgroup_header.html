@@ -1,0 +1,59 @@
+<h1>SCOT Alertgroup Export {{ alertgroup.id }} : {{ alertgroup.full_alert_data[0]["AlertName"]}}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ alertgroup.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ alertgroup.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ alertgroup.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ alertgroup.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ alertgroup.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ alertgroup.view_count }} / {{ alertgroup.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in alertgroup.tags %}
+                    {{ t["name"] }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in alertgroup.sources %}
+                    {{ t["name"] }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>

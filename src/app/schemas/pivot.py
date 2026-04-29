@@ -14,7 +14,7 @@ class PivotBase(BaseModel):
 
 
 class PivotCreate(PivotBase):
-    title: Annotated[str, Field(...)]
+    title: Annotated[str, Field(...)] = ""
     template: Annotated[str, Field(...)] = ""
     description: Annotated[str | None, Field(...)] = ""
 

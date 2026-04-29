@@ -41,10 +41,12 @@ class Settings(BaseSettings):
     # The database URL used to connect to the database (required)
     SQLALCHEMY_DATABASE_URI: str
     # Database connection settings
-    DB_CONNECT_TIMEOUT: int = 100000
-    DB_CONNECTION_POOL_SIZE: int = 10
+    DB_CONNECT_TIMEOUT: int = 30
+    DB_CONNECTION_POOL_SIZE: int = 6
     # this is the amount *over* the pool size, not total
-    DB_CONNECTION_POOL_OVERFLOW: int = 20 
+    DB_CONNECTION_POOL_OVERFLOW: int = 10
+    # How long to wait to get connection from pool before timeout
+    DB_CONNECTION_POOL_TIMEOUT: int = 5
     # Will be set to True when running unit tests
     TEST: bool = False
     # The key used to sign JWT tokens (required)
@@ -56,6 +58,10 @@ class Settings(BaseSettings):
     # How many reverse proxy steps are between the API and the user
     # Used with the X-Forwarded-For header for user logging
     NUM_TRUSTED_PROXIES: int | None = None
+    # Whether to start the MCP server or not
+    MCP_SERVER_ENABLED: bool = False
+    # Key for encrypting MCP oauth tokens
+    MCP_OAUTH_SECRET_KEY: str | None = None
 
     # Test email (used in tests only)
     EMAIL_TEST_USER: str = "test1@example.com"
@@ -73,6 +79,8 @@ class Settings(BaseSettings):
     # The id of the "everyone" role which includes all users by default
     # Set to None to disable the everyone role
     EVERYONE_ROLE_ID: int | None = 1
+    # Comma-separated list of users excluded from gamification stats
+    GAME_IGNORE_USERS: str = "scot-admin"
 
     # SMTP options for outgoing email
     SMTP_TLS: bool = True
@@ -117,6 +125,9 @@ class Settings(BaseSettings):
     CREATE_DEFAULT_STORAGE_PROVIDER: bool = True
     FILE_STORAGE_LOCATION: str | None = "/var/scot_files"
     FILE_DELETED_LOCATION: str | None = "/var/scot_files/_deleted_items"
+
+    # settings for importing MITRE ATT&CK data into threat model item table
+    MITRE_VERSION: str = "v18.1"
 
     model_config = SettingsConfigDict(env_file="ENV_PATH", case_sensitive=True)
 

@@ -13,7 +13,7 @@ from app.utils import create_schema_details, get_search_filters
 router = APIRouter()
 
 
-description, _ = create_schema_details(SearchRequest, "Perform a search across all SCOT text data (entries, alerts, and titles), optionally filtering by certain fields of the parent object")
+description, _ = create_schema_details(SearchRequest, "Perform a search across all SCOT text data (entries, alerts, and titles), optionally filtering by certain fields of the parent object. Results contain an `index_id` field that begins with \"a\" if the result is an alert or \"e\" if the result is an entry, followed by the id of that alert/entry. For alerts, the returned `entry_text` field is a dictionary of that alert's fields, while for entries it is a snippet of that entry's plain text content. The `target_type` and `target_id` fields represent the parent object of the entry/alert, while `parent_text` is the title of the parent object.")
 
 
 def generate_single_list_or_range(name: str, value: str | list | tuple):
@@ -43,7 +43,7 @@ def search(
     client = meilisearch.Client(settings.SEARCH_HOST, settings.SEARCH_API_KEY)
     entries_index = client.index('entries')
 
-    search_dict = get_search_filters(search_body)
+    search_dict = get_search_filters(search_body, ignore_fields=["limit", "offset", "crop_length"])
     search_filter = []
     for key in search_dict:
         if key not in ["text", "sort", "not"]:
@@ -73,9 +73,10 @@ def search(
         {
             'attributesToHighlight': ['entry_text', 'parent_text'],
             'highlightPreTag': '<mark>',
-            'cropLength': 30,
+            'cropLength': search_body.crop_length,
             'highlightPostTag': '</mark>',
-            'limit': 100,
+            'limit': search_body.limit,
+            'offset': search_body.offset,
             'attributesToCrop': ['entry_text'],
             'filter': search_filter,
             'sort': sort_order

@@ -1,11 +1,11 @@
 import jinja2
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Union, get_args
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session, aliased
 from sqlalchemy.sql.functions import coalesce
-from sqlalchemy import and_, func, inspect
+from sqlalchemy import and_, func, inspect, or_, false
 
 from app.core.config import settings
 from app import crud
@@ -348,7 +348,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
             crud.link.create(db_session, obj_in=new_link, audit_logger=audit_logger)
             # Add to appearances table
             new_appearance = AppearanceCreate(
-                when_date=datetime.utcnow(),
+                when_date=datetime.now(timezone.utc),
                 target_type=target_type,
                 target_id=target_id,
                 value_type=TargetTypeEnum.entity.value,
@@ -416,6 +416,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
                     entity_class = crud.entity_class.create(db_session=db_session, obj_in=new_entity_class)
                     entity.classes.append(entity_class)
 
+        entity.modified = datetime.now(timezone.utc)
         db_session.add(entity)
         db_session.flush()
         db_session.refresh(entity)
@@ -444,6 +445,7 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
             if entity_class is not None:
                 entity.classes.remove(entity_class)
 
+        entity.modified = datetime.now(timezone.utc)
         db_session.add(entity)
         db_session.flush()
         db_session.refresh(entity)
@@ -494,6 +496,69 @@ class CRUDEntity(CRUDBase[Entity, EntityCreate, EntityUpdate]):
             db_session, entity.id, target_type, target_id, context,
             audit_logger, skip_duplicate
         )
+
+    def link_entities_by_value(
+        self,
+        db_session: Session,
+        entity_values: list[str],
+        target_type: TargetTypeEnum,
+        target_id: int,
+        create: bool = True,
+        context: str = "linked to",
+        entity_types: list[str] | None = None,
+        entity_classes: list[list[str]] | None = None,
+        audit_logger=None,
+        skip_duplicate: bool = True,
+        entity_cache: dict | None = None
+    ):
+        """
+        Links multiple entities to a target object, caching entity id lookups
+        for efficiency. Parameters are identical to link_entity_by_value, except
+        for the entity values, types, and classes being passed as a list.
+        """
+        # Get all entities and cache them
+        cached_query = db_session.query(Entity.value, Entity.id)
+        cached_conditions = []
+        for entity in entity_values:
+            if entity_cache is None or entity not in entity_cache:
+                cached_conditions.append(Entity.value == entity)
+        if len(cached_conditions) > 0:
+            cached_query = cached_query.filter(or_(false(), *cached_conditions))
+            entity_cache = entity_cache | {e[0]: e[1] for e in cached_query.all()}
+
+        results = []
+        for idx, entity in enumerate(entity_values):
+            entity_type = None
+            entity_class = []
+            if entity_types is not None and len(entity_types) > idx:
+                entity_type = entity_types[idx]
+            if entity_classes is not None and len(entity_classes) > idx:
+                entity_class = entity_classes[idx]
+            # Use the standard link_entity_by_value if entity does not exist
+            if entity not in entity_cache and create:
+                results.append(self.link_entity_by_value(
+                    db_session=db_session,
+                    entity_value=entity,
+                    target_type=target_type,
+                    target_id=target_id,
+                    create=create,
+                    context=context,
+                    entity_type=entity_type,
+                    entity_class=entity_class,
+                    audit_logger=audit_logger,
+                    skip_duplicate=skip_duplicate
+                ))
+            elif entity in entity_cache:
+                results.append(self.link_entity(
+                    db_session=db_session,
+                    entity_id=entity_cache[entity],
+                    target_type=target_type,
+                    target_id=target_id,
+                    context=context,
+                    audit_logger=audit_logger,
+                    skip_duplicate=skip_duplicate
+                ))
+        return results
 
 
 entity = CRUDEntity(Entity)

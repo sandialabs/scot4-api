@@ -2,20 +2,10 @@ from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
 from app.enums import TlpEnum
-from app.models.mixins import (
-    EntryMixin,
-    GuidesForMixin,
-    SourceMixin,
-    TagMixin,
-    TimestampMixin,
-    PopularityMixin,
-    UserLinksMixin
-)
+from app.models.mixins import EntryMixin, GuidesForMixin, SourceMixin, TagMixin, TimestampMixin, PopularityMixin, UserLinksMixin, ThreatModelForMixin
 
 
-class Signature(
-    Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, GuidesForMixin, PopularityMixin, UserLinksMixin
-):
+class Signature(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, GuidesForMixin, PopularityMixin, UserLinksMixin, ThreatModelForMixin):
     __tablename__ = "signatures"
 
     id = Column("signature_id", Integer, primary_key=True)

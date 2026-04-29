@@ -1,7 +1,6 @@
-from datetime import datetime
 from sqlalchemy import JSON, Column, Enum, Integer, Text
 
-from app.db.base_class import Base
+from app.db.base_class import Base, utc_now
 from app.enums import TlpEnum
 from app.models.mixins import TimestampMixin, UTCDateTime, EntryMixin, PopularityMixin
 
@@ -18,6 +17,6 @@ class Feed(Base, TimestampMixin, EntryMixin, PopularityMixin):
     uri = Column("uri", Text, nullable=False)
     article_count = Column("article_count", Integer, nullable=False, default=0)
     promotions_count = Column("promotions_count", Integer, nullable=False, default=0)
-    last_article = Column("last_article", UTCDateTime, default=datetime.utcnow)
-    last_attempt = Column("last_attempt", UTCDateTime, default=datetime.utcnow)
+    last_article = Column("last_article", UTCDateTime, default=utc_now)
+    last_attempt = Column("last_attempt", UTCDateTime, default=utc_now)
     data = Column("feed_data", JSON)

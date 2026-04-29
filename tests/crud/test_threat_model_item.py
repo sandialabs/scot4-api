@@ -1,22 +1,21 @@
 import random
 from faker import Faker
 from sqlalchemy.orm import Session
-from fastapi.encoders import jsonable_encoder
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import PermissionEnum, TargetTypeEnum
+from app.enums import PermissionEnum, TargetTypeEnum, ThreatModelName
 from app.models import ThreatModelItem
 from app.schemas.threat_model_item import ThreatModelItemCreate, ThreatModelItemUpdate
 
 from tests.utils.alertgroup import create_random_alertgroup_no_sig
-from tests.utils.threat_model_item import create_random_threat_model_item
+from tests.utils.threat_model_item import create_random_threat_model_item, create_random_threat_model_data
 from tests.utils.roles import create_random_role
 from tests.utils.user import create_random_user
 
 
 def test_get_threat_model_item(db: Session, faker: Faker) -> None:
-    threat_model_item = create_random_threat_model_item(db, faker)
+    threat_model_item = create_random_threat_model_item(db, faker, create_extras=False)
     db_obj = crud.threat_model_item.get(db, threat_model_item.id)
 
     assert db_obj.id == threat_model_item.id
@@ -29,7 +28,7 @@ def test_get_threat_model_item(db: Session, faker: Faker) -> None:
 def test_get_multi_threat_model_item(db: Session, faker: Faker) -> None:
     threat_model_items = []
     for _ in range(5):
-        threat_model_items.append(create_random_threat_model_item(db, faker))
+        threat_model_items.append(create_random_threat_model_item(db, faker, create_extras=False))
 
     db_objs = crud.threat_model_item.get_multi(db)
     old_length = len(db_objs)
@@ -51,36 +50,37 @@ def test_get_multi_threat_model_item(db: Session, faker: Faker) -> None:
 
 
 def test_create_threat_model_item(db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    threat_model_name = random.choice(list(ThreatModelName))
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
     threat_model_item = ThreatModelItemCreate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data,
+        owner=owner.username
     )
     db_obj = crud.threat_model_item.create(db, obj_in=threat_model_item)
 
     assert db_obj.id is not None
-    assert db_obj.title == threat_model_item.title
-    assert db_obj.type == threat_model_item.type
-    assert db_obj.description == threat_model_item.description
+    assert db_obj.threat_model_name == threat_model_item.threat_model_name
+    assert db_obj.threat_model_id == threat_model_item.threat_model_id
     assert db_obj.data == threat_model_item.data
 
 
 def test_update_threat_model_item(db: Session, faker: Faker) -> None:
-    threat_model_item = create_random_threat_model_item(db, faker)
+    threat_model_item = create_random_threat_model_item(db, faker, create_extras=False)
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_item.threat_model_name)
     update = ThreatModelItemUpdate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_item.threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data
     )
 
     db_obj = crud.threat_model_item.update(db, db_obj=threat_model_item, obj_in=update)
 
     assert db_obj.id == threat_model_item.id
-    assert db_obj.title == update.title
-    assert db_obj.type == update.type
-    assert db_obj.description == update.description
+    assert db_obj.threat_model_name == update.threat_model_name
+    assert db_obj.threat_model_id == update.threat_model_id
     assert db_obj.data == update.data
 
     update = {}
@@ -98,24 +98,23 @@ def test_update_threat_model_item(db: Session, faker: Faker) -> None:
     assert db_obj.id == threat_model_item.id
     assert not hasattr(db_obj, "test")
 
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_item.threat_model_name)
     update = {
-        "title": faker.word(),
-        "type": faker.word(),
-        "description": faker.sentence(),
-        "data": jsonable_encoder(faker.pydict())
+        "threat_model_name": threat_model_item.threat_model_name,
+        "threat_model_id": threat_model_id,
+        "data": data
     }
 
     db_obj = crud.threat_model_item.update(db, db_obj=ThreatModelItem(), obj_in=update)
 
     assert db_obj.id == threat_model_item.id + 1
-    assert db_obj.title == update["title"]
-    assert db_obj.type == update["type"]
-    assert db_obj.description == update["description"]
+    assert db_obj.threat_model_name == update["threat_model_name"]
+    assert db_obj.threat_model_id == update["threat_model_id"]
     assert db_obj.data == update["data"]
 
 
 def test_remove_threat_model_item(db: Session, faker: Faker) -> None:
-    threat_model_item = create_random_threat_model_item(db, faker)
+    threat_model_item = create_random_threat_model_item(db, faker, create_extras=False)
 
     db_obj = crud.threat_model_item.remove(db, _id=threat_model_item.id)
 
@@ -131,11 +130,14 @@ def test_remove_threat_model_item(db: Session, faker: Faker) -> None:
 
 
 def test_get_or_create_threat_model_item(db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    threat_model_name = random.choice(list(ThreatModelName))
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
     threat_model_item = ThreatModelItemCreate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data,
+        owner=owner.username
     )
 
     db_obj = crud.threat_model_item.get_or_create(db, obj_in=threat_model_item)
@@ -150,7 +152,7 @@ def test_get_or_create_threat_model_item(db: Session, faker: Faker) -> None:
 def test_query_with_filters_threat_model_item(db: Session, faker: Faker) -> None:
     threat_model_items = []
     for _ in range(5):
-        threat_model_items.append(create_random_threat_model_item(db, faker))
+        threat_model_items.append(create_random_threat_model_item(db, faker, create_extras=False))
 
     random_threat_model_item = random.choice(threat_model_items)
 
@@ -161,22 +163,25 @@ def test_query_with_filters_threat_model_item(db: Session, faker: Faker) -> None
     assert len(db_obj) == count
     assert db_obj[0].id == random_threat_model_item.id
 
-    db_obj, count = crud.threat_model_item.query_with_filters(db, filter_dict={"title": f"!{random_threat_model_item.title}"})
+    db_obj, count = crud.threat_model_item.query_with_filters(db, filter_dict={"threat_model_id": f"!{random_threat_model_item.threat_model_id}"})
 
     assert db_obj is not None
-    assert all(a.title != random_threat_model_item.title for a in db_obj)
+    assert all(a.threat_model_id != random_threat_model_item.threat_model_id for a in db_obj)
 
 
 def test_get_with_roles_threat_model_item(db: Session, faker: Faker) -> None:
     threat_model_items = []
     roles = []
     for _ in range(5):
+        owner = create_random_user(db, faker)
         role = create_random_role(db, faker)
+        threat_model_name = random.choice(list(ThreatModelName))
+        threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
         threat_model_item = ThreatModelItemCreate(
-            title=faker.word(),
-            type=faker.word(),
-            description=faker.sentence(),
-            data=jsonable_encoder(faker.pydict())
+            threat_model_name=threat_model_name,
+            threat_model_id=threat_model_id,
+            data=data,
+            owner=owner.username
         )
         roles.append(role)
 
@@ -193,11 +198,14 @@ def test_query_objects_with_roles_threat_model_item(db: Session, faker: Faker) -
     roles = []
     for _ in range(5):
         role = create_random_role(db, faker)
+        owner = create_random_user(db, faker)
+        threat_model_name = random.choice(list(ThreatModelName))
+        threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
         threat_model_item = ThreatModelItemCreate(
-            title=faker.word(),
-            type=faker.word(),
-            description=faker.sentence(),
-            data=jsonable_encoder(faker.pydict())
+            threat_model_name=threat_model_name,
+            threat_model_id=threat_model_id,
+            data=data,
+            owner=owner.username
         )
         roles.append(role)
 
@@ -210,37 +218,38 @@ def test_query_objects_with_roles_threat_model_item(db: Session, faker: Faker) -
 
 
 def test_create_with_owner_threat_model_item(db: Session, faker: Faker) -> None:
+    threat_model_name = random.choice(list(ThreatModelName))
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
     threat_model_item = ThreatModelItemCreate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data
     )
     owner = create_random_user(db, faker)
-
-    # doesn't really do anything just make sure we don't get back an owner field
     db_obj = crud.threat_model_item.create_with_owner(db, obj_in=threat_model_item, owner=owner)
 
     assert db_obj is not None
-    assert db_obj.title == threat_model_item.title
-    assert not hasattr(db_obj, "owner")
+    assert db_obj.threat_model_id == threat_model_item.threat_model_id
+    assert hasattr(db_obj, "owner")
 
 
 def test_create_with_permissions_threat_model_item(db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
     role = create_random_role(db, faker)
+    threat_model_name = random.choice(list(ThreatModelName))
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
     threat_model_item = ThreatModelItemCreate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data,
+        owner=owner.username
     )
 
     db_obj = crud.threat_model_item.create_with_permissions(db, obj_in=threat_model_item, perm_in={PermissionEnum.read: [role.id]})
 
     assert db_obj.id is not None
-    assert db_obj.title == threat_model_item.title
-    assert db_obj.type == threat_model_item.type
-    assert db_obj.description == threat_model_item.description
+    assert db_obj.threat_model_name == threat_model_item.threat_model_name
+    assert db_obj.threat_model_id == threat_model_item.threat_model_id
     assert db_obj.data == threat_model_item.data
 
     permission = crud.permission.get_permissions_from_roles(db, [role], TargetTypeEnum.threat_model_item, db_obj.id)
@@ -250,11 +259,14 @@ def test_create_with_permissions_threat_model_item(db: Session, faker: Faker) ->
 
 
 def test_create_in_object_threat_model_item(db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+    threat_model_name = random.choice(list(ThreatModelName))
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
     threat_model_item = ThreatModelItemCreate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data,
+        owner=owner.username
     )
 
     alert_group = create_random_alertgroup_no_sig(db, faker, with_alerts=False)
@@ -262,7 +274,7 @@ def test_create_in_object_threat_model_item(db: Session, faker: Faker) -> None:
     db_obj = crud.threat_model_item.create_in_object(db, obj_in=threat_model_item, source_type=TargetTypeEnum.alertgroup, source_id=alert_group.id)
 
     assert db_obj is not None
-    assert db_obj.title == threat_model_item.title
+    assert db_obj.threat_model_id == threat_model_item.threat_model_id
 
     link, _ = crud.link.query_with_filters(db, filter_dict={"v0_id": alert_group.id, "v1_id": db_obj.id})
 
@@ -272,11 +284,13 @@ def test_create_in_object_threat_model_item(db: Session, faker: Faker) -> None:
 
 def test_get_history_threat_model_item(db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
+    threat_model_name = random.choice(list(ThreatModelName))
+    threat_model_id, data = create_random_threat_model_data(faker, threat_model_name)
     threat_model_item = ThreatModelItemCreate(
-        title=faker.word(),
-        type=faker.word(),
-        description=faker.sentence(),
-        data=jsonable_encoder(faker.pydict())
+        threat_model_name=threat_model_name,
+        threat_model_id=threat_model_id,
+        data=data,
+        owner=owner.username
     )
     audit_logger = AuditLogger(owner.username, faker.ipv4(), faker.user_agent(), db)
     db_obj = crud.threat_model_item.create(db, obj_in=threat_model_item, audit_logger=audit_logger)
@@ -290,7 +304,7 @@ def test_get_history_threat_model_item(db: Session, faker: Faker) -> None:
 
 def test_undelete_threat_model_item(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
-    threat_model_item = create_random_threat_model_item(db, faker)
+    threat_model_item = create_random_threat_model_item(db, faker, create_extras=False)
     audit_logger = AuditLogger(user.username, faker.ipv4(), faker.user_agent(), db)
 
     db_obj = crud.threat_model_item.remove(db, _id=threat_model_item.id, audit_logger=audit_logger)

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>
+        SCOT Vulnfeed Export {{ vulnfeed.id }} : {{ vulnfeed.subject }}
+    </title>
+{% endblock %}
+
+
+{% block export_header %}
+    {% include 'vulnfeed_header.html' %}
+{% endblock %}
+
+{% block journal %}
+    {% include 'journal.html' %}
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

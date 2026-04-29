@@ -95,7 +95,6 @@ api_router.include_router(search.router, prefix='/search', tags=['search'])
 api_router.include_router(notification.router, prefix='/notification', tags=['notification'])
 api_router.include_router(health.router, prefix='/health', tags=['health'])
 api_router.include_router(special_metric.router, prefix='/special_metric', tags=['special_metric'])
-# Disabled until we actually start using threat model items
-# api_router.include_router(threat_model_items.router, prefix='/threat_model_item', tags=['threat_model_item'])
+api_router.include_router(threat_model_items.router, prefix='/threat_model_item', tags=['threat_model_item'])
 # We don't use sigbodies anymore, delete?
 # api_router.include_router(sigbody.router, prefix='/sigbody', tags=['sigbody'])

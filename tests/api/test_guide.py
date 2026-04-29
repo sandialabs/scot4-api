@@ -12,6 +12,8 @@ from tests.utils.guide import create_random_guide
 from tests.utils.signature import create_random_signature
 from tests.utils.entity import create_random_entity
 from tests.utils.entry import create_random_entry
+from tests.utils.tag import create_random_tag
+from tests.utils.source import create_random_source
 
 
 def test_get_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -380,6 +382,173 @@ def test_entries_guide(client: TestClient, superuser_token_headers: dict, normal
     assert entry_data["resultCount"] == 1
     assert entry_data["totalCount"] == 1
     assert entry_data["result"][0]["id"] == entry.id
+
+
+def test_tag_untag_guide(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    guide = create_random_guide(db, faker, owner)
+    tag1 = create_random_tag(db, faker)
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/tag",
+        headers=superuser_token_headers,
+        json={"id": tag1.id}
+    )
+
+    assert r.status_code == 200
+    tag_guide = r.json()
+    assert tag_guide is not None
+    assert any([i for i in tag_guide["tags"] if i["id"] == tag1.id])
+
+    tag2 = create_random_tag(db, faker)
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/tag",
+        headers=superuser_token_headers,
+        json={"id": tag2.id}
+    )
+
+    assert r.status_code == 200
+    tag_guide = r.json()
+    assert tag_guide is not None
+    assert any([i for i in tag_guide["tags"] if i["id"] == tag2.id])
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/-1/tag",
+        headers=superuser_token_headers,
+        json={"id": tag1.id},
+    )
+
+    assert r.status_code == 404
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/tag",
+        headers=superuser_token_headers,
+        json={"id": -1},
+    )
+
+    assert r.status_code == 404
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/untag",
+        headers=superuser_token_headers,
+        json={"id": tag1.id},
+    )
+
+    assert r.status_code == 200
+    tag_guide = r.json()
+    assert tag_guide is not None
+    assert any([i for i in tag_guide["tags"] if i["id"] != tag1.id])
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/untag",
+        headers=superuser_token_headers,
+        json={"id": tag2.id},
+    )
+
+    assert r.status_code == 200
+    tag_guide = r.json()
+    assert tag_guide is not None
+    assert len([i for i in tag_guide["tags"] if i["id"] != tag2.id]) == 0
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/-1/untag",
+        headers=superuser_token_headers,
+        json={"id": tag2.id},
+    )
+
+    assert r.status_code == 404
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/untag",
+        headers=superuser_token_headers,
+        json={"id": -1},
+    )
+
+    assert r.status_code == 422
+
+
+def test_source_guide(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
+    owner = create_random_user(db, faker)
+    guide = create_random_guide(db, faker, owner)
+    source1 = create_random_source(db, faker)
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/add-source",
+        headers=superuser_token_headers,
+        json={"id": source1.id}
+    )
+
+    assert r.status_code == 200
+    source_guide = r.json()
+    assert source_guide is not None
+    assert source1.id in [i["id"] for i in source_guide["sources"]]
+
+    source2 = create_random_source(db, faker)
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/add-source",
+        headers=superuser_token_headers,
+        json={"id": source2.id}
+    )
+
+    assert r.status_code == 200
+    source_guide = r.json()
+    assert source_guide is not None
+    assert source2.id in [i["id"] for i in source_guide["sources"]]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/-1/add-source",
+        headers=superuser_token_headers,
+        json={"id": source1.id},
+    )
+
+    assert r.status_code == 404
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/add-source",
+        headers=superuser_token_headers,
+        json={"id": -1},
+    )
+
+    assert r.status_code == 404
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/remove-source",
+        headers=superuser_token_headers,
+        json={"id": source1.id},
+    )
+
+    assert r.status_code == 200
+    source_guide = r.json()
+    assert source_guide is not None
+    assert source1.id not in [i["id"] for i in source_guide["sources"]]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/remove-source",
+        headers=superuser_token_headers,
+        json={"id": source2.id},
+    )
+
+    assert r.status_code == 200
+    source_guide = r.json()
+    assert source_guide is not None
+    assert source2.id not in [i["id"] for i in source_guide["sources"]]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/-1/remove-source",
+        headers=superuser_token_headers,
+        json={"id": source2.id},
+    )
+
+    assert r.status_code == 404
+
+    r = client.post(
+        f"{settings.API_V1_STR}/guide/{guide.id}/remove-source",
+        headers=superuser_token_headers,
+        json={"id": -1},
+    )
+
+    assert r.status_code == 422
 
 
 def test_entities_guide(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:

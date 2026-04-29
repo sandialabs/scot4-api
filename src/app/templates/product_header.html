@@ -1,0 +1,59 @@
+<h1>SCOT Product {{ product.id }} : {{ product.subject }}</h1>
+    <table class="header_table">
+        <tr>
+            <th>
+                Owner
+            </th>
+            <td>
+                {{ product.owner }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Created
+            </th>
+            <td>
+                {{ product.created }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Updated
+            </th>
+            <td>
+                {{ product.modified }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                TLP
+            </th>
+            <td>
+                {{ product.tlp.value }}
+            </td>
+        </tr>
+        <tr>
+            <th>
+                Views / Popularity
+            </th>
+            <td>
+                {{ product.view_count }} / {{ product.popularity_count }}
+            </td>
+        </tr>
+        <tr>
+            <th>Tags:</th>
+            <td colspan=4>
+                {% for t in product.tags %}
+                {{ t.name }} &nbsp;
+                {% endfor %}
+            </td>
+        </tr>
+        <tr>
+            <th>Sources:</th>
+            <td colspan=4>
+                {% for s in product.sources %}
+                {{ s.name }} &nbsp;
+                {% endfor %}
+            </td>
+        </tr>
+    </table>

@@ -601,6 +601,7 @@ def test_history_alertgroup(client: TestClient, superuser_token_headers: dict, n
         headers=superuser_token_headers,
         json=data,
     )
+    print(r.json())
     assert r.status_code == 200
 
     r = client.get(

@@ -47,7 +47,7 @@ from .product import Product, ProductCreate, ProductUpdate, ProductSearch
 from .promotion import Promotion, PromotionCreate, PromotionUpdate
 from .remote_flair import RemoteFlair, RemoteFlairCreate, RemoteFlairUpdate
 from .response import ListResponse
-from .role import Role, RoleCreate, RoleUpdate
+from .role import Role, RoleCreate, RoleUpdate, RoleNoAuth
 from .setting import (
     AuthHelp,
     AuthSettings,
@@ -82,9 +82,38 @@ from .notification import (
 )
 from .token import Token, TokenPayload
 from .user_links import UserLinks, UserLinksCreate, UserLinksUpdate
-from .user import User, UserCreate, UserUpdate
+from .user import User, UserCreate, UserUpdate, UserSafe
 from .search import SearchRequest, SearchResponse
 from .stat import Stat, StatCreate, StatUpdate, StatSearch
 from .tag_type import TagType, TagTypeCreate, TagTypeUpdate
 from .vuln_feed import VulnFeed, VulnFeedCreate, VulnFeedUpdate, VulnFeedSearch
 from .vuln_track import VulnTrack, VulnTrackCreate, VulnTrackUpdate, VulnTrackSearch
+
+from ..enums import TargetTypeEnum
+SearchTypeMapping = {
+    TargetTypeEnum.alert: AlertSearch,
+    TargetTypeEnum.alertgroup: AlertGroupSearch,
+    TargetTypeEnum.checklist: ChecklistSearch,
+    TargetTypeEnum.dispatch: DispatchSearch,
+    TargetTypeEnum.entity: EntitySearch,
+    TargetTypeEnum.entry: EntrySearch,
+    TargetTypeEnum.event: EventSearch,
+    TargetTypeEnum.file: FileSearch,
+    TargetTypeEnum.guide: GuideSearch,
+    TargetTypeEnum.incident: IncidentSearch,
+    TargetTypeEnum.intel: IntelSearch,
+    TargetTypeEnum.product: ProductSearch,
+    TargetTypeEnum.sigbody: SigbodySearch,
+    TargetTypeEnum.signature: SignatureSearch,
+    TargetTypeEnum.entity_class: EntityClassSearch,
+    TargetTypeEnum.entity_type: EntityTypeSearch,
+    TargetTypeEnum.source: SourceSearch,
+    TargetTypeEnum.special_metric: SpecialMetricSearch,
+    TargetTypeEnum.stat: StatSearch,
+    TargetTypeEnum.tag: TagSearch,
+    TargetTypeEnum.threat_model_item: ThreatModelItemSearch,
+    TargetTypeEnum.feed: FeedSearch,
+    TargetTypeEnum.pivot: PivotSearch,
+    TargetTypeEnum.vuln_feed: VulnFeedSearch,
+    TargetTypeEnum.vuln_track: VulnTrackSearch,
+}

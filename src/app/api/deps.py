@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Request, Query, Path
@@ -25,7 +25,7 @@ def get_db(request: Request):
     if hasattr(request.state, "db"):
         return request.state.db
     else:
-        raise HTTPException(status=500, detail="Could not get database session")
+        raise HTTPException(status_code=500, detail="Could not get database session")
 
 
 # Changes an api token to a JWT token if present
@@ -113,10 +113,9 @@ def get_current_active_user(
         raise HTTPException(status_code=401, detail="Unauthorized")
     if not crud.user.is_active(current_user):
         raise HTTPException(status_code=400, detail="Inactive user")
-    crud.user.update_last_activity(db, current_user)
+    crud.user.update_last_activity(db, current_user, new_transaction=True)
     # add user id to the session for some queries
     db.info["user_id"] = current_user.id
-    db.commit()  # Done here to prevent race conditions
     return current_user
 
 
@@ -215,7 +214,7 @@ class AuditLogger:
             thing_id = thing.id
         # Create the audit entry
         audit = schemas.AuditCreate(
-            when_date=datetime.utcnow(),
+            when_date=datetime.now(timezone.utc),
             username=self.username,
             what=what_string,
             thing_type=thing_type,
@@ -266,7 +265,7 @@ class PermissionCheck:
                             TargetTypeEnum.source, TargetTypeEnum.entity_class,
                             TargetTypeEnum.pivot, TargetTypeEnum.entity_type,
                             TargetTypeEnum.special_metric, TargetTypeEnum.none,
-                            None]
+                            TargetTypeEnum.threat_model_item, None]
 
     def __init__(self, target_type, permission, allow_admin=True):
         self.target_type = target_type

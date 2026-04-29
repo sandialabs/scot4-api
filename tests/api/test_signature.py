@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 import pytest
 
-from app.enums import TargetTypeEnum, EntryClassEnum
+from app.enums import TargetTypeEnum, EntryClassEnum, ThreatModelName
 from app.core.config import settings
 
 from tests.utils.signature import create_random_signature
@@ -16,6 +16,7 @@ from tests.utils.entity import create_random_entity
 from tests.utils.entry import create_random_entry
 from tests.utils.sigbody import create_random_sigbody
 from tests.utils.link import create_link
+from tests.utils.threat_model_item import create_random_threat_model_item
 
 
 def test_get_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -42,19 +43,20 @@ def test_get_signature(client: TestClient, superuser_token_headers: dict, normal
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["id"] == signature.id
+    assert r.json() is not None
+    assert r.json()["id"] == signature.id
 
 
 def test_create_signature(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     owner = create_random_user(db, faker)
+    threat_model_item = create_random_threat_model_item(db, faker)
     data = {
         "owner": owner.username,
         "name": faker.word(),
         "description": faker.sentence(),
         "data": faker.json(),
-        "type": faker.word()
+        "type": faker.word(),
+        "threat_model_items": [threat_model_item.id]
     }
 
     r = client.post(
@@ -71,11 +73,10 @@ def test_create_signature(client: TestClient, normal_user_token_headers: dict, d
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["id"] >= 1
-    assert signature_data["name"] == data["name"]
-    assert signature_data["type"] == data["type"]
+    assert r.json() is not None
+    assert r.json()["id"] >= 1
+    assert r.json()["name"] == data["name"]
+    assert r.json()["type"] == data["type"]
 
 
 def test_create_signatures(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -108,16 +109,15 @@ def test_create_signatures(client: TestClient, normal_user_token_headers: dict, 
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert len(signature_data) == 2
-    assert signature_data[0]["id"] >= 1
-    assert signature_data[0]["name"] == data[0]["name"]
-    assert signature_data[0]["type"] == data[0]["type"]
-    assert signature_data[1]["id"] >= 1
-    assert signature_data[1]["name"] == data[1]["name"]
-    assert signature_data[1]["type"] == data[1]["type"]
-    assert signature_data[0]["id"] < signature_data[1]["id"]
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] >= 1
+    assert r.json()[0]["name"] == data[0]["name"]
+    assert r.json()[0]["type"] == data[0]["type"]
+    assert r.json()[1]["id"] >= 1
+    assert r.json()[1]["name"] == data[1]["name"]
+    assert r.json()[1]["type"] == data[1]["type"]
+    assert r.json()[0]["id"] < r.json()[1]["id"]
 
 
 def test_update_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -158,11 +158,10 @@ def test_update_signature(client: TestClient, superuser_token_headers: dict, nor
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["id"] == signature.id
-    assert signature_data["type"] == data["type"]
-    assert signature_data["type"] != signature.type
+    assert r.json() is not None
+    assert r.json()["id"] == signature.id
+    assert r.json()["type"] == data["type"]
+    assert r.json()["type"] != signature.type
 
 
 def test_update_signatures(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -204,13 +203,12 @@ def test_update_signatures(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert len(signature_data) == 2
-    assert signature_data[0]["id"] == signature1.id
-    assert signature_data[0]["type"] == data["type"]
-    assert signature_data[1]["id"] == signature2.id
-    assert signature_data[1]["type"] == data["type"]
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] == signature1.id
+    assert r.json()[0]["type"] == data["type"]
+    assert r.json()[1]["id"] == signature2.id
+    assert r.json()[1]["type"] == data["type"]
 
 
 def test_delete_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -237,9 +235,8 @@ def test_delete_signature(client: TestClient, superuser_token_headers: dict, nor
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["id"] == signature.id
+    assert r.json() is not None
+    assert r.json()["id"] == signature.id
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}",
@@ -274,11 +271,10 @@ def test_delete_signatures(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert len(signature_data) == 2
-    assert signature_data[0]["id"] == signature1.id
-    assert signature_data[1]["id"] == signature2.id
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] == signature1.id
+    assert r.json()[1]["id"] == signature2.id
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature1.id}",
@@ -326,9 +322,8 @@ def test_undelete_signature(client: TestClient, superuser_token_headers: dict, n
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["id"] == signature.id
+    assert r.json() is not None
+    assert r.json()["id"] == signature.id
 
 
 def test_entries_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -349,11 +344,10 @@ def test_entries_signature(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert entry_data["resultCount"] == 0
-    assert entry_data["totalCount"] == 0
-    assert len(entry_data["result"]) == 0
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 0
+    assert r.json()["totalCount"] == 0
+    assert len(r.json()["result"]) == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}/entry",
@@ -361,11 +355,10 @@ def test_entries_signature(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert entry_data["resultCount"] == 1
-    assert entry_data["totalCount"] == 1
-    assert entry_data["result"][0]["id"] == entry.id
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 1
+    assert r.json()["totalCount"] == 1
+    assert r.json()["result"][0]["id"] == entry.id
 
 
 def test_tag_untag_signature(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -403,8 +396,7 @@ def test_tag_untag_signature(client: TestClient, superuser_token_headers: dict, 
     )
 
     assert r.status_code == 200
-    tag_signature = r.json()
-    assert any([i for i in tag_signature["tags"] if i["id"] == tag.id])
+    assert any([i for i in r.json()["tags"] if i["id"] == tag.id])
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/-1/untag",
@@ -436,8 +428,7 @@ def test_tag_untag_signature(client: TestClient, superuser_token_headers: dict, 
     )
 
     assert r.status_code == 200
-    tag_signature = r.json()
-    assert tag_signature["tags"] == []
+    assert r.json()["tags"] == []
 
 
 def test_source_add_remove_signature(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -475,8 +466,7 @@ def test_source_add_remove_signature(client: TestClient, superuser_token_headers
     )
 
     assert r.status_code == 200
-    source_signature = r.json()
-    assert any([i for i in source_signature["sources"] if i["id"] == source.id])
+    assert any([i for i in r.json()["sources"] if i["id"] == source.id])
 
     r = client.post(
         f"{settings.API_V1_STR}/signature/-1/remove-source",
@@ -508,8 +498,7 @@ def test_source_add_remove_signature(client: TestClient, superuser_token_headers
     )
 
     assert r.status_code == 200
-    source_signature = r.json()
-    assert source_signature["sources"] == []
+    assert r.json()["sources"] == []
 
 
 def test_entities_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -528,22 +517,20 @@ def test_entities_signature(client: TestClient, superuser_token_headers: dict, n
         headers=superuser_token_headers
     )
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["resultCount"] == 0
-    assert entity_data["totalCount"] == 0
-    assert len(entity_data["result"]) == 0
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 0
+    assert r.json()["totalCount"] == 0
+    assert len(r.json()["result"]) == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}/entity",
         headers=superuser_token_headers
     )
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["resultCount"] == 1
-    assert entity_data["totalCount"] == 1
-    assert entity_data["result"][0]["id"] == entity.id
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 1
+    assert r.json()["totalCount"] == 1
+    assert r.json()["result"][0]["id"] == entity.id
 
 
 def test_history_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -568,9 +555,8 @@ def test_history_signature(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert any(i["audit_data"]["description"] == data["description"] for i in signature_data)
-    assert signature_data[0]["audit_data"]["description"] == data["description"]
+    assert any(i["audit_data"]["description"] == data["description"] for i in r.json())
+    assert r.json()[0]["audit_data"]["description"] == data["description"]
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}/history",
@@ -584,8 +570,7 @@ def test_history_signature(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data == []
+    assert r.json() == []
 
 
 def test_search_signatures(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -603,9 +588,8 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_search = r.json()
-    assert signature_search is not None
-    assert signature_search["result"] == []
+    assert r.json() is not None
+    assert r.json()["result"] == []
 
     random_signature = random.choice(signatures)
 
@@ -615,10 +599,9 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_search = r.json()
-    assert signature_search is not None
-    assert signature_search["totalCount"] == 1
-    assert any(i["id"] == random_signature.id for i in signature_search["result"])
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 1
+    assert any(i["id"] == random_signature.id for i in r.json()["result"])
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/?id=-1",
@@ -626,9 +609,8 @@ def test_search_signatures(client: TestClient, superuser_token_headers: dict, no
     )
 
     assert r.status_code == 200
-    signature_search = r.json()
-    assert signature_search is not None
-    assert signature_search["result"] == []
+    assert r.json() is not None
+    assert r.json()["result"] == []
 
     # int negations
     r = client.get(
@@ -875,8 +857,7 @@ def test_sigbodies_signature(client: TestClient, superuser_token_headers: dict, 
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data == []
+    assert r.json() == []
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}/sigbodies",
@@ -884,9 +865,8 @@ def test_sigbodies_signature(client: TestClient, superuser_token_headers: dict, 
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert any(sigbody.id == i["id"] for i in signature_data)
+    assert r.json() is not None
+    assert any(sigbody.id == i["id"] for i in r.json())
 
 
 def test_links_signature(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -907,11 +887,10 @@ def test_links_signature(client: TestClient, superuser_token_headers: dict, norm
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["totalCount"] == 0
-    assert signature_data["resultCount"] == 0
-    assert len(signature_data["result"]) == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
+    assert len(r.json()["result"]) == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/signature/{signature.id}/links",
@@ -919,8 +898,286 @@ def test_links_signature(client: TestClient, superuser_token_headers: dict, norm
     )
 
     assert r.status_code == 200
-    signature_data = r.json()
-    assert signature_data is not None
-    assert signature_data["totalCount"] == 1
-    assert signature_data["resultCount"] == 1
-    assert signature_data["result"][0]["id"] == link.v1_id
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 1
+    assert r.json()["resultCount"] == 1
+    assert r.json()["result"][0]["id"] == link.v1_id
+
+
+def test_attack_navigator_signatures(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    owner = create_random_user(db, faker)
+
+    signatures = []
+    for _ in range(5):
+        threat_model_item = create_random_threat_model_item(db, faker, ThreatModelName.attack, owner, False)
+        signatures.append(create_random_signature(db, faker, owner, None, [threat_model_item]))
+
+    random_signature = random.choice(signatures)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id={random_signature.id}",
+        headers=normal_user_token_headers
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert isinstance(r.json(), dict)
+    assert "techniques" in r.json().keys()
+    assert len(r.json()["techniques"]) == 0
+
+    random_signature = random.choice(signatures)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id={random_signature.id}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert isinstance(r.json(), dict)
+    assert "techniques" in r.json().keys()
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+    assert r.json()["techniques"][0]["links"][0]["label"] == f"SCOT Signature {random_signature.id}"
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id=-1",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert "techniques" in r.json().keys()
+    assert len(r.json()["techniques"]) == 0
+
+    # int negations
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id=!{random_signature.id}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert isinstance(r.json(), dict)
+    assert "techniques" in r.json().keys()
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" not in link_labels
+
+    # test type checking
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id={faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    # id range
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id=({signatures[0].id},{signatures[3].id})",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {signatures[0].id}" in link_labels
+    assert f"SCOT Signature {signatures[1].id}" in link_labels
+    assert f"SCOT Signature {signatures[2].id}" in link_labels
+    assert f"SCOT Signature {signatures[3].id}" in link_labels
+
+    # not id range
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id=!({signatures[0].id},{signatures[3].id})",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {signatures[0].id}" not in link_labels
+    assert f"SCOT Signature {signatures[1].id}" not in link_labels
+    assert f"SCOT Signature {signatures[2].id}" not in link_labels
+    assert f"SCOT Signature {signatures[3].id}" not in link_labels
+    assert f"SCOT Signature {signatures[4].id}" in link_labels
+
+    # id in list
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id=[{signatures[0].id},{signatures[4].id},{signatures[2].id}]",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {signatures[0].id}" in link_labels
+    assert f"SCOT Signature {signatures[1].id}" not in link_labels
+    assert f"SCOT Signature {signatures[2].id}" in link_labels
+    assert f"SCOT Signature {signatures[3].id}" not in link_labels
+    assert f"SCOT Signature {signatures[4].id}" in link_labels
+
+    # id not in list
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?id=![{signatures[0].id},{signatures[4].id},{signatures[2].id}]",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {signatures[0].id}" not in link_labels
+    assert f"SCOT Signature {signatures[1].id}" in link_labels
+    assert f"SCOT Signature {signatures[2].id}" not in link_labels
+    assert f"SCOT Signature {signatures[3].id}" in link_labels
+    assert f"SCOT Signature {signatures[4].id}" not in link_labels
+
+    # type checking
+    tag = create_random_tag(db, faker, TargetTypeEnum.signature, random_signature.id)
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?tag={tag.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?name={random_signature.name[1:-1]}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?description={random_signature.description[1:-1]}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?type={random_signature.type}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?owner={random_signature.owner}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?tlp={random_signature.tlp.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/signature/attack_navigator/?signature_group={random_signature.data['signature_group'][0]}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert len(r.json()["techniques"]) >= 1
+    assert len(r.json()["techniques"][0]["links"]) >= 1
+
+    link_labels = []
+    for technique in r.json()["techniques"]:
+        for link in technique["links"]:
+            link_labels.append(link["label"])
+
+    assert f"SCOT Signature {random_signature.id}" in link_labels

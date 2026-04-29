@@ -1,13 +1,12 @@
 import re
 
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Union, Dict
 from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.enums import PermissionEnum
 from app.crud.base import CRUDBase
 from app.crud.crud_permission import permission as crud_permission
 from app.enums import TargetTypeEnum, TlpEnum, StatusEnum
@@ -343,7 +342,7 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
                 # a single select of an object
                 db_session.commit()
             if alertgroup.view_count == 0:
-                alertgroup.first_view = datetime.utcnow()
+                alertgroup.first_view = datetime.now(timezone.utc)
                 alertgroup.view_count = AlertGroup.view_count + 1
             else:
                 # Use manual update to avoid changing the "modified" field
@@ -375,28 +374,36 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
             alert_flair_updates = {
                 a.id: a for a in alert_results if a.id in alertgroup.alert_ids
             }
+            # Gather list of entity values
+            entity_values = []
+            entity_types = []
+            entity_cache = {}
+            for alert_id, alert_results in alert_flair_updates.items():
+                if alert_results.entities is not None:
+                    for entity_type in alert_results.entities:
+                        for entity in alert_results.entities[entity_type]:
+                            entity_values.append(entity)
+                            entity_types.append(entity_type)
+            # Also link each entity to the alertgroup
+            crud.entity.link_entities_by_value(
+                db_session,
+                entity_values=entity_values,
+                target_type=TargetTypeEnum.alertgroup,
+                target_id=alertgroup_id,
+                entity_types=entity_types,
+                audit_logger=audit_logger,
+                entity_cache=entity_cache
+            )
             # Update each alert's flair individually
-
+            # Put alert updates at end to benefit from entity cache
             for alert_id, alert_results in alert_flair_updates.items():
                 crud.alert.flair_update(
                     db_session,
                     alert_id,
                     flair_result=alert_results,
-                    audit_logger=audit_logger
+                    audit_logger=audit_logger,
+                    entity_cache=entity_cache
                 )
-
-                # Also link each entity to the alertgroup
-                if alert_results.entities is not None:
-                    for entity_type in alert_results.entities:
-                        for entity in alert_results.entities[entity_type]:
-                            crud.entity.link_entity_by_value(
-                                db_session,
-                                entity_value=entity,
-                                target_type=TargetTypeEnum.alertgroup,
-                                target_id=alertgroup_id,
-                                entity_type=entity_type,
-                                audit_logger=audit_logger,
-                            )
             db_session.refresh(alertgroup)
         return alertgroup
 

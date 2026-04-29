@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Union
+from sqlalchemy import update
 from sqlalchemy.orm import Session
 
 from app.auth import get_authenticator
@@ -123,7 +124,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             )
         # Store login time if successful
         if isinstance(result, User):
-            result.last_login = datetime.utcnow()
+            result.last_login = datetime.now(timezone.utc)
             self.update_last_activity(db_session, result)
         return result
 
@@ -273,10 +274,20 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             )
         return None
 
-    def update_last_activity(self, db_session: Session, user: User):
-        user.last_activity = datetime.utcnow()
-        db_session.add(user)
-        db_session.flush()
+    def update_last_activity(self, db_session: Session, user: User, new_transaction=False):
+        if new_transaction:
+            # Commit old transaction to try to avoid deadlocks
+            db_session.commit()
+        # Execute manually so that user.modified isn't changed
+        db_session.execute(
+            update(User).where(User.id == user.id)
+            .values(last_activity=datetime.now(timezone.utc), modified=User.modified)
+        )
+        if new_transaction:
+            # Commit as soon as possible to avoid deadlocks
+            db_session.commit()
+        else:
+            db_session.flush()
 
     def reset_failed_attempts(self, db_session: Session, username: str):
         """

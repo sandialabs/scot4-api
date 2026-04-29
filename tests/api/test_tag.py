@@ -10,6 +10,8 @@ from app.core.config import settings
 from tests.utils.alert import create_random_alert
 from tests.utils.event import create_random_event
 from tests.utils.tag import create_random_tag
+from tests.utils.intel import create_random_intel
+from tests.utils.guide import create_random_guide
 
 
 def test_get_tag(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -28,16 +30,26 @@ def test_get_tag(client: TestClient, normal_user_token_headers: dict, db: Sessio
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] == tag.id
+    assert r.json() is not None
+    assert r.json()["id"] == tag.id
 
 
 def test_create_tag(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
     data = {
-        "name": f"{faker.unique.word()}_{faker.pyint()}".lower(),
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
         "description": faker.sentence(),
     }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/tag",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()["name"] == data["name"].lower().strip().replace(" ", "_")
+
+    data["name"] = f"{faker.unique.word()}_{faker.pyint()}"
 
     r = client.post(
         f"{settings.API_V1_STR}/tag",
@@ -53,14 +65,31 @@ def test_create_tag(client: TestClient, normal_user_token_headers: dict, faker: 
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] >= 1
-    assert tag_data["name"] == data["name"].lower()
-    assert tag_data["description"] == data["description"]
+    assert r.json() is not None
+    assert r.json()["id"] >= 1
+    assert r.json()["name"] == data["name"].lower()
+    assert r.json()["description"] == data["description"]
 
 
 def test_create_tags(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
+    data = [{
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+        "description": faker.sentence(),
+    },{
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+        "description": faker.sentence(),
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/tag/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()[0]["name"] == data[0]["name"].lower().strip().replace(" ", "_")
+    assert r.json()[1]["name"] == data[1]["name"].lower().strip().replace(" ", "_")
+
     data = [{
         "name": f"{faker.unique.word()}_{faker.pyint()}".lower(),
         "description": faker.sentence(),
@@ -83,16 +112,15 @@ def test_create_tags(client: TestClient, normal_user_token_headers: dict, faker:
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert len(tag_data) == 2
-    assert tag_data[0]["id"] >= 1
-    assert tag_data[0]["name"] == data[0]["name"].lower()
-    assert tag_data[0]["description"] == data[0]["description"]
-    assert tag_data[1]["id"] >= 1
-    assert tag_data[1]["name"] == data[1]["name"].lower()
-    assert tag_data[1]["description"] == data[1]["description"]
-    assert tag_data[0]["id"] < tag_data[1]["id"]
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] >= 1
+    assert r.json()[0]["name"] == data[0]["name"].lower()
+    assert r.json()[0]["description"] == data[0]["description"]
+    assert r.json()[1]["id"] >= 1
+    assert r.json()[1]["name"] == data[1]["name"].lower()
+    assert r.json()[1]["description"] == data[1]["description"]
+    assert r.json()[0]["id"] < r.json()[1]["id"]
 
 
 def test_update_tag(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -124,14 +152,26 @@ def test_update_tag(client: TestClient, superuser_token_headers: dict, db: Sessi
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] == tag.id
-    assert tag_data["description"] == data["description"]
-    assert tag_data["description"] != tag.description
+    assert r.json() is not None
+    assert r.json()["id"] == tag.id
+    assert r.json()["description"] == data["description"]
+    assert r.json()["description"] != tag.description
+
+    data = {
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/tag/{tag.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()["name"] == data["name"].lower().strip().replace(" ", "_")
 
 
-def test_update_tag(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_update_tags(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
     tag1 = create_random_tag(db, faker)
     tag2 = create_random_tag(db, faker)
 
@@ -161,13 +201,25 @@ def test_update_tag(client: TestClient, superuser_token_headers: dict, db: Sessi
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert len(tag_data) == 2
-    assert tag_data[0]["id"] == tag1.id
-    assert tag_data[0]["description"] == data["description"]
-    assert tag_data[1]["id"] == tag2.id
-    assert tag_data[1]["description"] == data["description"]
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] == tag1.id
+    assert r.json()[0]["description"] == data["description"]
+    assert r.json()[1]["id"] == tag2.id
+    assert r.json()[1]["description"] == data["description"]
+
+    data = {
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/tag/many/?ids={tag1.id}",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()[0]["name"] == data["name"].lower().strip().replace(" ", "_")
 
 
 def test_delete_tag(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -186,9 +238,8 @@ def test_delete_tag(client: TestClient, normal_user_token_headers: dict, db: Ses
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] == tag.id
+    assert r.json() is not None
+    assert r.json()["id"] == tag.id
 
     r = client.get(
         f"{settings.API_V1_STR}/tag/{tag.id}",
@@ -215,11 +266,10 @@ def test_delete_tags(client: TestClient, normal_user_token_headers: dict, db: Se
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert len(tag_data) == 2
-    assert tag_data[0]["id"] == tag1.id
-    assert tag_data[1]["id"] == tag2.id
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] == tag1.id
+    assert r.json()[1]["id"] == tag2.id
 
     r = client.get(
         f"{settings.API_V1_STR}/tag/{tag1.id}",
@@ -259,9 +309,8 @@ def test_undelete_tag(client: TestClient, superuser_token_headers: dict, db: Ses
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] == tag.id
+    assert r.json() is not None
+    assert r.json()["id"] == tag.id
 
 
 def test_search_tag(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -411,9 +460,8 @@ def test_apply_tag(client: TestClient, superuser_token_headers: dict, normal_use
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] == tag.id
+    assert r.json() is not None
+    assert r.json()["id"] == tag.id
 
 
 def test_add_tag(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -422,7 +470,7 @@ def test_add_tag(client: TestClient, superuser_token_headers: dict, normal_user_
     data = {
         "target_type": TargetTypeEnum.alert.value,
         "target_id": alert.id,
-        "tag_name": faker.word().lower(),
+        "tag_name": f"{faker.word()}_{faker.pyint()}".lower(),
         "tag_description": faker.sentence()
     }
 
@@ -448,10 +496,27 @@ def test_add_tag(client: TestClient, superuser_token_headers: dict, normal_user_
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] >= 0
-    assert tag_data["name"] == data["tag_name"].lower()
+    assert r.json() is not None
+    assert r.json()["id"] >= 0
+    assert r.json()["name"] == data["tag_name"]
+
+    data = {
+        "target_type": TargetTypeEnum.alert.value,
+        "target_id": alert.id,
+        "tag_name": f" {faker.word()} {faker.pyint()} ",
+        "tag_description": faker.sentence()
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/tag/tag_by_name",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert r.json()["id"] >= 0
+    assert r.json()["name"] == data["tag_name"].lower().strip().replace(" ", "_")
 
 
 def test_remove_tag(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -493,9 +558,8 @@ def test_remove_tag(client: TestClient, superuser_token_headers: dict, normal_us
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["id"] == tag.id
+    assert r.json() is not None
+    assert r.json()["id"] == tag.id
 
     data = {
         "target_type": TargetTypeEnum.alert.value,
@@ -521,10 +585,9 @@ def test_tag_appearances(client: TestClient, normal_user_token_headers: dict, db
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["totalCount"] == 0
-    assert tag_data["resultCount"] == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/tag/-1/appearance",
@@ -532,10 +595,9 @@ def test_tag_appearances(client: TestClient, normal_user_token_headers: dict, db
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["totalCount"] == 0
-    assert tag_data["resultCount"] == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/tag/{tag.id}/appearance",
@@ -543,10 +605,9 @@ def test_tag_appearances(client: TestClient, normal_user_token_headers: dict, db
     )
 
     assert r.status_code == 200
-    tag_data = r.json()
-    assert tag_data is not None
-    assert tag_data["totalCount"] == 0
-    assert tag_data["resultCount"] == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
 
 
 def test_tag_replace(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -699,6 +760,40 @@ def test_tag_target_appearance(client: TestClient, normal_user_token_headers: di
     assert all([a["target_type"] == TargetTypeEnum.event.value for a in r.json()["result"]])
     for targets in r.json()["result"]:
         assert any([a["id"] in [tag1.id, tag2.id] for a in targets["items"]])
+    
+    # search with target type filters
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_appearance/?target_types=event",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert all([a["target_type"] == TargetTypeEnum.event.value for a in r.json()["result"]])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_appearance/?target_types=feed",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert all([a["target_type"] == TargetTypeEnum.feed.value for a in r.json()["result"]])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_appearance/?id={tag3.id}&target_types=event",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert len(r.json()["result"]) == 1
+    assert r.json()["result"][0]["target_type"] == TargetTypeEnum.event.value
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_appearance/?id={tag3.id}&target_types=feed",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert len(r.json()["result"]) == 0
 
     # test both id a names
     r = client.get(
@@ -714,4 +809,181 @@ def test_tag_target_appearance(client: TestClient, normal_user_token_headers: di
         headers=normal_user_token_headers
     )
 
+    assert r.status_code == 404
+
+
+def test_tag_target_types(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+    tag1 = create_random_tag(db, faker)
+    tag2 = create_random_tag(db, faker)
+    tag3 = create_random_tag(db, faker)
+    
+    event = create_random_event(db, faker, create_extras=False)
+    intel = create_random_intel(db, faker, create_extras=False)
+    guide1 = create_random_guide(db, faker, create_extras=False)
+    guide2 = create_random_guide(db, faker, create_extras=False)
+    
+    # apply tags to targets
+    r = client.post(
+        f"{settings.API_V1_STR}/tag/{tag1.id}/tag",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.event.value,
+            "target_id": event.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/tag/{tag2.id}/tag",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.intel.value,
+            "target_id": intel.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/tag/{tag3.id}/tag",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.guide.value,
+            "target_id": guide1.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/tag/{tag3.id}/tag",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.guide.value,
+            "target_id": guide2.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types/",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "event" in r.json().keys()
+    assert r.json()["event"] >= 1
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] >= 1
+    assert "guide" in r.json().keys()
+    assert r.json()["guide"] >= 2
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?id={tag1.id}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?name={tag1.name}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?id={tag2.id}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?name={tag2.name}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?id={tag3.id}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "guide" in r.json().keys()
+    assert r.json()["guide"] == 2
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?name={tag3.name}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "guide" in r.json().keys()
+    assert r.json()["guide"] == 2
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?id=[{tag1.id},{tag2.id}]",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/tag/target_types?name=[{tag1.name},{tag2.name}]",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        settings.API_V1_STR + "/tag/target_types?id={" + f"{tag1.id}" + "," + f"{tag2.id}" + "}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        settings.API_V1_STR + "/tag/target_types?name={" + f"{tag1.name}" + "," + f"{tag2.name}" + "}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        settings.API_V1_STR + "/tag/target_types?id=-1",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 404
+
+    r = client.get(
+        settings.API_V1_STR + "/tag/target_types?name=-1",
+        headers=normal_user_token_headers
+    )
+    
     assert r.status_code == 404

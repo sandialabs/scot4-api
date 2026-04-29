@@ -9,6 +9,7 @@ from app.crud.base import CRUDBase
 from app.models.game import Game
 from app.models.audit import Audit
 from app.schemas.game import GameCreate, GameUpdate
+from app.core.config import settings
 
 
 class CRUDGame(CRUDBase[Game, GameCreate, GameUpdate]):
@@ -26,6 +27,9 @@ class CRUDGame(CRUDBase[Game, GameCreate, GameUpdate]):
             games = game_query.all()
         else:
             games = db_session.query(Game).all()
+        # Default users to be excluded from game stats
+        if exclude_users is None:
+            exclude_users = settings.GAME_IGNORE_USERS.split(",")
         # Get the results from the audit table
         results = []
         game: Game
@@ -39,8 +43,6 @@ class CRUDGame(CRUDBase[Game, GameCreate, GameUpdate]):
             if exclude_users is not None:
                 query = query.filter(Audit.username.not_in(exclude_users))
             params = game.parameters
-            if "what" in params.keys():
-                query = query.filter(Audit.what == params["what"])
             if "type" in params.keys():
                 if params["type"] is None:
                     thing_type = type(TargetTypeEnum.none).__name__.lower()
@@ -66,6 +68,9 @@ class CRUDGame(CRUDBase[Game, GameCreate, GameUpdate]):
                             query = query.filter(Audit.audit_data[key].as_string() == str(params["data"][key]))
                 else:
                     query = query.filter(Audit.audit_data.contains(params["data"]))
+            # "what" at the end to help out mysql with its indexes
+            if "what" in params.keys():
+                query = query.filter(Audit.what == params["what"])
             query = query.group_by(Audit.username)
             query = query.order_by(desc(func.count(Audit.username)))
             if num_top_users is not None:

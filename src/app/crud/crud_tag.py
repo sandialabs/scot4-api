@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
@@ -75,7 +75,7 @@ class CRUDTag(CRUDBase[Tag, TagCreate, TagUpdate]):
             link.create(db_session, obj_in=new_link, audit_logger=audit_logger)
             # Add to appearances table
             new_appearance = AppearanceCreate(
-                when_date=datetime.utcnow(),
+                when_date=datetime.now(timezone.utc),
                 target_type=target_type,
                 target_id=target_id,
                 value_type=TargetTypeEnum.tag.value,

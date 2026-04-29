@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.logger import logger
 from app.db.session import SessionLocal
 from app.db.init_db import init_db
-from app.enums import TargetTypeEnum
+from app.enums import TargetTypeEnum, ThreatModelName
 from app import schemas, crud
 from app.core.config import settings
 
@@ -82,6 +82,17 @@ def main() -> None:
 
         setting = create_random_setting(db_session, faker)
         logger.info(f"Generated Site Setting {setting.id}")
+    
+        threat_model_items = []
+        logger.info("Generating Threat Model Items")
+        for threat_model_name in list(ThreatModelName):
+            logger.debug(f"Generating Threat Model {threat_model_name}")
+            for _ in range(5):
+                threat_model_item = create_random_threat_model_item(db_session, faker, threat_model_name, random.choice(users))
+                threat_model_items.append(threat_model_item)
+                logger.debug(f"Generating Random Permission for Threat Model Item {threat_model_item.id}")
+                create_random_permission(db_session, random.choice(saved_roles), threat_model_item)
+                logger.info(f"Threat Model Item {threat_model_item.id} Created")
 
         logger.info("Generate Signatures")
         # The idea here is to generate signatures that are going to
@@ -91,7 +102,7 @@ def main() -> None:
         signature_names_types = []
         unique_signature_types = set(["None"])
         for _ in range(5):
-            signature = create_random_signature(db_session, faker, random.choice(users))
+            signature = create_random_signature(db_session, faker, random.choice(users), None, random.choices(threat_model_items, k=3))
             create_popularity(db_session, faker, signature.id, TargetTypeEnum.signature, users)
             create_random_user_links(db_session, faker, signature.id, TargetTypeEnum.signature, random.choice(users))
             logger.info(f"Generating Random Entries for Signature {signature.id}")
@@ -469,29 +480,6 @@ def main() -> None:
             audit = create_audit(db_session, faker, _user, signature)
             game = create_random_game(db_session, faker, audit)
             logger.info(f"Game {game.id} Created")
-
-        logger.info("Generating Threat Model Item")
-        for _ in range(5):
-            threat_model_item = create_random_threat_model_item(db_session, faker)
-            create_popularity(db_session, faker, threat_model_item.id, TargetTypeEnum.threat_model_item, users)
-            logger.info(f"Generating Random Entries for Threat Model Item {threat_model_item.id}")
-            entry = create_random_entry(db_session, faker, target_type=TargetTypeEnum.threat_model_item, target_id=threat_model_item.id)
-            create_popularity(db_session, faker, entry.id, TargetTypeEnum.entry, users)
-            create_random_user_links(db_session, faker, entry.id, TargetTypeEnum.entry, random.choice(users))
-            logger.debug(f"Generating Random Appearance for Threat Model Item {threat_model_item.id}")
-            create_random_appearance(db_session, faker, threat_model_item.id, TargetTypeEnum.threat_model_item)
-            logger.debug(f"Generating Random Source for Threat Model Item {threat_model_item.id}")
-            create_random_source(db_session, faker, TargetTypeEnum.threat_model_item, threat_model_item.id)
-            logger.debug(f"Generating Random Tag for Threat Model Item {threat_model_item.id}")
-            create_random_tag(db_session, faker, TargetTypeEnum.threat_model_item, threat_model_item.id)
-            logger.debug(f"Generating Random Entity for Threat Model Item {threat_model_item.id}")
-            entity = create_random_entity(db_session, faker, TargetTypeEnum.threat_model_item, threat_model_item.id)
-            # create source and tag for entity
-            create_random_source(db_session, faker, TargetTypeEnum.entity, entity.id)
-            create_random_tag(db_session, faker, TargetTypeEnum.entity, entity.id)
-            logger.debug(f"Generating Random Permission for Threat Model Item {threat_model_item.id}")
-            create_random_permission(db_session, random.choice(saved_roles), threat_model_item)
-            logger.info(f"Threat Model Item {threat_model_item.id} Created")
 
         logger.info("Generating Stat")
         for _ in range(5):

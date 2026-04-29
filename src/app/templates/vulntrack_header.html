@@ -1,0 +1,59 @@
+<h1>SCOT Vulntrack {{ vulntrack.id }} : {{ vulntrack.subject }}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ vulntrack.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ vulntrack.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ vulntrack.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ vulntrack.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ vulntrack.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ vulntrack.view_count }} / {{ vulntrack.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in vulntrack.tags %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in vulntrack.sources %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>

@@ -12,13 +12,16 @@ from .generic import (
     generic_get,
     generic_post,
     generic_put,
+    generic_source_add_remove,
+    generic_tag_untag,
     generic_undelete,
     generic_history,
     generic_entities,
     generic_search,
     generic_export,
     generic_upvote_and_downvote,
-    generic_user_links
+    generic_user_links,
+    generic_get_signatures
 )
 
 router = APIRouter()
@@ -31,31 +34,11 @@ generic_delete(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_search(router, crud.guide, TargetTypeEnum.guide, schemas.GuideSearch, schemas.Guide)
 generic_undelete(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_entries(router, TargetTypeEnum.guide)
+generic_tag_untag(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
+generic_source_add_remove(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_entities(router, TargetTypeEnum.guide)
 generic_history(router, crud.guide, TargetTypeEnum.guide)
 generic_export(router, crud.guide, TargetTypeEnum.guide)
 generic_upvote_and_downvote(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
 generic_user_links(router, crud.guide, TargetTypeEnum.guide, schemas.Guide)
-
-
-@router.get(
-    "/{id}/signatures", response_model=list[schemas.Signature],
-    summary="Get signatures for guide",
-    dependencies=[Depends(
-        deps.PermissionCheckId(TargetTypeEnum.guide, PermissionEnum.read)
-    )]
-)
-def signatures_for(
-    *,
-    roles: list[models.Role] = Depends(deps.get_current_roles),
-    db: Session = Depends(deps.get_db),
-    id: Annotated[int, Path(...)],
-) -> Any:
-    """
-    Get all the signatures associated with a guide
-    """
-    _signatures = crud.guide.get_signatures_for(db, id, roles)
-    if _signatures is None:
-        raise HTTPException(404, f"Guide {id} not found")
-
-    return _signatures
+generic_get_signatures(router, crud.guide, TargetTypeEnum.guide)

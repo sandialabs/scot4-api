@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app import crud, models, schemas
 from app.api import deps
 from app.enums import PermissionEnum, TargetTypeEnum
-from app.utils import get_search_filters
+from app.utils import get_appearance_filters
 
 from .generic import (
     generic_delete,
@@ -28,6 +28,7 @@ tag_read_dep = Depends(deps.PermissionCheckId(TargetTypeEnum.tag, PermissionEnum
 def tag_target_appearance(
     id: Annotated[str, Query(...)] = None,
     name: Annotated[str, Query(...)] = None,
+    target_types: Annotated[list[TargetTypeEnum], Query(...)] = None,
     skip: Annotated[int, Query(...)] = 0,
     limit: Annotated[int, Query(...)] = 100,
     sort: Annotated[str, Query(...)] = None,
@@ -62,25 +63,74 @@ def tag_target_appearance(
     - If none of the range or list filters work it will attempt to do a normal search
     - When searching by name, a wildcard search will be performed for anything that includes the name i.e. searching "foo" will return foo and bar-foo-bar
     """
-    if id and name:
-        raise HTTPException(422, "Submit either id or name, not both")
-
-    and_ = False
-    # check for 'and' filters
-    if id is not None and id.startswith("{") and id.endswith("}"):
-        id = f"[{id[1:-1]}]"
-        and_ = True
-    elif name is not None and name.startswith("{") and name.endswith("}"):
-        name = f"[{name[1:-1]}]"
-        and_ = True
+    try:
+        filter_dict, and_ = get_appearance_filters(schemas.SourceSearch, id, name)
+    except Exception as e:
+        raise HTTPException(422, str(e))
 
     # get a list of tag ids from a list of names
-    tags, _ = crud.tag.query_with_filters(db, roles, get_search_filters(schemas.TagSearch(id=id, name=name)))
+    tags, _ = crud.tag.query_with_filters(db, roles, filter_dict)
     if len(tags) == 0:
         raise HTTPException(404, "No Tags were found")
 
-    _result, _count = crud.link.target_filter(db, [a.id for a in tags], TargetTypeEnum.tag, and_, skip, limit, sort)
-    return {"totalCount": _count, "resultCount": len(_result), "result": _result}
+    try:
+        _result, _count = crud.link.target_filter(db, [a.id for a in tags], TargetTypeEnum.tag, target_types, and_, skip, limit, sort)
+        return {"totalCount": _count, "resultCount": len(_result), "result": _result}
+    except Exception as e:
+        raise HTTPException(422, str(e))
+
+
+@router.get(
+    "/target_types",
+    response_model=dict[TargetTypeEnum, int],
+    summary="Get all target types for tags"
+)
+def tag_target_appearance(
+    id: Annotated[str, Query(...)] = None,
+    name: Annotated[str, Query(...)] = None,
+    roles: list[models.Role] = Depends(deps.get_current_roles),
+    db: Session = Depends(deps.get_db),
+    _: deps.AuditLogger = Depends(deps.get_audit_logger),
+):
+    """
+    Return all associated target types and counts for a given tag name or id
+
+    ### Search using the available fields with the optional filters:
+    | | |
+    | --- | --- |
+    | `!` | return the opposite result |
+    | `(n, n1)` | select values within the given range |
+    | `!(n, n1)` | select values **NOT** within the given range |
+    | `[n, n1, n2, ...]` | select multiple values within a list |
+    | `![n, n1, n2, ...]` | select multiple values **NOT** within a list |
+    | `{n, n1, n2, ...}` | select values that match all items in the list |
+    | `\\` | use a backslash to escape a special character at the beginning of your search string; you must escape a starting parenthesis `(`, bracket `[`, or exclamation point `!` or it will be interpreted as above |
+
+    ### Examples:
+    | | |
+    | --- | --- |
+    | `id=!1` | return all ids that don't match the value |
+    | `name=[foo, bar, baz]` | return all values that have any of the names (think OR)|
+    | `name={foo, bar, baz}` | return all values that have all of the names (think AND)|
+
+    ### Notes:
+    - If none of the range or list filters work it will attempt to do a normal search
+    - When searching by name, a wildcard search will be performed for anything that includes the name i.e. searching "foo" will return foo and bar-foo-bar
+    """
+    try:
+        filter_dict, _ = get_appearance_filters(schemas.TagSearch, id, name)
+    except Exception as e:
+        raise HTTPException(422, str(e))
+
+    # get a list of tag ids from a list of names
+    tags, _ = crud.tag.query_with_filters(db, roles, filter_dict)
+    if len(tags) == 0:
+        raise HTTPException(404, "No Tags were found")
+
+    try:
+        return crud.link.target_types(db, [a.id for a in tags], TargetTypeEnum.tag)
+    except Exception as e:
+        raise HTTPException(422, str(e))
 
 
 # Create get, post, put, and delete endpoints

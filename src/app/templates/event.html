@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>
+        SCOT Event Export {{ event.id }} : {{ event.subject }}
+    </title>
+{% endblock %}
+
+
+{% block export_header %}
+    {% include 'event_header.html' %}
+{% endblock %}
+
+{% block promoted_items %}
+    {% if alerts %}
+    <h2>Promoted from Alerts</h2>
+        <h3>{{ alerts[0]["alertgroup_subject"] }}<h3>
+        <h4>Promoted from Alertgroup {{ alerts[0]["alertgroup_id"] }}</h4>
+        <table class="alert_table">
+            <tr>
+                {% for col in alerts[0]["data_flaired"] %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+            {% for alert in alerts %}
+            <tr>
+                {% for col in alert["data_flaired"] %}
+                <td>
+                    {% autoescape false %}
+                    {% set cell_array = alert["data_flaired"][col] %}
+                    {{ cell_array }}<br>
+                    {% endautoescape %}
+                </td>
+                {% endfor %}
+            </tr> 
+            {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}
+
+{% block journal %}
+    {% include 'journal.html' %}
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

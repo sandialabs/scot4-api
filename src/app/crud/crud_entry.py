@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Union
 
 from sqlalchemy.orm import Session, aliased
@@ -51,7 +51,7 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
                 db_session, db_obj.target_id
             )
             if parent_obj and hasattr(parent_obj, "modified"):
-                parent_obj.modified = datetime.utcnow()
+                parent_obj.modified = datetime.now(timezone.utc)
         return super().update(db_session, db_obj=db_obj, obj_in=obj_in, audit_logger=audit_logger)
 
     def get_by_type(
@@ -99,14 +99,11 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
             .join(Permission, (self.model.id == Permission.target_id))\
             .filter(((self.model.target_type_enum() == Permission.target_type) & (required_permission == Permission.permission)))\
             .filter(Permission.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]))\
-            .join(
+            .outerjoin(
                 permission_alias,
-                (
-                    (self.model.target_id == permission_alias.target_id)
-                    & (self.model.target_type == permission_alias.target_type)
-                    & (required_permission == permission_alias.permission)
-                )
-                | (self.model.target_type == TargetTypeEnum.entity))\
+                (self.model.target_id == permission_alias.target_id)
+                & (self.model.target_type == permission_alias.target_type)
+                & (required_permission == permission_alias.permission))\
             .filter(permission_alias.role_id.in_([role.id for role in roles] + [settings.EVERYONE_ROLE_ID]) | (self.model.target_type == TargetTypeEnum.entity))\
             .group_by(self.model.id)  # We can't use DISTINCT with entries
 
@@ -138,33 +135,44 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
                 alert = alert_crud.get(db_session, entry.target_id)
                 if alert:
                     alertgroup_id = alert.alertgroup_id
+            entity_values = []
+            entity_types = []
+            entity_cache = {}
+            # Gather entities and their types
             for entity_type in entities:
                 for entity in entities[entity_type]:
-                    entity_crud.link_entity_by_value(
-                        db_session,
-                        entity_value=entity,
-                        target_type=TargetTypeEnum.entry,
-                        target_id=entry.id,
-                        entity_type=entity_type,
-                        audit_logger=audit_logger,
-                    )
-                    entity_crud.link_entity_by_value(
-                        db_session,
-                        entity_value=entity,
-                        target_type=entry.target_type,
-                        target_id=entry.target_id,
-                        entity_type=entity_type,
-                        audit_logger=audit_logger,
-                    )
-                    if alertgroup_id:
-                        entity_crud.link_entity_by_value(
-                            db_session,
-                            entity_value=entity,
-                            target_type=TargetTypeEnum.alertgroup,
-                            target_id=alertgroup_id,
-                            entity_type=entity_type,
-                            audit_logger=audit_logger,
-                        )
+                    entity_values.append(entity)
+                    entity_types.append(entity_type)
+            # Link them to the entry and its parent in bulk
+            entity_crud.link_entities_by_value(
+                db_session,
+                entity_values=entity_values,
+                target_type=TargetTypeEnum.entry,
+                target_id=entry.id,
+                entity_types=entity_types,
+                audit_logger=audit_logger,
+                entity_cache=entity_cache
+            )
+            entity_crud.link_entities_by_value(
+                db_session,
+                entity_values=entity_values,
+                target_type=entry.target_type,
+                target_id=entry.target_id,
+                entity_types=entity_types,
+                audit_logger=audit_logger,
+                entity_cache=entity_cache
+            )
+            # If attached to an alert, also link to alertgroup
+            if alertgroup_id:
+                entity_crud.link_entities_by_value(
+                    db_session,
+                    entity_values=entity_values,
+                    target_type=TargetTypeEnum.alertgroup,
+                    target_id=alertgroup_id,
+                    entity_types=entity_types,
+                    audit_logger=audit_logger,
+                    entity_cache=entity_cache
+                )
         return entry
 
 

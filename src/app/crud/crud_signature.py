@@ -2,10 +2,11 @@ from typing import get_args
 from sqlalchemy import and_, func
 from sqlalchemy.orm import Session
 
+from app import crud
 from app.core.config import settings
 from app.crud.base import CRUDBase
 from app.enums import TargetTypeEnum, PermissionEnum
-from app.models import Event, Signature, Role, Permission, Link, User
+from app.models import Event, Signature, Role, Permission, Link, ThreatModelItem
 from app.schemas.signature import SignatureCreate, SignatureUpdate
 
 
@@ -17,6 +18,7 @@ class CRUDSignature(CRUDBase[Signature, SignatureCreate, SignatureUpdate]):
         query = self._json_filter(query, filter_dict, "signature_group", "signature_group", "data")
         query = self._tag_or_source_filter(query, filter_dict, TargetTypeEnum.tag)
         query = self._tag_or_source_filter(query, filter_dict, TargetTypeEnum.source)
+        query = self._threat_model_name_filter(query, filter_dict)
 
         return super().filter(query, filter_dict)
 
@@ -52,7 +54,7 @@ class CRUDSignature(CRUDBase[Signature, SignatureCreate, SignatureUpdate]):
             TargetTypeEnum.dispatch: [],
             TargetTypeEnum.product: [],
             TargetTypeEnum.incident: [],
-            TargetTypeEnum.signature: []
+            TargetTypeEnum.signature: [],
         }
 
         for signature_link in signature_links:
@@ -104,6 +106,25 @@ class CRUDSignature(CRUDBase[Signature, SignatureCreate, SignatureUpdate]):
         # Now get all the IDS
         linked_events = db_session.query(Event.owner, func.count(Event.owner)).filter(Event.id.in_(event_ids)).group_by(Event.owner).all()
         return [{"owner": x[0], "count": x[1]} for x in linked_events]
+
+    def get_threat_model_items(
+        self,
+        db_session: Session,
+        id: int,
+        roles: list[Role] = None
+    ):
+        signature = self.get(db_session, id)
+        if not signature:
+            return None
+        if roles is None or crud.permission.roles_have_admin(db_session, roles):
+            query = db_session.query(ThreatModelItem)
+        else:
+            query = crud.threat_model_item.query_objects_with_roles(db_session, roles)
+        query = query.join(Link, (Link.v0_id == id)
+                        & (Link.v0_type == TargetTypeEnum.signature)
+                        & (Link.v1_id == ThreatModelItem.id)
+                        & (Link.v1_type == TargetTypeEnum.threat_model_item))
+        return query.all()
 
     # def get_alert_stats(self, db_session=None, signature_id=None):
     #     signature_links = db_session.query(Link.v0_id, Link.v0_type, Link.v1_id, Link.v1_type).filter(or_(and_(Link.v1_id == signature_id, Link.v1_type == TargetTypeEnum.signature, Link.v0_type == TargetTypeEnum.alert), and_(Link.v0_id == signature_id, Link.v0_type == TargetTypeEnum.signature, Link.v1_type == TargetTypeEnum.alert))).all()

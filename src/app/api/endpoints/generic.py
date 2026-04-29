@@ -1,6 +1,6 @@
 import os
 
-from pydantic import BaseModel, ValidationError, create_model, Field
+from pydantic import BaseModel, create_model, Field, ValidationError
 from pydantic.json_schema import SkipJsonSchema
 from typing import Any, Annotated
 from fastapi import BackgroundTasks, Body, Depends, HTTPException, APIRouter, Path, Query
@@ -190,7 +190,7 @@ def generic_put(
     update_schema - The update schema for the object (e.g. EventUpdate)
     pretty_name (optional) - A user-friendly name for this type of object (defaults to the string of the target type)
     admin_only (optional) - Set the API endpoint for admin users only (defaults to False)
-    many (optional) - Create a many API endpoint as well to all for updating multiple objects at once
+    many (optional) - Create a many API endpoint as well for updating multiple objects at once
     """
     pretty_name = gen_pretty_name(pretty_name, target_type)
     description = f"Update one or more fields of {'an' if pretty_name.lower()[0] in 'aeiou' else 'a'} {pretty_name}"
@@ -249,8 +249,12 @@ def generic_put(
         _obj = crud_type.get(db, id)
         if not _obj:
             raise HTTPException(404, f"{pretty_name.capitalize()} not found")
+
+        # Perform validation on the state of the new object
         try:
-            response_schema.model_validate(_obj)
+            validation_dict = response_schema.model_validate(_obj).model_dump()
+            validation_dict.update(obj.model_dump(exclude_unset=True))
+            response_schema.model_validate(validation_dict)
         except ValidationError as e:
             raise HTTPException(422, f"Validation error: {e}")
 
@@ -281,6 +285,8 @@ def generic_put(
                     audit_logger=audit_logger
                 )
         crud.notification.send_update_notifications(db, updated, current_user, extra_data=obj.model_dump(exclude_unset=True))
+
+        print("HERE", updated)
         return updated
 
 
@@ -974,6 +980,7 @@ def generic_export(
         audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
         id: Annotated[int, Query(...)],
         format: Annotated[ExportFormatEnum, Query(...)] = ExportFormatEnum.html,
+        roles: list[models.Role] = Depends(deps.get_current_roles),
         background_tasks: BackgroundTasks
     ) -> Any:
         # get original object
@@ -981,7 +988,7 @@ def generic_export(
         if not _obj:
             raise HTTPException(404, f"{pretty_name} {id} not found")
 
-        tmp_file, media_type = export_object(db, _obj, target_type, format, pretty_name)
+        tmp_file, media_type = export_object(db, _obj, target_type, format, pretty_name, roles)
         # add a background task to remove the temporary file after it has been sent
         background_tasks.add_task(remove_file, tmp_file)
         return FileResponse(
@@ -1145,3 +1152,83 @@ def generic_user_links(
 
         db.refresh(item)
         return item
+
+
+def generic_get_signatures(
+    router: APIRouter,
+    crud_type: CRUDBase,
+    target_type: TargetTypeEnum,
+    pretty_name: str | None = None,
+):
+    """
+    Creates a GET endpoint on a router to get any associated signatures for a specific target type
+
+    :param router: The router to add the route to
+    :type router: APIRouter
+    :param crud_type: They crud method to query the database with
+    :type crud_type: CRUDBase
+    :param target_type: The TargetTypeEnum object that refers to these objects (or None if there is no TargetTypeEnum entry)
+    :type target_type: TargetTypeEnum
+    :param pretty_name: A user-friendly name for this type of object (defaults to the string of the target type)
+    :type pretty_name: str | None
+    """
+    pretty_name = gen_pretty_name(pretty_name, target_type)
+
+    @router.get(
+        "/{id}/signatures", response_model=list[schemas.Signature],
+        summary=f"Get signatures for {pretty_name}",
+        description=f"Get all the signatures associated with a {pretty_name}",
+        dependencies=[Depends(deps.PermissionCheckId(target_type, PermissionEnum.read))]
+    )
+    def get_signatures(
+        *,
+        roles: list[models.Role] = Depends(deps.get_current_roles),
+        db: Session = Depends(deps.get_db),
+        id: Annotated[int, Path(...)],
+    ):
+        _signatures = crud_type.get_signatures_for(db, id, roles)
+        if _signatures is None:
+            raise HTTPException(404, f"{pretty_name} {id} not found")
+
+        return _signatures
+
+
+def generic_get_threat_model_items(
+    router: APIRouter,
+    crud_type: CRUDBase,
+    target_type: TargetTypeEnum,
+    pretty_name: str | None = None,
+):
+    """
+    Creates a GET endpoint on a router to get any associated threat model items for a specific target type
+
+    :param router: The router to add the route to
+    :type router: APIRouter
+    :param crud_type: They crud method to query the database with
+    :type crud_type: CRUDBase
+    :param target_type: The TargetTypeEnum object that refers to these objects (or None if there is no TargetTypeEnum entry)
+    :type target_type: TargetTypeEnum
+    :param pretty_name: A user-friendly name for this type of object (defaults to the string of the target type)
+    :type pretty_name: str | None
+    """
+    pretty_name = gen_pretty_name(pretty_name, target_type)
+
+    @router.get(
+        "/{id}/threat_model_item", response_model=list[schemas.ThreatModelItem],
+        summary=f"Get threat model items for {pretty_name}",
+        description=f"Get all the threat model items associated with a {pretty_name}",
+        dependencies=[Depends(deps.PermissionCheckId(target_type, PermissionEnum.read))]
+    )
+    def get_threat_model_items(
+        *,
+        roles: list[models.Role] = Depends(deps.get_current_roles),
+        db: Session = Depends(deps.get_db),
+        id: Annotated[int, Path(...)],
+    ):
+        if TargetTypeEnum.threat_model_item in deps.PermissionCheck.type_allow_whitelist:
+            roles = None  # If threat model items are open, don't check roles
+        _tm_items = crud_type.get_threat_model_items(db, id, roles)
+        if _tm_items is None:
+            raise HTTPException(404, f"{pretty_name} {id} not found")
+
+        return _tm_items

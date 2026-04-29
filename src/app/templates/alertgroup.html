@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    {% set subject = alertgroup.full_alert_data[0]["AlertName"] %}
+    <title>
+        SCOT Alertgroup Export {{ alertgroup.id }} : {{ subject }}
+    </title>
+{% endblock %}
+
+{% block export_header %}
+    {% include 'alertgroup_header.html' %}
+{% endblock %}
+
+{% block promoted_items %}
+        <h2>Alerts</h2>
+            <table class="alert_table">
+                <tr>
+                    {% for col in alertgroup.column_names %}
+                    <th>{{ col }}</th>
+                    {% endfor %}
+                </tr>
+                {% for alert in alertgroup.alert_data_flaired %}
+                <tr>
+                    {% for col in alertgroup.column_names %}
+                    <td>
+                        {% autoescape false %}
+                        {% set cell_array = alert[col] %}
+                        {{ cell_array }}<br>
+                        {% endautoescape %}
+                    </td>
+                    {% endfor %}
+                </tr> 
+                {% endfor %}
+            </table>
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

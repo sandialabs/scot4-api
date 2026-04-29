@@ -1,8 +1,6 @@
-from datetime import datetime
-
 from sqlalchemy import JSON, Column, Integer, Text
 
-from app.db.base_class import Base
+from app.db.base_class import Base, utc_now
 from app.models.mixins import UTCDateTime
 
 
@@ -11,7 +9,7 @@ class Audit(Base):
 
     id = Column("audit_id", Integer, primary_key=True)
     when_date = Column(
-        "when_date", UTCDateTime, nullable=False, default=datetime.utcnow
+        "when_date", UTCDateTime, nullable=False, default=utc_now
     )
     username = Column("username", Text)
     what = Column("what", Text, nullable=False)

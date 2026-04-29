@@ -55,7 +55,7 @@ def login_password(
         secure=secure_cookie,
         expires=int(access_token_expires.total_seconds()),
     )  # In production make sure you add secure=True
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer"}  # nosec B105
 
 
 @router.post("/login/local", summary="Local login", response_model=schemas.Token)
@@ -148,7 +148,7 @@ def login_token(
         secure=secure_cookie,
         expires=int(access_token_expires.total_seconds()),
     )  # In production make sure you add secure=True
-    return {"access_token": access_token, "token_type": "bearer"}
+    return {"access_token": access_token, "token_type": "bearer"}  # nosec B105
 
 
 @router.get("/login/aad-callback", summary="Callback endpoing for AAD")

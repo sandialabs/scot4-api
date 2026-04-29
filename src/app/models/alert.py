@@ -62,9 +62,6 @@ class AlertData(Base):
         ForeignKey("alertgroup_schema_keys.schema_key_id"),
         primary_key=True,
     )
-    alert_id = Column(
-        "alert_id", Integer, ForeignKey("alerts.alert_id"), primary_key=True
-    )
     # Row/column relationships
     schema_column = relationship(
         "AlertGroupSchemaKeys",

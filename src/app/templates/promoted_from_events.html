@@ -1,0 +1,15 @@
+<h2>Promoted from Events</h2>
+<table class="alert_table">
+        <tr>
+    <th>Event Id</th>
+    <th>Subject</th>
+    <th>Created</th>
+</tr>
+{% for e in events %}
+<tr>
+    <td>{{ e.id }}</td>
+    <td>{{ e.subject }}</td>
+    <td>{{ e.created }}</td>
+</tr>
+{% endfor %}
+</table>

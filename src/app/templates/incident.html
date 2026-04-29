@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>
+        SCOT Incident Export {{ incident.id }} : {{ incident.subject }}
+    </title>
+{% endblock %}
+
+
+{% block export_header %}
+    {% include 'incident_header.html' %}
+{% endblock %}
+
+{% block promoted_items %}
+        {% if events %}
+        <h2>Promoted from Events</h2>
+	    <table class="alert_table">
+                <tr>
+		    <th>Event Id</th>
+		    <th>Subject</th>
+		    <th>Created</th>
+		</tr>
+		{% for e in events %}
+		<tr>
+		    <td>{{ e.id }}</td>
+		    <td>{{ e.subject }}</td>
+		    <td>{{ e.created }}</td>
+		</tr>
+		{% endfor %}
+	    </table>
+        {% endif %}
+{% endblock %}
+
+{% block journal %}
+    {% include 'journal.html' %}
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

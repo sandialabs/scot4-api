@@ -148,3 +148,10 @@ class PopularityMetricEnum(enum.Enum):
 class UserLinkEnum(enum.Enum):
     favorite = "favorite"
     subscription = "subscription"
+
+
+class ThreatModelName(enum.Enum):
+    attack = "MITRE ATTACK"
+    # kill_chain = "Kill Chain"
+    # diamond = "Diamond"
+    # unified = "Unified Kill Chain"

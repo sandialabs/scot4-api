@@ -27,7 +27,8 @@ else:
         pool_size=settings.DB_CONNECTION_POOL_SIZE,
         pool_pre_ping=True,
         pool_recycle=3600,
-        max_overflow=settings.DB_CONNECTION_POOL_OVERFLOW
+        max_overflow=settings.DB_CONNECTION_POOL_OVERFLOW,
+        pool_timeout=settings.DB_CONNECTION_POOL_TIMEOUT
     )
 # scoped_session
 # db_session = scoped_session(
@@ -35,6 +36,7 @@ else:
 # )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
+# SessionLocal = sessionmaker(autocommit=False, bind=engine)
 
 
 @event.listens_for(SessionLocal, "do_orm_execute")

@@ -12,7 +12,6 @@ from app.db.base_class import Base
 association_table = Table(
     "entity_class_entity_association",
     Base.metadata,
-
     Column("entity_id", ForeignKey("entities.entity_id")),
     Column("entity_class_id", ForeignKey("entity_classes.entity_class_id")),
 )

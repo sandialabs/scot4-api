@@ -1,0 +1,59 @@
+<h1>SCOT Guide {{ guide.id }} : {{ guide.subject }}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ guide.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ guide.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ guide.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ guide.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ guide.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ guide.view_count }} / {{ guide.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in guide.tags %}
+                    {{ t.value }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in guide.sources %}
+                    {{ t.value }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>

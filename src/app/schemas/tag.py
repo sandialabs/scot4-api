@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Annotated
 from pydantic import BaseModel, Field, field_validator, ConfigDict
 from pydantic.json_schema import SkipJsonSchema
@@ -11,10 +10,11 @@ class TagBase(BaseModel):
     name: Annotated[str, Field(...)]
     description: Annotated[str | None, Field(...)] = None
 
-    # Tag names are always lowercase
+    # Source names are always lowercase removes and leading or
+    # trailing whitespace and replaces any spaces with underscores
     @field_validator("name")
-    def ensure_lowercase(cls, v: str):
-        return v.lower()
+    def check_name(cls, v: str):
+        return v.lower().strip().replace(" ", "_")
 
 
 class TagCreate(TagBase):

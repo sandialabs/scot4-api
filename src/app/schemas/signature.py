@@ -1,4 +1,3 @@
-from datetime import datetime
 from typing import Any, Annotated
 from pydantic import BaseModel, ConfigDict, Field, Json
 from pydantic.json_schema import SkipJsonSchema
@@ -35,6 +34,8 @@ class SignatureBase(BaseModel):
 
 class SignatureCreate(SignatureBase):
     owner: Annotated[str, Field(...)] = settings.FIRST_SUPERUSER_USERNAME
+    status: Annotated[str | None, Field(...)] = "disabled"
+    data: Annotated[dict | list[dict] | SkipJsonSchema[Json] | None, Field(..., examples=sigdata_examples)] = {}
 
 
 class SignatureUpdate(SignatureBase):

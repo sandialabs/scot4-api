@@ -8,6 +8,8 @@ from app.enums import GuideStatusEnum, TlpEnum
 from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
 from app.schemas.user_links import FavoriteLink
+from app.schemas.source import Source
+from app.schemas.tag import Tag
 
 
 class GuideBase(BaseModel):
@@ -32,6 +34,8 @@ class GuideUpdate(GuideBase):
 # pretty
 class Guide(PopularityVoted, FavoriteLink, GuideBase, ResultBase):
     entry_count: Annotated[int, Field(...)]
+    tags: Annotated[list[Tag], Field(...)] = []
+    sources: Annotated[list[Source], Field(...)] = []
 
     model_config = ConfigDict(from_attributes=True)
 

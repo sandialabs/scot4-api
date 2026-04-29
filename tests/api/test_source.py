@@ -10,6 +10,8 @@ from app.core.config import settings
 from tests.utils.alert import create_random_alert
 from tests.utils.event import create_random_event
 from tests.utils.source import create_random_source
+from tests.utils.intel import create_random_intel
+from tests.utils.guide import create_random_guide
 
 
 def test_get_source(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -28,16 +30,26 @@ def test_get_source(client: TestClient, normal_user_token_headers: dict, db: Ses
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] == source.id
+    assert r.json() is not None
+    assert r.json()["id"] == source.id
 
 
-def test_create_source(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_create_source(client: TestClient, normal_user_token_headers: dict, faker: Faker) -> None:
     data = {
-        "name": f"{faker.unique.word()}_{faker.pyint()}".lower(),
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
         "description": faker.sentence(),
     }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/source",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()["name"] == data["name"].lower().strip().replace(" ", "_")
+
+    data["name"] = f"{faker.unique.word()}_{faker.pyint()}".lower()
 
     r = client.post(
         f"{settings.API_V1_STR}/source",
@@ -53,14 +65,32 @@ def test_create_source(client: TestClient, normal_user_token_headers: dict, db: 
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] >= 1
-    assert source_data["name"] == data["name"].lower()
-    assert source_data["description"] == data["description"]
+    assert r.json() is not None
+    assert r.json()["id"] >= 1
+    assert r.json()["name"] == data["name"].lower()
+    assert r.json()["description"] == data["description"]
 
 
 def test_create_sources(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+    data = [{
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+        "description": faker.sentence(),
+    },{
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+        "description": faker.sentence(),
+    }]
+
+    r = client.post(
+        f"{settings.API_V1_STR}/source/many",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["name"] == data[0]["name"].lower().strip().replace(" ", "_")
+
     data = [{
         "name": f"{faker.unique.word()}_{faker.pyint()}".lower(),
         "description": faker.sentence(),
@@ -83,16 +113,15 @@ def test_create_sources(client: TestClient, normal_user_token_headers: dict, db:
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert len(source_data) == 2
-    assert source_data[0]["id"] >= 1
-    assert source_data[0]["name"] == data[0]["name"].lower()
-    assert source_data[0]["description"] == data[0]["description"]
-    assert source_data[1]["id"] >= 1
-    assert source_data[1]["name"] == data[1]["name"].lower()
-    assert source_data[1]["description"] == data[1]["description"]
-    assert source_data[0]["id"] < source_data[1]["id"]
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] >= 1
+    assert r.json()[0]["name"] == data[0]["name"].lower()
+    assert r.json()[0]["description"] == data[0]["description"]
+    assert r.json()[1]["id"] >= 1
+    assert r.json()[1]["name"] == data[1]["name"].lower()
+    assert r.json()[1]["description"] == data[1]["description"]
+    assert r.json()[0]["id"] < r.json()[1]["id"]
 
 
 def test_update_source(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -124,11 +153,23 @@ def test_update_source(client: TestClient, normal_user_token_headers: dict, db: 
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] == source.id
-    assert source_data["description"] == data["description"]
-    assert source_data["description"] != source.description
+    assert r.json() is not None
+    assert r.json()["id"] == source.id
+    assert r.json()["description"] == data["description"]
+    assert r.json()["description"] != source.description
+
+    data = {
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/source/{source.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()["name"] == data["name"].lower().strip().replace(" ", "_") 
 
 
 def test_update_sources(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -161,12 +202,24 @@ def test_update_sources(client: TestClient, normal_user_token_headers: dict, db:
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data[0]["id"] == source1.id
-    assert source_data[0]["description"] == data["description"]
-    assert source_data[1]["id"] == source2.id
-    assert source_data[1]["description"] == data["description"]
+    assert r.json() is not None
+    assert r.json()[0]["id"] == source1.id
+    assert r.json()[0]["description"] == data["description"]
+    assert r.json()[1]["id"] == source2.id
+    assert r.json()[1]["description"] == data["description"]
+
+    data = {
+        "name": f" {faker.unique.word()} {faker.pyint()} ",
+    }
+
+    r = client.put(
+        f"{settings.API_V1_STR}/source/many/?ids={source1.id}",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json()[0]["name"] == data["name"].lower().strip().replace(" ", "_")
 
 
 def test_delete_source(client: TestClient, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -185,9 +238,8 @@ def test_delete_source(client: TestClient, superuser_token_headers: dict, db: Se
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] == source.id
+    assert r.json() is not None
+    assert r.json()["id"] == source.id
 
     r = client.get(
         f"{settings.API_V1_STR}/source/{source.id}",
@@ -214,11 +266,10 @@ def test_delete_sources(client: TestClient, superuser_token_headers: dict, db: S
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert len(source_data) == 2
-    assert source_data[0]["id"] == source1.id
-    assert source_data[1]["id"] == source2.id
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["id"] == source1.id
+    assert r.json()[1]["id"] == source2.id
 
     r = client.get(
         f"{settings.API_V1_STR}/source/{source1.id}",
@@ -258,9 +309,8 @@ def test_undelete_source(client: TestClient, superuser_token_headers: dict, db: 
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] == source.id
+    assert r.json() is not None
+    assert r.json()["id"] == source.id
 
 
 def test_search_source(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -377,7 +427,7 @@ def test_add_source(client: TestClient, superuser_token_headers: dict, normal_us
     data = {
         "target_type": TargetTypeEnum.alert.value,
         "target_id": alert.id,
-        "source_name": faker.word().lower(),
+        "source_name": f"{faker.word()}_{faker.pyint()}",
         "source_description": faker.sentence()
     }
 
@@ -403,10 +453,27 @@ def test_add_source(client: TestClient, superuser_token_headers: dict, normal_us
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] >= 0
-    assert source_data["name"] == data["source_name"]
+    assert r.json() is not None
+    assert r.json()["id"] >= 0
+    assert r.json()["name"] == data["source_name"]
+
+    data = {
+        "target_type": TargetTypeEnum.alert.value,
+        "target_id": alert.id,
+        "source_name": f" {faker.word()} {faker.pyint()} ",
+        "source_description": faker.sentence()
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/source/source_by_name",
+        headers=superuser_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert r.json()["id"] >= 0
+    assert r.json()["name"] == data["source_name"].lower().strip().replace(" ", "_")
 
 
 def test_apply_source(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -448,9 +515,8 @@ def test_apply_source(client: TestClient, superuser_token_headers: dict, normal_
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] == source.id
+    assert r.json() is not None
+    assert r.json()["id"] == source.id
 
 
 def test_remove_source(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -492,9 +558,8 @@ def test_remove_source(client: TestClient, superuser_token_headers: dict, normal
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["id"] == source.id
+    assert r.json() is not None
+    assert r.json()["id"] == source.id
 
     data = {
         "target_type": TargetTypeEnum.alert.value,
@@ -520,10 +585,9 @@ def test_source_appearances(client: TestClient, normal_user_token_headers: dict,
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["totalCount"] == 0
-    assert source_data["resultCount"] == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/source/{source.id}/appearance",
@@ -531,10 +595,9 @@ def test_source_appearances(client: TestClient, normal_user_token_headers: dict,
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["totalCount"] == 0
-    assert source_data["resultCount"] == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
 
     r = client.get(
         f"{settings.API_V1_STR}/source/{source.id}/appearance",
@@ -542,10 +605,9 @@ def test_source_appearances(client: TestClient, normal_user_token_headers: dict,
     )
 
     assert r.status_code == 200
-    source_data = r.json()
-    assert source_data is not None
-    assert source_data["totalCount"] == 0
-    assert source_data["resultCount"] == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
 
 
 def test_source_replace(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -713,4 +775,181 @@ def test_source_target_appearance(client: TestClient, normal_user_token_headers:
         headers=normal_user_token_headers
     )
 
+    assert r.status_code == 404
+
+
+def test_source_target_types(client: TestClient, normal_user_token_headers: dict, superuser_token_headers: dict, db: Session, faker: Faker) -> None:
+    source1 = create_random_source(db, faker)
+    source2 = create_random_source(db, faker)
+    source3 = create_random_source(db, faker)
+    
+    event = create_random_event(db, faker, create_extras=False)
+    intel = create_random_intel(db, faker, create_extras=False)
+    guide1 = create_random_guide(db, faker, create_extras=False)
+    guide2 = create_random_guide(db, faker, create_extras=False)
+    
+    # apply sources to targets
+    r = client.post(
+        f"{settings.API_V1_STR}/source/{source1.id}/assign",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.event.value,
+            "target_id": event.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/source/{source2.id}/assign",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.intel.value,
+            "target_id": intel.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/source/{source3.id}/assign",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.guide.value,
+            "target_id": guide1.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.post(
+        f"{settings.API_V1_STR}/source/{source3.id}/assign",
+        headers=superuser_token_headers,
+        json={
+            "target_type": TargetTypeEnum.guide.value,
+            "target_id": guide2.id
+        }
+    )
+    assert r.status_code == 200
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types/",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "event" in r.json().keys()
+    assert r.json()["event"] >= 1
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] >= 1
+    assert "guide" in r.json().keys()
+    assert r.json()["guide"] >= 2
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?id={source1.id}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?name={source1.name}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?id={source2.id}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?name={source2.name}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?id={source3.id}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "guide" in r.json().keys()
+    assert r.json()["guide"] == 2
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?name={source3.name}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "guide" in r.json().keys()
+    assert r.json()["guide"] == 2
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?id=[{source1.id},{source2.id}]",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        f"{settings.API_V1_STR}/source/target_types?name=[{source1.name},{source2.name}]",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        settings.API_V1_STR + "/source/target_types?id={" + f"{source1.id}" + "," + f"{source2.id}" + "}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        settings.API_V1_STR + "/source/target_types?name={" + f"{source1.name}" + "," + f"{source2.name}" + "}",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 200
+    assert "intel" in r.json().keys()
+    assert r.json()["intel"] == 1
+    assert "event" in r.json().keys()
+    assert r.json()["event"] == 1
+
+    r = client.get(
+        settings.API_V1_STR + "/source/target_types?id=-1",
+        headers=normal_user_token_headers
+    )
+    
+    assert r.status_code == 404
+
+    r = client.get(
+        settings.API_V1_STR + "/source/target_types?name=-1",
+        headers=normal_user_token_headers
+    )
+    
     assert r.status_code == 404

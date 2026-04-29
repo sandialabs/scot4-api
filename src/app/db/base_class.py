@@ -1,11 +1,15 @@
 import enum
 
 from typing import Any
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import inspect
 from sqlalchemy.orm import as_declarative, declared_attr
 
 from app.enums import TargetTypeEnum
+
+
+def utc_now():
+    return datetime.now(timezone.utc)
 
 
 @as_declarative()

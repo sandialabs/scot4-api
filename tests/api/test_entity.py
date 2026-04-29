@@ -1,5 +1,6 @@
 import random
 
+from dateutil import parser
 from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -29,9 +30,8 @@ def test_get_entity(client: TestClient, normal_user_token_headers: dict, faker: 
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data["entity_count"] == entity.entity_count
-    assert entity_data["status"] == entity.status.value
+    assert r.json()["entity_count"] == entity.entity_count
+    assert r.json()["status"] == entity.status.value
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/0",
@@ -55,11 +55,10 @@ def test_update_entities(client: TestClient, normal_user_token_headers: dict, fa
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data[0]["id"] == entity1.id
-    assert entity_data[0]["value"] == data["value"]
-    assert entity_data[1]["id"] == entity2.id
-    assert entity_data[1]["value"] == data["value"]
+    assert r.json()[0]["id"] == entity1.id
+    assert r.json()[0]["value"] == data["value"]
+    assert r.json()[1]["id"] == entity2.id
+    assert r.json()[1]["value"] == data["value"]
 
     r = client.put(
         f"{settings.API_V1_STR}/entity/many/?ids={entity1.id}&ids={entity2.id}",
@@ -90,9 +89,8 @@ def test_update_entity(client: TestClient, normal_user_token_headers: dict, fake
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data["id"] == entity.id
-    assert entity_data["value"] == data["value"]
+    assert r.json()["id"] == entity.id
+    assert r.json()["value"] == data["value"]
 
     r = client.put(
         f"{settings.API_V1_STR}/entity/{entity.id}",
@@ -191,9 +189,8 @@ def test_undelete_entity(client: TestClient, superuser_token_headers: dict, norm
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["id"] == entity.id
+    assert r.json() is not None
+    assert r.json()["id"] == entity.id
 
 
 def test_entries_entity(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
@@ -207,11 +204,10 @@ def test_entries_entity(client: TestClient, normal_user_token_headers: dict, fak
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert entry_data["resultCount"] == 1
-    assert entry_data["totalCount"] == 1
-    assert entry_data["result"][0]["id"] == entry.id
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 1
+    assert r.json()["totalCount"] == 1
+    assert r.json()["result"][0]["id"] == entry.id
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/-1/entry",
@@ -219,10 +215,9 @@ def test_entries_entity(client: TestClient, normal_user_token_headers: dict, fak
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert entry_data["resultCount"] == 0
-    assert entry_data["totalCount"] == 0
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 0
+    assert r.json()["totalCount"] == 0
 
 
 def test_tag_untag_entity(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
@@ -236,9 +231,8 @@ def test_tag_untag_entity(client: TestClient, normal_user_token_headers: dict, f
     )
 
     assert r.status_code == 200
-    tag_entity = r.json()
-    assert tag_entity is not None
-    assert any([i for i in tag_entity["tags"] if i["id"] == tag1.id])
+    assert r.json() is not None
+    assert any([i for i in r.json()["tags"] if i["id"] == tag1.id])
 
     tag2 = create_random_tag(db, faker)
     r = client.post(
@@ -248,9 +242,8 @@ def test_tag_untag_entity(client: TestClient, normal_user_token_headers: dict, f
     )
 
     assert r.status_code == 200
-    tag_entity = r.json()
-    assert tag_entity is not None
-    assert any([i for i in tag_entity["tags"] if i["id"] == tag2.id])
+    assert r.json() is not None
+    assert any([i for i in r.json()["tags"] if i["id"] == tag2.id])
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/-1/tag",
@@ -275,9 +268,8 @@ def test_tag_untag_entity(client: TestClient, normal_user_token_headers: dict, f
     )
 
     assert r.status_code == 200
-    tag_entity = r.json()
-    assert tag_entity is not None
-    assert any([i for i in tag_entity["tags"] if i["id"] != tag1.id])
+    assert r.json() is not None
+    assert any([i for i in r.json()["tags"] if i["id"] != tag1.id])
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/{entity.id}/untag",
@@ -286,9 +278,8 @@ def test_tag_untag_entity(client: TestClient, normal_user_token_headers: dict, f
     )
 
     assert r.status_code == 200
-    tag_entity = r.json()
-    assert tag_entity is not None
-    assert len(tag_entity["tags"]) == 0
+    assert r.json() is not None
+    assert len(r.json()["tags"]) == 0
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/-1/untag",
@@ -318,9 +309,8 @@ def test_source_add_remove_entity(client: TestClient, normal_user_token_headers:
     )
 
     assert r.status_code == 200
-    source_entity = r.json()
-    assert source_entity is not None
-    assert any([i for i in source_entity["sources"] if i["id"] == source1.id])
+    assert r.json() is not None
+    assert any([i for i in r.json()["sources"] if i["id"] == source1.id])
 
     source2 = create_random_source(db, faker)
 
@@ -331,9 +321,8 @@ def test_source_add_remove_entity(client: TestClient, normal_user_token_headers:
     )
 
     assert r.status_code == 200
-    source_entity = r.json()
-    assert source_entity is not None
-    assert any([i for i in source_entity["sources"] if i["id"] == source2.id])
+    assert r.json() is not None
+    assert any([i for i in r.json()["sources"] if i["id"] == source2.id])
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/-1/add-source",
@@ -358,9 +347,8 @@ def test_source_add_remove_entity(client: TestClient, normal_user_token_headers:
     )
 
     assert r.status_code == 200
-    source_entity = r.json()
-    assert source_entity is not None
-    assert any([i for i in source_entity["sources"] if i["id"] != source1.id])
+    assert r.json() is not None
+    assert any([i for i in r.json()["sources"] if i["id"] != source1.id])
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/{entity.id}/remove-source",
@@ -369,9 +357,8 @@ def test_source_add_remove_entity(client: TestClient, normal_user_token_headers:
     )
 
     assert r.status_code == 200
-    source_entity = r.json()
-    assert source_entity is not None
-    assert len(source_entity["sources"]) == 0
+    assert r.json() is not None
+    assert len(r.json()["sources"]) == 0
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/-1/remove-source",
@@ -399,23 +386,21 @@ def test_entities_entity(client: TestClient, normal_user_token_headers: dict, fa
         headers=normal_user_token_headers
     )
 
-    assert 200 <= r.status_code < 300
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["resultCount"] == 1
-    assert entity_data["totalCount"] == 1
-    assert entity_data["result"][0]["id"] == entity.id
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 1
+    assert r.json()["totalCount"] == 1
+    assert r.json()["result"][0]["id"] == entity.id
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/-1/entity",
         headers=normal_user_token_headers
     )
 
-    assert 200 <= r.status_code < 300
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["resultCount"] == 0
-    assert entity_data["totalCount"] == 0
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert r.json()["resultCount"] == 0
+    assert r.json()["totalCount"] == 0
 
 
 def test_history_entity(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -439,9 +424,8 @@ def test_history_entity(client: TestClient, superuser_token_headers: dict, norma
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert any(i["audit_data"]["data_ver"] == data["data_ver"] for i in entity_data)
-    assert entity_data[0]["audit_data"]["data_ver"] == data["data_ver"]
+    assert any(i["audit_data"]["data_ver"] == data["data_ver"] for i in r.json())
+    assert r.json()[0]["audit_data"]["data_ver"] == data["data_ver"]
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/-1/history",
@@ -449,8 +433,7 @@ def test_history_entity(client: TestClient, superuser_token_headers: dict, norma
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data == []
+    assert r.json() == []
 
 
 def test_search_entity(client: TestClient, superuser_token_headers: dict, faker: Faker, db: Session) -> None:
@@ -656,9 +639,8 @@ def test_create_entity(client: TestClient, normal_user_token_headers: dict, fake
     )
 
     assert r.status_code == 200
-    created_entity = r.json()
-    assert created_entity["value"] == data["entity"]["value"]
-    assert crud.entity.get(db, created_entity["id"]) is not None
+    assert r.json()["value"] == data["entity"]["value"]
+    assert crud.entity.get(db, r.json()["id"]) is not None
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/",
@@ -690,12 +672,11 @@ def test_create_entities(client: TestClient, normal_user_token_headers: dict, fa
     )
 
     assert r.status_code == 200
-    created_entity = r.json()
-    assert created_entity is not None
-    assert len(created_entity) == 2
-    assert created_entity[0]["value"] == data["entities"][0]["value"]
-    assert created_entity[1]["value"] == data["entities"][1]["value"]
-    assert created_entity[0]["id"] < created_entity[1]["id"]
+    assert r.json() is not None
+    assert len(r.json()) == 2
+    assert r.json()[0]["value"] == data["entities"][0]["value"]
+    assert r.json()[1]["value"] == data["entities"][1]["value"]
+    assert r.json()[0]["id"] < r.json()[1]["id"]
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/many/",
@@ -715,10 +696,9 @@ def test_appearances_for_flair_entity(client: TestClient, normal_user_token_head
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert "alertgroup_appearances" not in entry_data.keys()
-    assert all([len(a) == 0 for a in entry_data.values()])
+    assert r.json() is not None
+    assert "alertgroup_appearances" not in r.json().keys()
+    assert all([len(a) == 0 for a in r.json().values()])
 
     entity = create_random_entity(db, faker, pivot=False)
     alerts = []
@@ -739,11 +719,10 @@ def test_appearances_for_flair_entity(client: TestClient, normal_user_token_head
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert "alert_appearances" in entry_data.keys()
-    assert len(entry_data["alert_appearances"]) == 10
-    assert entry_data["alert_appearances"][0]["id"] == alerts[-1].id
+    assert r.json() is not None
+    assert "alert_appearances" in r.json().keys()
+    assert len(r.json()["alert_appearances"]) == 10
+    assert r.json()["alert_appearances"][0]["id"] == alerts[-1].id
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/{entity.id}/flair_appearances?skip=10",
@@ -751,11 +730,10 @@ def test_appearances_for_flair_entity(client: TestClient, normal_user_token_head
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert "alert_appearances" in entry_data.keys()
-    assert len(entry_data["alert_appearances"]) == 1
-    assert entry_data["alert_appearances"][0]["id"] == alerts[0].id
+    assert r.json() is not None
+    assert "alert_appearances" in r.json().keys()
+    assert len(r.json()["alert_appearances"]) == 1
+    assert r.json()["alert_appearances"][0]["id"] == alerts[0].id
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/{entity.id}/flair_appearances?limit=1",
@@ -763,11 +741,10 @@ def test_appearances_for_flair_entity(client: TestClient, normal_user_token_head
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert "alert_appearances" in entry_data.keys()
-    assert len(entry_data["alert_appearances"]) == 1
-    assert entry_data["alert_appearances"][0]["id"] == alerts[-1].id
+    assert r.json() is not None
+    assert "alert_appearances" in r.json().keys()
+    assert len(r.json()["alert_appearances"]) == 1
+    assert r.json()["alert_appearances"][0]["id"] == alerts[-1].id
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/{entity.id}/flair_appearances?skip=1&limit=1",
@@ -775,11 +752,10 @@ def test_appearances_for_flair_entity(client: TestClient, normal_user_token_head
     )
 
     assert r.status_code == 200
-    entry_data = r.json()
-    assert entry_data is not None
-    assert "alert_appearances" in entry_data.keys()
-    assert len(entry_data["alert_appearances"]) == 1
-    assert entry_data["alert_appearances"][0]["id"] == alerts[-2].id
+    assert r.json() is not None
+    assert "alert_appearances" in r.json().keys()
+    assert len(r.json()["alert_appearances"]) == 1
+    assert r.json()["alert_appearances"][0]["id"] == alerts[-2].id
 
 
 def test_entity_pivots(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
@@ -793,11 +769,10 @@ def test_entity_pivots(client: TestClient, normal_user_token_headers: dict, fake
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["totalCount"] == 1
-    assert entity_data["resultCount"] == 1
-    assert entity_data["result"][0]["id"] == pivot.id
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 1
+    assert r.json()["resultCount"] == 1
+    assert r.json()["result"][0]["id"] == pivot.id
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/-1/pivot",
@@ -805,11 +780,10 @@ def test_entity_pivots(client: TestClient, normal_user_token_headers: dict, fake
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["totalCount"] == 0
-    assert entity_data["resultCount"] == 0
-    assert len(entity_data["result"]) == 0
+    assert r.json() is not None
+    assert r.json()["totalCount"] == 0
+    assert r.json()["resultCount"] == 0
+    assert len(r.json()["result"]) == 0
 
 
 def test_entity_enrichments_entity(client: TestClient, normal_user_token_headers: dict, faker: Faker, db: Session) -> None:
@@ -821,10 +795,9 @@ def test_entity_enrichments_entity(client: TestClient, normal_user_token_headers
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert isinstance(entity_data, dict)
-    assert len(entity_data.keys()) != 0
+    assert r.json() is not None
+    assert isinstance(r.json(), dict)
+    assert len(r.json().keys()) != 0
 
     r = client.get(
         f"{settings.API_V1_STR}/entity/-1/enrichment",
@@ -845,10 +818,10 @@ def test_entity_class_entity(client: TestClient, normal_user_token_headers: dict
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert len(entity_data["classes"]) >= 0
-    assert any([i for i in entity_data["classes"] if i["id"] == entity_class.id])
+    assert r.json() is not None
+    assert len(r.json()["classes"]) >= 0
+    assert any([i for i in r.json()["classes"] if i["id"] == entity_class.id])
+    assert parser.parse(r.json()["modified"]) > entity.modified
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/-1/entity_class",
@@ -904,9 +877,8 @@ def test_add_enrichment_entity(client: TestClient, normal_user_token_headers: di
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["id"] == entity.id
+    assert r.json() is not None
+    assert r.json()["id"] == entity.id
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/{entity.id}/enrichment",
@@ -929,6 +901,22 @@ def test_remove_entity_class_entity(client: TestClient, normal_user_token_header
     entity = create_random_entity(db, faker, entity_class_ids=[entity_class.id])
 
     data = {
+        "entity_class_ids": [-1]
+    }
+
+    r = client.post(
+        f"{settings.API_V1_STR}/entity/{entity.id}/entity_class/remove",
+        headers=normal_user_token_headers,
+        json=data
+    )
+
+    assert r.status_code == 200
+    assert r.json() is not None
+    assert r.json()["id"] == entity.id
+    assert r.json()["classes"][0]["id"] == entity_class.id
+    assert parser.parse(r.json()["modified"]) > entity.modified
+
+    data = {
         "entity_class_ids": [entity_class.id]
     }
 
@@ -939,10 +927,10 @@ def test_remove_entity_class_entity(client: TestClient, normal_user_token_header
     )
 
     assert r.status_code == 200
-    entity_data = r.json()
-    assert entity_data is not None
-    assert entity_data["id"] == entity.id
-    assert entity_data["classes"] == []
+    assert r.json() is not None
+    assert r.json()["id"] == entity.id
+    assert r.json()["classes"] == []
+    assert parser.parse(r.json()["modified"]) > entity.modified
 
     r = client.post(
         f"{settings.API_V1_STR}/entity/-1/entity_class/remove",

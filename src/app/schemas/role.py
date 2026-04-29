@@ -20,6 +20,10 @@ class RoleUpdate(RoleBase):
 
 
 # pretty
+class RoleNoAuth(RoleBase, ResultBase):
+    model_config = ConfigDict(from_attributes=True)
+
+
 class Role(RoleBase, ResultBase):
     auth_methods: Annotated[list[AuthSettings], Field(...)]
 

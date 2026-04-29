@@ -1,0 +1,59 @@
+        <h1>SCOT Event {{ event.id }}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ event.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ event.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ event.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ event.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ event.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ event.view_count }} / {{ event.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in event.tags %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in event.sources %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>

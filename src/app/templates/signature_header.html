@@ -1,0 +1,63 @@
+        <h1>SCOT Signatures {{ signature.id }}</h1>
+        <table class="header_table">
+            <tr>
+                <th>
+                    Owner
+                </th>
+                <td>
+                    {{ signature.owner }}
+                </td>
+                <th>
+                    Created
+                </th>
+                <td>
+                    {{ signature.created }}
+                </td>
+                <th>
+                    Status
+                </th>
+                <td>
+                    {{ signature.status.value }}
+                </td>
+            </tr>
+            <tr>
+                <th>
+                    TLP
+                </th>
+                <td>
+                    {{ signature.tlp.value }}
+                </td>
+                <th>
+                    Updated
+                </th>
+                <td>
+                    {{ signature.modified }}
+                </td>
+                <th>
+                    Views / Popularity
+                </th>
+                <td>
+                    {{ signature.view_count }} / {{ signature.popularity_count }}
+                </td>
+            </tr>
+            <tr>
+                <th>Tags:</th>
+                <td colspan=4>
+                    {% for t in signature.tags %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+            <tr>
+                <th>Sources:</th>
+                <td colspan=4>
+                    {% for t in signature.sources %}
+                    {{ t.name }} &nbsp;
+                    {% endfor %}
+                </td>
+            </tr>
+        </table>
+
+        <div class="sigblock">
+            {{ signature.sig_body }}
+        </div>

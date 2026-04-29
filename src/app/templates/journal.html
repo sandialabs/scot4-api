@@ -1,0 +1,15 @@
+<h2>Journal Entries</h2>
+{% if entries %}
+    {% for entry in entries %}
+    <div class="entry">
+        <div class="entry_header">
+            [{{ entry.id }}] {{ entry.owner }} @ {{ entry.created }} (last modified: {{ entry.modified }}
+        </div>
+        <div class="entry_body">
+            {% autoescape false %}
+            {{ entry.entry_data["flaired_html"] }}
+            {% endautoescape %}
+        </div>
+    </div>
+    {% endfor %}
+{% endif %}

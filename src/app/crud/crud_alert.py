@@ -277,6 +277,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
         alert_id: int,
         flair_result: AlertFlairResult,
         audit_logger=None,
+        entity_cache=None,
     ):
         # We are serializing the json here now because of
         # issues getting serialized json back from the flair
@@ -296,16 +297,21 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
                 alert_update.data = flair_result.text_data
             self.update(db_session, alert, alert_update, audit_logger=audit_logger)
             if flair_result.entities is not None:
+                entity_values = []
+                entity_types = []
                 for entity_type in flair_result.entities:
                     for entity in flair_result.entities[entity_type]:
-                        entity_crud.link_entity_by_value(
-                            db_session,
-                            entity_value=entity,
-                            target_type=TargetTypeEnum.alert,
-                            target_id=alert_id,
-                            entity_type=entity_type,
-                            audit_logger=audit_logger,
-                        )
+                        entity_values.append(entity)
+                        entity_types.append(entity_type)
+                entity_crud.link_entities_by_value(
+                    db_session,
+                    entity_values=entity_values,
+                    target_type=TargetTypeEnum.alert,
+                    target_id=alert_id,
+                    entity_types=entity_types,
+                    audit_logger=audit_logger,
+                    entity_cache=entity_cache
+                )
         return alert
 
 

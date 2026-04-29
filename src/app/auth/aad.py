@@ -1,6 +1,6 @@
 import msal
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from app.schemas.user import UserCreate
 
@@ -15,7 +15,7 @@ class AzureAdAuthentication(BaseAuthentication):
     default_config = {
         "provider_name": "",
         "client_id": "",
-        "client_secret": "",
+        "client_secret": "",  # nosec B105
         "authority": "https://login.microsoftonline.com/common",
         "callback_url": "",
         "scopes": [],
@@ -28,7 +28,7 @@ class AzureAdAuthentication(BaseAuthentication):
     config_name_pretty = {
         "provider_name": "Provider Name",
         "client_id": "Client ID",
-        "client_secret": "Client Secret",
+        "client_secret": "Client Secret",  # nosec B105
         "authority": "Authority",
         "callback_url": "Callback URL",
         "scopes": "Scopes",
@@ -42,7 +42,7 @@ class AzureAdAuthentication(BaseAuthentication):
         "provider_name": "A name that identifies this authentication instance",
         "client_id": "The client ID of your application in Azure Active"
         " Directory",
-        "client_secret": "A client secret configured for your application in"
+        "client_secret": "A client secret configured for your application in"  # nosec B105
         " Azure Active Directory",
         "authority": "The authority used to log in to Azure; this is usually"
         " in the format https://login.microsoftonline.com/"
@@ -102,7 +102,7 @@ class AzureAdAuthentication(BaseAuthentication):
             self.scopes, redirect_uri=self.callback_url
         )
         state = flow["state"]
-        flow["_scot_datetime"] = datetime.utcnow().isoformat()
+        flow["_scot_datetime"] = datetime.now(timezone.utc).isoformat()
         self.storage[state] = json.dumps(flow)
         return flow["auth_uri"]
 
@@ -118,7 +118,7 @@ class AzureAdAuthentication(BaseAuthentication):
         auth_result = self.app.acquire_token_by_auth_code_flow(flow, token)
         # Clean up all old flows older than an hour
         if len(self.storage) > 0:
-            expiry = (datetime.utcnow() + timedelta(hours=1)).isoformat()
+            expiry = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
             for key, value in list(self.storage.items()):
                 item = json.loads(value)
                 if (

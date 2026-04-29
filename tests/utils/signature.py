@@ -1,20 +1,23 @@
-import json
 import random
 from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
+from app.enums import TargetTypeEnum
 from app.schemas.signature import SignatureCreate
+from app.schemas.link import LinkCreate
 
 
 try:
     from tests.utils.user import create_random_user
+    from tests.utils.threat_model_item import create_random_threat_model_item
 except ImportError:
     # needed to make initial_data.py function properly
     from user import create_random_user
+    from threat_model_item import create_random_threat_model_item
 
 
-def create_random_signature(db: Session, faker: Faker, owner: schemas.User | None = None, signature_name: str | None = None):
+def create_random_signature(db: Session, faker: Faker, owner: schemas.User | None = None, signature_name: str | None = None, threat_model_items: list[schemas.ThreatModelItem] | None = None):
     sig_type_titles = {
         "splunk": "title",
         "microsoft_sentinel": "displayName",
@@ -91,7 +94,25 @@ def create_random_signature(db: Session, faker: Faker, owner: schemas.User | Non
         description=faker.text(max_nb_chars=30),
         data=signature_data,
         type=signature_type_to_choose,
-        status=random.choice(["enabled", "disabled"])
+        status=random.choice(["enabled", "disabled"]),
     )
 
-    return crud.signature.create(db, obj_in=signature_create)
+    signature = crud.signature.create(db, obj_in=signature_create)
+
+    if threat_model_items is None:
+        threat_model_items = []
+        for _ in range(3):
+            threat_model_items.append(create_random_threat_model_item(db, faker))
+
+    for threat_model_item in threat_model_items:
+        crud.link.create(
+            db,
+            obj_in=LinkCreate(
+                v0_type=TargetTypeEnum.signature,
+                v0_id=signature.id,
+                v1_type=TargetTypeEnum.threat_model_item,
+                v1_id=threat_model_item.id,
+            )
+        )
+
+    return signature

@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session, aliased, Query
 from app.core.config import settings
 from app.db.base_class import Base
 from app.enums import PermissionEnum, TargetTypeEnum
-from app.models import Permission, Role, User, Link, Tag, Source, Audit, Promotion, Popularity
+from app.models import Permission, Role, User, Link, Tag, Source, Audit, Promotion, ThreatModelItem
 from app.utils import escape_sql_like
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -166,7 +166,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         skip: int = 0,
         limit: int | None = None,
         audit_logger=None,
-    ):
+    ) -> tuple[list[ModelType], int]:
         # Just normal query if a role is an admin role, or if no roles were given
         from app.crud import permission
         # Performs a query while filtering, sorting, and paginating appropriately
@@ -403,6 +403,47 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 query = query.filter(linked_table.name.not_in(not_item))
             else:
                 query = query.filter(linked_table.name != not_item)
+
+        return query
+
+    def _threat_model_name_filter(self, query: Query, filter_dict: dict):
+        item = filter_dict.pop("threat_model_name", None)
+        not_item = filter_dict.get("not", {}).pop("threat_model_name", None)
+
+        if item is not None or not_item is not None:
+            # join to link table (in either direction)
+            link_alias = aliased(Link)
+            linked_table = aliased(ThreatModelItem)
+
+            # First links join
+            query = query.outerjoin(
+                link_alias,
+                (
+                    (self.model.target_type_enum() == link_alias.v0_type)
+                    & (self.model.id == link_alias.v0_id)
+                    & (TargetTypeEnum.threat_model_item == link_alias.v1_type)
+                )
+            )
+            # Join to target table
+            query = query.outerjoin(
+                linked_table, linked_table.id == link_alias.v1_id
+            )
+
+        if item is not None:
+            if isinstance(item, tuple):
+                query = query.filter(linked_table.threat_model_name.between(item[0], item[1]))
+            if isinstance(item, list):
+                query = query.filter(linked_table.threat_model_name.in_(item))
+            else:
+                query = query.filter(linked_table.threat_model_name == item)
+
+        if not_item is not None:
+            if isinstance(not_item, tuple):
+                query = query.filter(~linked_table.threat_model_name.between(not_item[0], not_item[1]))
+            if isinstance(not_item, list):
+                query = query.filter(linked_table.threat_model_name.not_in(not_item))
+            else:
+                query = query.filter(linked_table.threat_model_name != not_item)
 
         return query
 

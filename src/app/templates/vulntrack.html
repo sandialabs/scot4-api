@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}
+    <title>
+        SCOT Vulntrack Export {{ vulntrack.id }} : {{ vulntrack.subject }}
+    </title>
+{% endblock %}
+
+
+{% block export_header %}
+    {% include 'vulntrack_header.html' %}
+{% endblock %}
+
+{% block promoted_items %}
+    {% if vulnfeeds %}
+    <h2>Promoted from vulnfeed</h2>
+        <h3>{{ vulnfeeds[0]["vulnfeed_subject"] }}<h3>
+        <h4>Promoted from Dispatch {{ vulnfeeds[0]["vulnfeed_id"] }}</h4>
+        <table class="alert_table">
+            <tr>
+                {% for col in vulnfeed[0]["data_flaired"] %}
+                <th>{{ col }}</th>
+                {% endfor %}
+            </tr>
+            {% for vulnfeed in vulnfeeds %}
+            <tr>
+                {% for col in vulnfeed["data_flaired"] %}
+                <td>
+                    {% set cell_array = vulnfeed["data_flaired"][col] %}
+                    {{ cell_array }}<br>
+                </td>
+                {% endfor %}
+            </tr> 
+            {% endfor %}
+        </table>
+    {% endif %}
+{% endblock %}
+
+{% block journal %}
+    {% include 'journal.html' %}
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

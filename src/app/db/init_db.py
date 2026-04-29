@@ -1,4 +1,7 @@
 import argparse
+import requests
+import json
+import re
 
 from sqlalchemy.orm import Session
 from sqlalchemy import Index
@@ -9,7 +12,7 @@ from app.core.logger import logger
 from app.db import base
 from app.models import EntityClass
 from app.db.session import SessionLocal
-from app.enums import AuthTypeEnum, PermissionEnum, TargetTypeEnum, StorageProviderEnum
+from app.enums import AuthTypeEnum, PermissionEnum, TargetTypeEnum, StorageProviderEnum, ThreatModelName
 from app.icons.flags import flags
 from app.icons.default_icons import default_icons
 from app.models import Entity, Link, Permission, Entry, Promotion, Audit, UserLinks, Popularity
@@ -40,7 +43,7 @@ def create_indices(db_session: Session):
     index.create(bind=db_session.bind, checkfirst=True)
     index = Index('enrichment_lookup', Entity.value, mysql_length=16)
     index.create(bind=db_session.bind)
-    index = Index('audit_speedup_1', Audit.what, mysql_length=16)
+    index = Index('audit_speedup_1', Audit.what, Audit.thing_type, mysql_length=16)
     index.create(bind=db_session.bind)
     index = Index('audit_speedup_2', Audit.thing_type, Audit.thing_id, mysql_length={'thing_type': 16})
     index.create(bind=db_session.bind)
@@ -68,7 +71,6 @@ def init_db(db_session: Session, create_tables: bool = False, reset_db: bool = F
     # Create all the tables
     if reset_db is True:
         base.Base.metadata.drop_all(bind=db_session.bind)
-        print('Dropped all tables in database, waiting 15 seconds....')
     if create_tables or reset_db:
         base.Base.metadata.create_all(bind=db_session.bind)
 
@@ -166,6 +168,8 @@ if __name__ == "__main__":
     parser.add_argument("--create_tables", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--reset_db", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--create_sql_indices", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--fix_tag_sources", action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument("--add_mitre_attack", action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
 
     db_session = SessionLocal()
@@ -174,4 +178,77 @@ if __name__ == "__main__":
     if args.reset_db:
         db_session.bulk_insert_mappings(EntityClass, flags)
         db_session.bulk_insert_mappings(EntityClass, default_icons)
+
+    if args.fix_tag_sources:
+        for tag in crud.tag.get_multi(db_session):
+            if tag.name.strip() == "":
+                crud.tag.remove(db_session, tag.id)
+            elif " " in tag.name:
+                new_name = tag.name.replace(" ", "_")
+                new_tag = crud.tag.get_by_name(db_session, new_name)
+                if new_tag is not None:
+                    for link in crud.link.find_all_links(db_session, TargetTypeEnum.tag, tag.id):
+                        update = {}
+                        if link.v0_type == TargetTypeEnum.tag and link.v0_id == tag.id:
+                            update["v0_id"] = new_tag.id
+                        elif link.v1_type == TargetTypeEnum.tag and link.v1_id == tag.id:
+                            update["v1_id"] = new_tag.id
+                        crud.link.update(db_session, db_obj=link, obj_in=update)
+                    crud.tag.remove(db_session, tag.id)
+                else:
+                    crud.tag.update(db_session, db_obj=tag, obj_in={"name": new_name})
+
+        for source in crud.source.get_multi(db_session):
+            if source.name.strip() == "":
+                crud.source.remove(db_session, source.id)
+            elif " " in source.name:
+                new_name = source.name.replace(" ", "_")
+                new_source = crud.source.get_by_name(db_session, new_name)
+                if new_source is not None:
+                    for link in crud.link.find_all_links(db_session, TargetTypeEnum.source, source.id):
+                        update = {}
+                        if link.v0_type == TargetTypeEnum.source and link.v0_id == source.id:
+                            update["v0_id"] = new_source.id
+                        elif link.v1_type == TargetTypeEnum.source and link.v1_id == source.id:
+                            update["v1_id"] = new_source.id
+                        crud.link.update(db_session, db_obj=link, obj_in=update)
+                    crud.source.remove(db_session, source.id)
+                else:
+                    crud.source.update(db_session, db_obj=source, obj_in={"name": new_name})
+
+    if args.add_mitre_attack:
+        r = requests.get(f"https://github.com/mitre/cti/releases/download/ATT&CK-{settings.MITRE_VERSION}/enterprise-attack.json", verify=False, timeout=60)  # nosec: B501
+        if r.status_code == 200:
+            mitre_data = json.loads(r.text)
+            for obj in mitre_data["objects"]:
+                threat_model_id = ""
+                url = ""
+                tactics = []
+
+                for external_reference in obj.get("external_references", []):
+                    if external_reference.get("source_name", "") == "mitre-attack" and re.match(r"^T\d{4}\.\d{3}$|^T\d{4}$", external_reference.get("external_id", "")):
+                        threat_model_id = external_reference["external_id"]
+                        url = external_reference["url"]
+                        break
+
+                for kill_chain_phase in obj.get("kill_chain_phases", []):
+                    if kill_chain_phase.get("kill_chain_name", "") == "mitre-attack":
+                        tactics.append(kill_chain_phase["phase_name"])
+
+                if threat_model_id != "" and len(tactics) > 0:
+                    crud.threat_model_item.create(db_session=db_session, obj_in=schemas.ThreatModelItemCreate(
+                        threat_model_name=ThreatModelName.attack,
+                        threat_model_id=threat_model_id,
+                        title=obj.get("name"),
+                        description=obj.get("description"),
+                        data={
+                            "url": url,
+                            "tactics": tactics,
+                            "id": obj.get("id"),
+                            "version": settings.MITRE_VERSION
+                        }
+                    ))
+        else:
+            print(f"failed to download mitre data {r.status_code} - {r.text}")
+
     db_session.commit()

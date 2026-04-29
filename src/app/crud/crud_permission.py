@@ -310,7 +310,7 @@ class CRUDPermission(CRUDBase[Permission, PermissionCreate, PermissionUpdate]):
                             & (Permission.target_id == x['id'])
                         )
                 query = query.filter((Permission.permission == PermissionEnum.read)
-                                     & (Permission.role_id.in_([r.id for r in roles]))
+                                     & (Permission.role_id.in_([r.id for r in roles] + [settings.EVERYONE_ROLE_ID]))
                                      & (conditionExpression))
 
                 return query.all()

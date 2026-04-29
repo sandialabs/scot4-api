@@ -1,10 +1,8 @@
-from datetime import datetime
-
 from sqlalchemy import Boolean, Column, Integer, JSON, Text, Table, ForeignKey, \
     SmallInteger, VARCHAR
 from sqlalchemy.orm import relationship
 
-from app.db.base_class import Base
+from app.db.base_class import Base, utc_now
 from app.models.mixins import TimestampMixin, UTCDateTime, TimestampMixin
 
 
@@ -19,9 +17,9 @@ class User(Base, TimestampMixin):
 
     id = Column("user_id", Integer, primary_key=True)
     username = Column("username", VARCHAR(length=255), unique=True, nullable=False)
-    last_login = Column("last_login_date", UTCDateTime, default=datetime.utcnow)
-    last_login_attempt = Column("last_login_attempt", UTCDateTime, default=datetime.utcnow)
-    last_activity = Column("last_activity_date", UTCDateTime, default=datetime.utcnow)
+    last_login = Column("last_login_date", UTCDateTime, default=utc_now)
+    last_login_attempt = Column("last_login_attempt", UTCDateTime, default=utc_now)
+    last_activity = Column("last_activity_date", UTCDateTime, default=utc_now)
     failed_attempts = Column("failed_attempt_count", SmallInteger, default=0)
     is_active = Column(Boolean(), default=True)
     pw_hash = Column("pwhash", Text)

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+        <title>
+            SCOT Dispatch Export {{ dispatch.id }} : {{ dispatch.subject }}
+        </title>
+{% endblock %}
+
+
+{% block export_header %}
+    {% include 'dispatch_header.html' %}
+{% endblock %}
+
+{% block journal %}
+    {% include 'journal.html' %}
+{% endblock %}
+
+{% block entities %}
+    {% if entities %}
+        {% include 'included_entities.html' %}
+    {% endif %}
+{% endblock %}

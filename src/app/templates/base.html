@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                background-color: white;
+                color: black;
+                font-family: sans-serif;
+            }
+            .entity {
+                background-color: lightyellow;
+            }
+            .entry {
+                border: 1px solid black;
+                box-sizing: border-box;
+            }
+            .entry_header {
+                border: 1px;
+                background-color: lightgrey;
+            }
+            .entry_body {
+                background-color: white;
+                padding-bottom: 5px;
+            }
+            .header_table {
+                width: 100%;
+            }
+            .header_table th {
+                background-color: lightgrey;
+            }
+            .entity_table {
+                width: 100%;
+                border: 1px;
+                border-collapse: collapse;
+            }
+            .entity_table th {
+                background: lightgrey;
+            }
+            .entity_table tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+            .alert_table {
+                width: 100%;
+                border: 1px;
+                border-collapse: collapse;
+                font-size: 50%;
+            }
+            .alert_table th {
+                background: lightgrey;
+            }
+            .alert_table tr:nth-child(even) {
+                background-color: #f2f2f2;
+            }
+
+            @media print {
+                @page {
+                    font-size: 12pt;
+                    size: Letter landscape;
+                    margin: 1cm;
+                    @top-right {
+                        content counter(page);
+                    }
+                }
+                @page :first {
+                    @top-right {
+                        content: "";
+                    }
+                }
+                pre {
+                    white-space: pre-wrap;
+                }
+                .entry_body table {
+                    transform: scale(.7);
+                    width: 100%;
+                    break-inside: avoid;
+                }
+            }
+        </style>
+	{% block title %}
+        <title>
+            SCOT Export 
+        </title>
+	{% endblock %}
+    </head>
+    <body>
+
+	{% block export_header %}
+	{% endblock %}
+
+	{% block promoted_items %}
+	{% endblock %}
+
+	{% block journal %}
+	{% endblock %}
+
+	{% block entities %}
+	{% endblock %}
+
+    </body>
+</html>

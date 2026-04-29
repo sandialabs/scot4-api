@@ -11,7 +11,12 @@ from .generic import (
     generic_source_add_remove,
     generic_tag_untag,
     generic_search,
-    generic_upvote_and_downvote
+    generic_upvote_and_downvote,
+    generic_entries,
+    generic_entities,
+    generic_get_signatures,
+    generic_history,
+    generic_user_links,
 )
 
 router = APIRouter()
@@ -26,3 +31,8 @@ generic_tag_untag(router, crud.threat_model_item, TargetTypeEnum.threat_model_it
 generic_source_add_remove(router, crud.threat_model_item, TargetTypeEnum.threat_model_item, schemas.ThreatModelItem)
 generic_search(router, crud.threat_model_item, TargetTypeEnum.threat_model_item, schemas.ThreatModelItemSearch, schemas.ThreatModelItem)
 generic_upvote_and_downvote(router, crud.threat_model_item, TargetTypeEnum.threat_model_item, schemas.ThreatModelItem)
+generic_entries(router, TargetTypeEnum.threat_model_item)
+generic_entities(router, TargetTypeEnum.threat_model_item)
+generic_get_signatures(router, crud.threat_model_item, TargetTypeEnum.threat_model_item)
+generic_history(router, crud.threat_model_item, TargetTypeEnum.threat_model_item)
+generic_user_links(router, crud.threat_model_item, TargetTypeEnum.threat_model_item, schemas.ThreatModelItem)
