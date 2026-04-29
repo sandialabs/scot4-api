@@ -208,10 +208,10 @@ def create_mcp_server(base_app):
         if provider.auth_active and provider.auth == AuthTypeEnum.aad:
             azure_settings = provider.auth_properties
             provider_id = provider.id
-    _, authority, tenant_id = azure_settings["authority"].rsplit("/", 2)
-    global un_email_usernames
-    un_email_usernames = azure_settings["un_email_usernames"]
     if azure_settings:
+        _, authority, tenant_id = azure_settings["authority"].rsplit("/", 2)
+        global un_email_usernames
+        un_email_usernames = azure_settings["un_email_usernames"]
         secret_key = None
         try:
             secret_key = settings.MCP_OAUTH_SECRET_KEY
