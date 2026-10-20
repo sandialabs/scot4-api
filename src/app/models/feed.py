@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base, utc_now
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.models.mixins import TimestampMixin, UTCDateTime, EntryMixin, PopularityMixin
 
 
@@ -12,6 +12,7 @@ class Feed(Base, TimestampMixin, EntryMixin, PopularityMixin):
     name = Column("feed_name", Text, nullable=False)
     owner = Column("owner", Text, nullable=False)
     tlp = Column("tlp", Enum(TlpEnum), nullable=False)
+    alf = Column("alf", Enum(AlfEnum), nullable=False)
     status = Column("status", Text, nullable=False)
     type = Column("feed_type", Text, nullable=False)
     uri = Column("uri", Text, nullable=False)

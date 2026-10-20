@@ -5,7 +5,7 @@ from pydantic.json_schema import SkipJsonSchema
 from dateutil import parser
 
 from app.core.config import settings
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
 
@@ -14,6 +14,7 @@ class FeedBase(BaseModel):
     name: Annotated[str, Field(...)]
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     status: Annotated[str, Field(...)] = "paused"
     type: Annotated[str, Field(...)]
     uri: Annotated[str, Field(...)]
@@ -33,6 +34,7 @@ class FeedUpdate(FeedBase):
     name: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     uri: Annotated[str | SkipJsonSchema[None], Field(...)] = None

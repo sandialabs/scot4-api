@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum
 from app.models import Product
 from app.schemas.product import ProductCreate, ProductUpdate
 
@@ -54,6 +54,7 @@ def test_create_product(db: Session, faker: Faker) -> None:
     product = ProductCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
     db_obj = crud.product.create(db, obj_in=product)
@@ -61,6 +62,7 @@ def test_create_product(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == product.owner
     assert db_obj.tlp == product.tlp
+    assert db_obj.alf == product.alf
     assert db_obj.subject == product.subject
 
 
@@ -70,6 +72,7 @@ def test_update_product(db: Session, faker: Faker) -> None:
     update = ProductUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
 
@@ -78,6 +81,7 @@ def test_update_product(db: Session, faker: Faker) -> None:
     assert db_obj.id == product.id
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
+    assert db_obj.alf == update.alf
     assert db_obj.subject == update.subject
 
     update = {}
@@ -99,6 +103,7 @@ def test_update_product(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "subject": faker.sentence()
     }
 
@@ -107,6 +112,7 @@ def test_update_product(db: Session, faker: Faker) -> None:
     assert db_obj.id == product.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.subject == update["subject"]
 
 
@@ -131,6 +137,7 @@ def test_get_or_create_product(db: Session, faker: Faker) -> None:
     product = ProductCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
 
@@ -199,6 +206,7 @@ def test_get_with_roles_product(db: Session, faker: Faker) -> None:
         product = ProductCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             subject=faker.sentence()
         )
         roles.append(role)
@@ -220,6 +228,7 @@ def test_query_objects_with_roles_product(db: Session, faker: Faker) -> None:
         product = ProductCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             subject=faker.sentence()
         )
         roles.append(role)
@@ -235,6 +244,7 @@ def test_query_objects_with_roles_product(db: Session, faker: Faker) -> None:
 def test_create_with_owner_product(db: Session, faker: Faker) -> None:
     product = ProductCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
     owner = create_random_user(db, faker)
@@ -254,6 +264,7 @@ def test_create_with_permissions_product(db: Session, faker: Faker) -> None:
     product = ProductCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
 
@@ -262,6 +273,7 @@ def test_create_with_permissions_product(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == product.owner
     assert db_obj.tlp == product.tlp
+    assert db_obj.alf == product.alf
     assert db_obj.subject == product.subject
 
     permission = crud.permission.get_permissions_from_roles(db, [role], TargetTypeEnum.product, db_obj.id)
@@ -275,6 +287,7 @@ def test_create_in_object_product(db: Session, faker: Faker) -> None:
     product = ProductCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
 
@@ -296,6 +309,7 @@ def test_get_history_product(db: Session, faker: Faker) -> None:
     product = ProductCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence()
     )
     audit_logger = AuditLogger(owner.username, faker.ipv4(), faker.user_agent(), db)

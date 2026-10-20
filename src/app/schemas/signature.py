@@ -3,7 +3,7 @@ from pydantic import BaseModel, ConfigDict, Field, Json
 from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase, ResultBase
@@ -21,6 +21,7 @@ sigdata_examples = [{
 class SignatureBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     latest_revision: Annotated[int | None, Field(...)] = 0
     name: Annotated[str | None, Field(...)] = None
     description: Annotated[str | None, Field(...)] = None
@@ -57,6 +58,7 @@ class SignatureSearch(SearchBase):
     type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alf: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tag: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     source: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
@@ -66,5 +68,7 @@ class SignatureSearch(SearchBase):
             return value
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         else:
             return super().type_mapping(attr, value)

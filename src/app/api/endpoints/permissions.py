@@ -6,7 +6,7 @@ from app import crud
 from app.api.deps import AuditLogger, get_audit_logger, get_current_active_user, get_db, PermissionCheckId
 from app.core.config import settings
 from app.enums import PermissionEnum, TargetTypeEnum
-from app.schemas import Permission, PermissionCreate, PermissionSetMass, User, Role
+from app.schemas import Permission, PermissionCreate, PermissionSetMass, User, RoleNoAuth
 from app.utils import create_schema_details
 
 router = APIRouter()
@@ -148,7 +148,7 @@ async def set_permission(
     return crud.permission.get_permission_roles(db, mass_permission.target_type, mass_permission.target_id)
 
 
-@router.get("/getroles", response_model=dict[PermissionEnum, list[Role]], summary="Get object permissions")
+@router.get("/getroles", response_model=dict[PermissionEnum, list[RoleNoAuth]], summary="Get object permissions")
 async def get_permission_roles(
     target_type: Annotated[TargetTypeEnum, Query(...)],
     target_id: Annotated[int, Query(...)],

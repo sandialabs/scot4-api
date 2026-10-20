@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum, EntryClassEnum
 from app.models import Entry
 from app.schemas.alertgroup import AlertGroupCreate
 from app.schemas.entry import EntryCreate, EntryUpdate
@@ -58,6 +58,7 @@ def test_create_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
@@ -67,6 +68,7 @@ def test_create_entry(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == entry.owner
     assert db_obj.tlp == entry.tlp
+    assert db_obj.alf == entry.alf
     assert db_obj.target_type == entry.target_type
     assert db_obj.target_id == entry.target_id
     assert db_obj.entry_class == entry.entry_class
@@ -107,6 +109,7 @@ def test_update_entry(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "target_type": select_random_target_type(),
         "target_id": faker.pyint(),
         "parsed": faker.pybool()
@@ -125,7 +128,8 @@ def test_update_entry(db: Session, faker: Faker) -> None:
     ag_modified = alertgroup.modified
     entry = create_random_entry(db, faker, owner, target_type=TargetTypeEnum.alertgroup, target_id=alertgroup.id)
     update = {
-        "tlp": random.choice(list(TlpEnum))
+        "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum))
     }
     db_obj = crud.entry.update(db, db_obj=entry, obj_in=update)
 
@@ -166,6 +170,7 @@ def test_get_or_create_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
@@ -272,6 +277,7 @@ def test_get_with_roles_entry(db: Session, faker: Faker) -> None:
         entry = EntryCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             target_type=TargetTypeEnum.alertgroup,
             target_id=alertgroup.id,
             entry_class=random.choice(list(EntryClassEnum))
@@ -301,6 +307,7 @@ def test_query_objects_with_roles_entry(db: Session, faker: Faker) -> None:
         entry = EntryCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             target_type=TargetTypeEnum.alertgroup,
             target_id=alertgroup.id,
             entry_class=random.choice(list(EntryClassEnum))
@@ -318,6 +325,7 @@ def test_query_objects_with_roles_entry(db: Session, faker: Faker) -> None:
 def test_create_with_owner_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
@@ -329,6 +337,7 @@ def test_create_with_owner_entry(db: Session, faker: Faker) -> None:
 
     assert db_obj is not None
     assert db_obj.tlp == entry.tlp
+    assert db_obj.alf == entry.alf
     assert db_obj.target_type == entry.target_type
     assert db_obj.target_id == entry.target_id
     assert db_obj.entry_class == entry.entry_class
@@ -342,6 +351,7 @@ def test_create_with_permissions_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
@@ -352,6 +362,7 @@ def test_create_with_permissions_entry(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == entry.owner
     assert db_obj.tlp == entry.tlp
+    assert db_obj.alf == entry.alf
     assert db_obj.target_type == entry.target_type
     assert db_obj.target_id == entry.target_id
     assert db_obj.entry_class == entry.entry_class
@@ -367,6 +378,7 @@ def test_create_in_object_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))
@@ -390,6 +402,7 @@ def test_get_history_entry(db: Session, faker: Faker) -> None:
     entry = EntryCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         target_type=select_random_target_type(),
         target_id=faker.pyint(),
         entry_class=random.choice(list(EntryClassEnum))

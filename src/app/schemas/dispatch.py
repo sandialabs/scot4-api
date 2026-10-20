@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase, ResultBase
@@ -16,6 +16,7 @@ from app.schemas.user_links import FavoriteLink
 class DispatchBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     status: Annotated[StatusEnum, Field(..., examples=[a.value for a in list(StatusEnum)])] = StatusEnum.open
     subject: Annotated[str | None, Field(...)] = None
     message_id: Annotated[str | None, Field(...)] = None
@@ -41,6 +42,7 @@ class Dispatch(PopularityVoted, FavoriteLink, DispatchBase, ResultBase):
 class DispatchSearch(SearchBase):
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alf: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tag: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     source: Annotated[str | SkipJsonSchema[None], Field(...)] = None
@@ -58,6 +60,8 @@ class DispatchSearch(SearchBase):
             return value
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         elif attr == "status":
             return StatusEnum(value)
         elif attr == "entry_count":

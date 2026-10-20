@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import TlpEnum, GuideStatusEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, GuideStatusEnum, TargetTypeEnum, EntryClassEnum
 
 from tests.utils.user import create_random_user
 from tests.utils.guide import create_random_guide
@@ -53,6 +53,7 @@ def test_create_guide(client: TestClient, normal_user_token_headers: dict, db: S
     data = {
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": f"Guide for {signature.name}",
         "status": random.choice(list(GuideStatusEnum)).value
     }
@@ -85,11 +86,13 @@ def test_create_guides(client: TestClient, normal_user_token_headers: dict, db: 
     data = [{
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": f"Guide for {signature.name}",
         "status": random.choice(list(GuideStatusEnum)).value
     },{
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": f"Guide for {signature.name}",
         "status": random.choice(list(GuideStatusEnum)).value
     }]
@@ -748,10 +751,23 @@ def test_search_guide(client: TestClient, superuser_token_headers: dict, normal_
     )
 
     assert r.status_code == 200
+    r = client.get(
+        f"{settings.API_V1_STR}/guide/?alf={random_guide.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
     assert any(a["id"] == random_guide.id for a in r.json()["result"])
 
     r = client.get(
         f"{settings.API_V1_STR}/guide/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/guide/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers,
     )
 

@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.entry import EntryCreate
 from app.schemas.flair import FlairedEntity, FlairedTarget, FlairResults
 
@@ -31,6 +31,7 @@ def create_random_entry(
     status: str | None = None,
 ):
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     if owner is None:
         owner = create_random_user(db, faker)
     if target_type is None:
@@ -63,6 +64,7 @@ def create_random_entry(
     entry_create = EntryCreate(
         owner=owner.username,
         tlp=tlp,
+        alf=alf,
         target_type=target_type,
         parent_entry_id=parent_entry_id,
         target_id=target_id,

@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import StatusEnum, TlpEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum, TargetTypeEnum, EntryClassEnum
 
 from tests.utils.user import create_random_user
 from tests.utils.intel import create_random_intel
@@ -51,6 +51,7 @@ def test_create_intel(client: TestClient, normal_user_token_headers: dict, db: S
     data = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence()
     }
@@ -81,11 +82,13 @@ def test_create_intels(client: TestClient, normal_user_token_headers: dict, db: 
     data = [{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence()
     },{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence()
     }]
@@ -703,6 +706,21 @@ def test_search_intel(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.get(
         f"{settings.API_V1_STR}/intel/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/intel/?alf={random_intel.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_intel.id for i in r.json()["result"])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/intel/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers,
     )
 

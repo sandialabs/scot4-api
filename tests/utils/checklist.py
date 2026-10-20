@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.schemas.checklist import ChecklistCreate
 
 try:
@@ -18,6 +18,7 @@ def create_random_checklist(db: Session, faker: Faker, owner: schemas.User | Non
         owner = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     subject = faker.sentence(12)
     checklist_data_ver = str(faker.pyfloat(1, 1, True))
     checklist_data = faker.pydict(value_types=[int, str, float])
@@ -25,6 +26,7 @@ def create_random_checklist(db: Session, faker: Faker, owner: schemas.User | Non
     checklist_create = ChecklistCreate(
         owner=owner.username,
         tlp=tlp,
+        alf=alf,
         subject=subject,
         checklist_data_ver=checklist_data_ver,
         checklist_data=checklist_data,

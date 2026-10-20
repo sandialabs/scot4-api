@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, GuideStatusEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, GuideStatusEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.guide import GuideCreate
 from app.schemas.signature import Signature
 from app.schemas.link import LinkCreate
@@ -33,12 +33,14 @@ def create_random_guide(db: Session, faker: Faker, owner: schemas.User | None = 
             create_random_user_links(db, faker, signature.id, TargetTypeEnum.signature, owner)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     subject = f"Guide for {signature.name}"
     status = random.choice(list(GuideStatusEnum))
 
     guide_create = GuideCreate(
         owner=owner.username,
         tlp=tlp,
+        alf=alf,
         subject=subject,
         status=status,
     )

@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import StatusEnum, TlpEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum, TargetTypeEnum, EntryClassEnum
 
 from tests.utils.user import create_random_user
 from tests.utils.incident import create_random_incident
@@ -55,6 +55,7 @@ def test_create_incident(client: TestClient, normal_user_token_headers: dict, db
     data = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "occurred_date": occurred_date.isoformat(),
         "discovered_date": discovered_date.isoformat(),
         "reported_date": faker.date_time_between_dates(discovered_date, datetime.now()).isoformat(),
@@ -93,6 +94,7 @@ def test_create_incidents(client: TestClient, normal_user_token_headers: dict, d
     data = [{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "occurred_date": occurred_date.isoformat(),
         "discovered_date": discovered_date.isoformat(),
         "reported_date": faker.date_time_between_dates(discovered_date, datetime.now()).isoformat(),
@@ -104,6 +106,7 @@ def test_create_incidents(client: TestClient, normal_user_token_headers: dict, d
     },{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "occurred_date": occurred_date.isoformat(),
         "discovered_date": discovered_date.isoformat(),
         "reported_date": faker.date_time_between_dates(discovered_date, datetime.now()).isoformat(),
@@ -665,6 +668,20 @@ def test_search_incident(client: TestClient, superuser_token_headers: dict, norm
 
     assert r.status_code == 422
 
+    r = client.get(
+        f"{settings.API_V1_STR}/incident/?alf={random_incident.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_incident.id for i in r.json()["result"])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/incident/?alf={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
     r = client.get(
         f"{settings.API_V1_STR}/incident/?subject={random_incident.subject[1:-1]}",
         headers=superuser_token_headers,

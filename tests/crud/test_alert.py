@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.schemas.alert import AlertCreate, AlertUpdate
 from tests.utils.user import create_random_user
 from tests.utils.alert import create_random_alert
@@ -13,13 +13,15 @@ def test_create_alert(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice(list(StatusEnum))
     parsed = faker.pybool()
-    alert_in = AlertCreate(owner=user.email, tlp=tlp, status=status, parsed=parsed)
+    alert_in = AlertCreate(owner=user.email, tlp=tlp, alf=alf, status=status, parsed=parsed)
 
     alert = crud.alert.create(db, obj_in=alert_in)
     assert alert.owner == user.email
     assert alert.tlp == tlp
+    assert alert.alf == alf
     assert alert.status == status
     assert alert.parsed == parsed
 
@@ -28,14 +30,16 @@ def test_get_alert(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice(list(StatusEnum))
     parsed = faker.pybool()
-    alert_in = AlertCreate(owner=user.email, tlp=tlp, status=status, parsed=parsed)
+    alert_in = AlertCreate(owner=user.email, tlp=tlp, alf=alf, status=status, parsed=parsed)
 
     alert = crud.alert.create(db, obj_in=alert_in)
     alert_2 = crud.alert.get(db, alert.id)
     assert alert.owner == alert_2.owner
     assert alert.tlp == alert_2.tlp
+    assert alert.alf == alert_2.alf
     assert alert.status == alert_2.status
     assert alert.parsed == alert_2.parsed
 
@@ -44,9 +48,10 @@ def test_update_alert(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice(list(StatusEnum))
     parsed = faker.pybool()
-    alert_in = AlertCreate(owner=user.email, tlp=tlp, status=status, parsed=parsed)
+    alert_in = AlertCreate(owner=user.email, tlp=tlp, alf=alf, status=status, parsed=parsed)
 
     alert = crud.alert.create(db, obj_in=alert_in)
     update_status = random.choice(list(StatusEnum))
@@ -64,9 +69,10 @@ def test_delete_alert(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice(list(StatusEnum))
     parsed = faker.pybool()
-    alert_in = AlertCreate(owner=user.email, tlp=tlp, status=status, parsed=parsed)
+    alert_in = AlertCreate(owner=user.email, tlp=tlp, alf=alf, status=status, parsed=parsed)
 
     alert = crud.alert.create(db, obj_in=alert_in)
     alert_get = crud.alert.get(db, alert.id)

@@ -2,14 +2,14 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Request, Query, Path
+from fastapi import BackgroundTasks, Depends, HTTPException, Request, Query, Path
 from fastapi.encoders import jsonable_encoder
 from jose import jwt
 from pydantic import ValidationError
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.core import security
+from app.core import security, publisher
 from app.core.config import settings
 from app.crud import permission
 from app.db.base_class import Base
@@ -132,7 +132,7 @@ def get_current_roles(
 
 
 def get_current_active_superuser(
-    current_user: models.User = Depends(get_current_user),
+    current_user: models.User = Depends(get_current_active_user),
 ) -> models.User:
     if not crud.user.is_superuser(current_user):
         raise HTTPException(
@@ -147,13 +147,15 @@ AUDIT_DATA_VERSION = "0.1"
 
 
 class AuditLogger:
-    def __init__(self, username, source_ip, user_agent, db_session=None):
+    def __init__(self, username, source_ip, user_agent, db_session=None, background_tasks: BackgroundTasks = None, publisher=None):
         self.username = username
         self.source_ip = source_ip
         self.user_agent = user_agent
         self.db_session = db_session
         self.audit_data_version = AUDIT_DATA_VERSION
         self.audit_objects = []
+        self.background_tasks = background_tasks
+        self.publisher = publisher
 
     def log(self, action, thing, thing_type=None, thing_pk=None, log_thing=True,
             thing_subtype=None):
@@ -226,6 +228,8 @@ class AuditLogger:
             audit_data=data,
         )
         self.audit_objects.append(audit)
+        if self.background_tasks is not None and self.publisher is not None:
+            self.background_tasks.add_task(self.publisher.processToPublish, audit)
 
     def save_audits(self, db: Session | None = None):
         if db is None:
@@ -236,21 +240,25 @@ class AuditLogger:
 # Dependency to get the audit logger of the current request
 def get_audit_logger(
     request: Request,
+    background_tasks: BackgroundTasks,
     db_session: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ) -> AuditLogger:
     username = current_user.username if current_user else None
     ipaddr = request.client.host
+    publisher = request.app.state.publisher
     # The end ip address is NUM_TRUSTED_PROXIES from the end of x-forwarded-for
     if settings.NUM_TRUSTED_PROXIES and request.headers.get("x-forwarded-for"):
         forwarded = request.headers.get("x-forwarded-for").split(", ")
         if len(forwarded) >= settings.NUM_TRUSTED_PROXIES:
             ipaddr = forwarded[-settings.NUM_TRUSTED_PROXIES]
     logger = AuditLogger(
-        username,
-        ipaddr,
-        request.headers.get("user-agent", None),
+        username=username,
+        source_ip=ipaddr,
+        user_agent=request.headers.get("user-agent", None),
+        background_tasks=background_tasks,
         db_session=db_session,
+        publisher=publisher,
     )
     request.state.audit_logger = logger
     return logger

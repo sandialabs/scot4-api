@@ -19,7 +19,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
     link_csv_writer.writerow(['v0_type', 'v0_id', 'v1_type', 'v1_id'])
     with open(f'{staging_directory}/incidents.csv','w+') as incident_csv:
         writer = csv.writer(incident_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['incident_id', 'tlp', 'owner', 'status', 'subject', 'created_date', 'modified_date', 'incident_data', 'incident_data_ver', 'reported_date', 'discovered_date', 'occurred_date'])
+        writer.writerow(['incident_id', 'tlp', 'alf', 'owner', 'status', 'subject', 'created_date', 'modified_date', 'incident_data', 'incident_data_ver', 'reported_date', 'discovered_date', 'occurred_date'])
         with tqdm.tqdm(total=scot3_incident_count) as pbar:
             for incident in scot3_incidents:
                 reported = incident['data'].get('reported')
@@ -31,6 +31,9 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     tlp = 'unset'
                 elif tlp =='amber+strict':
                     tlp = 'amber_strict'
+                alf = incident.get('alf')
+                if alf is None:
+                    alf = 'unset'
                 inc_ts = {}
                 if reported is not None:
                     reported_date = datetime.fromtimestamp(reported).astimezone(timezone.utc).replace(tzinfo=None)
@@ -44,7 +47,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     occurred_date = datetime.fromtimestamp(occurred).astimezone(timezone.utc).replace(tzinfo=None)
                 else:
                     occurred_date = None
-                new_incident = [incident['id'], tlp, incident['owner'], incident['status'],  incident['subject'], datetime.fromtimestamp(incident['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(incident['updated']).astimezone(timezone.utc).replace(tzinfo=None), json.dumps(incident['data']), version, reported_date, discovered_date, occurred_date]
+                new_incident = [incident['id'], tlp, alf, incident['owner'], incident['status'],  incident['subject'], datetime.fromtimestamp(incident['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(incident['updated']).astimezone(timezone.utc).replace(tzinfo=None), json.dumps(incident['data']), version, reported_date, discovered_date, occurred_date]
                 writer.writerow(new_incident)
                 write_permission(thing=incident, thing_type='incident', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)
                 write_tag_source_links(thing=incident, thing_type='incident', tag_lookup=tag_lookup, source_lookup=source_lookup, link_csv_writer=link_csv_writer)               

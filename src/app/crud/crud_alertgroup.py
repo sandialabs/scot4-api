@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 from app import crud
 from app.crud.base import CRUDBase
 from app.crud.crud_permission import permission as crud_permission
-from app.enums import TargetTypeEnum, TlpEnum, StatusEnum
+from app.enums import TargetTypeEnum, TlpEnum, AlfEnum, StatusEnum
 from app.crud.crud_tag import tag
 from app.crud.crud_source import source
 from app.models import Signature, AlertGroup, AlertData, Audit, User, Permission, Alert
@@ -74,6 +74,7 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
         db_obj = AlertGroup(
             owner=obj_in.owner,
             tlp=obj_in.tlp,
+            alf=obj_in.alf,
             view_count=obj_in.view_count,
             first_view=obj_in.first_view,
             message_id=obj_in.message_id,
@@ -105,6 +106,8 @@ class CRUDAlertGroup(CRUDBase[AlertGroup, AlertGroupDetailedCreate, AlertGroupUp
                         alert.owner = obj_in.owner
                     if alert.tlp == TlpEnum.unset:
                         alert.tlp = obj_in.tlp
+                    if alert.alf == AlfEnum.unset:
+                        alert.alf = obj_in.alf
                     alert.alertgroup_id = db_obj.id
                     crud.alert.create(db_session=db_session, obj_in=alert)
         self.publish("create", db_obj)

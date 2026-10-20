@@ -133,7 +133,13 @@ def generic_post(
             background_tasks.add_task(send_reflair_request, _obj.id, TargetTypeEnum.alertgroup, obj_to_flair)
         if target_type == TargetTypeEnum.remote_flair:
             background_tasks.add_task(send_reflair_request, _obj.id, TargetTypeEnum.remote_flair, _obj.html)
-        crud.notification.send_create_notifications(db, _obj, current_user)
+        crud.notification.send_create_notifications(
+            db,
+            _obj,
+            current_user,
+            background_tasks=background_tasks,
+            publisher=audit_logger.publisher,
+        )
 
         return _obj
 
@@ -284,9 +290,15 @@ def generic_put(
                     obj_in=_metric,
                     audit_logger=audit_logger
                 )
-        crud.notification.send_update_notifications(db, updated, current_user, extra_data=obj.model_dump(exclude_unset=True))
+        crud.notification.send_update_notifications(
+            db,
+            updated,
+            current_user,
+            extra_data=obj.model_dump(exclude_unset=True),
+            background_tasks=background_tasks,
+            publisher=audit_logger.publisher,
+        )
 
-        print("HERE", updated)
         return updated
 
 
@@ -980,9 +992,12 @@ def generic_export(
         audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
         id: Annotated[int, Query(...)],
         format: Annotated[ExportFormatEnum, Query(...)] = ExportFormatEnum.html,
+        user: models.User = Depends(deps.get_current_active_user),
         roles: list[models.Role] = Depends(deps.get_current_roles),
         background_tasks: BackgroundTasks
     ) -> Any:
+        # will raise an exception on bad permission
+        deps.PermissionCheckId(target_type, PermissionEnum.read)(id, db, user, roles)
         # get original object
         _obj = crud_type.get(db_session=db, _id=id, audit_logger=audit_logger)
         if not _obj:

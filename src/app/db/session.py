@@ -26,7 +26,7 @@ else:
         connect_args={"connect_timeout": settings.DB_CONNECT_TIMEOUT},
         pool_size=settings.DB_CONNECTION_POOL_SIZE,
         pool_pre_ping=True,
-        pool_recycle=3600,
+        pool_recycle=settings.DB_CONNECTION_POOL_RECYCLE,
         max_overflow=settings.DB_CONNECTION_POOL_OVERFLOW,
         pool_timeout=settings.DB_CONNECTION_POOL_TIMEOUT
     )

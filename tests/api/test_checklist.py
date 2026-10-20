@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import TlpEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, TargetTypeEnum
 from tests.utils.checklist import create_random_checklist
 from tests.utils.tag import create_random_tag
 
@@ -45,6 +45,7 @@ def test_create_checklist(client: TestClient, normal_user_token_headers: dict, s
     data = {
         "owner": faker.word(),
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence(12),
         "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
         "checklist_data": faker.pydict(value_types=[int, str, float]),
@@ -86,12 +87,14 @@ def test_create_checklists(client: TestClient, normal_user_token_headers: dict, 
     data = [{
         "owner": faker.word(),
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence(12),
         "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
         "checklist_data": faker.pydict(value_types=[int, str, float]),
     },{
         "owner": faker.word(),
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence(12),
         "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
         "checklist_data": faker.pydict(value_types=[int, str, float]),
@@ -141,6 +144,7 @@ def test_update_checklist(client: TestClient, normal_user_token_headers: dict, s
     checklist = create_random_checklist(db, faker)
     data = {
         "tlp": TlpEnum.white.value,
+        "alf": AlfEnum.white.value,
         "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
     }
 
@@ -155,6 +159,8 @@ def test_update_checklist(client: TestClient, normal_user_token_headers: dict, s
     assert get_checklist is not None
     assert get_checklist["tlp"] != checklist.tlp
     assert get_checklist["tlp"] == data["tlp"]
+    assert get_checklist["alf"] != checklist.alf
+    assert get_checklist["alf"] == data["alf"]
 
     r = client.put(
         f"{settings.API_V1_STR}/checklist/-1",
@@ -185,6 +191,7 @@ def test_update_checklists(client: TestClient, normal_user_token_headers: dict, 
 
     data = {
         "tlp": TlpEnum.white.value,
+        "alf": AlfEnum.white.value,
         "checklist_data_ver": str(faker.pyfloat(1, 1, True)),
     }
 
@@ -199,8 +206,10 @@ def test_update_checklists(client: TestClient, normal_user_token_headers: dict, 
     assert get_checklist is not None
     assert len(get_checklist) == 2
     assert get_checklist[0]["tlp"] == data["tlp"]
+    assert get_checklist[0]["alf"] == data["alf"]
     assert get_checklist[0]["checklist_data_ver"] == data["checklist_data_ver"]
     assert get_checklist[1]["tlp"] == data["tlp"]
+    assert get_checklist[1]["alf"] == data["alf"]
     assert get_checklist[1]["checklist_data_ver"] == data["checklist_data_ver"]
 
     r = client.put(
@@ -503,7 +512,23 @@ def test_search_checklist(client: TestClient, superuser_token_headers: dict, nor
     assert any(i["id"] == random_checklist.id for i in r.json()["result"])
 
     r = client.get(
+        f"{settings.API_V1_STR}/checklist/?alf={random_checklist.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_checklist.id for i in r.json()["result"])
+
+    r = client.get(
         f"{settings.API_V1_STR}/checklist/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+    assert any(i["id"] == random_checklist.id for i in r.json()["result"])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/checklist/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers,
     )
 

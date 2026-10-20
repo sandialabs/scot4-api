@@ -20,6 +20,7 @@ description, _ = create_schema_details(schemas.FlairUpdateResult, "Return a flai
 @router.post(
     "/flairupdate",
     response_model=Union[schemas.AlertGroupDetailed, schemas.Entry, schemas.Alert, schemas.RemoteFlair, dict],
+    dependencies=[Depends(deps.admin_only)],
     description=description,
     summary="Return flair data"
 )
@@ -158,6 +159,7 @@ description, _ = create_schema_details(schemas.RemoteFlairCreate, "Creates a rem
 def post_remote_flair(
     *,
     db: Session = Depends(deps.get_db),
+    _: models.User = Depends(deps.get_current_active_user),
     obj: Annotated[schemas.RemoteFlairCreate, Body(...)],
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     background_tasks: BackgroundTasks,
@@ -197,6 +199,7 @@ def post_remote_flair(
 def get_remote_flair(
     *,
     db: Session = Depends(deps.get_db),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     id: Annotated[int, Path(...)],
 ):

@@ -1,16 +1,6 @@
 # SCOT4 API
 
-## Build and Deploy
-
-**To build images for testing**: push code to the default branch of this repository. The CI pipeline will create a new image and push it to the [unsorted container registry](https://baltig.sandia.gov/scot/scot4/SCOT-API/container_registry/313) with a tag matching the short SHA of the commit.
-
-**To build an image for quality**: [identify the pipeline created by your latest push](https://baltig.sandia.gov/scot/scot4/SCOT-API/-/pipelines). Click the play button the "Tag Qual Image" job. This will take the image and push it to the [quality container registry](https://baltig.sandia.gov/scot/scot4/SCOT-API/container_registry/326) as tag `latest`. 
-
-**To build an image for production**: [create a new release for this project](https://baltig.sandia.gov/scot/scot4/SCOT-API/-/releases). When selecting a tag, choose a new tag name that follows a valid semantic versioning scheme (MAJOR.MINOR.PATCH) for instance 1.0.17. Make sure that this version is greater than any previous release. **Note**: only a maintainer of this repository may create a patch for the default branch. Once the image is created, it will be placed in [the production container registry](https://baltig.sandia.gov/scot/scot4/SCOT-API/container_registry/340) with a tag name matching the git tag created as well as overwriting `latest`.
-
-On tag validity: a job is run in the pipeline that verifies the tag is a valid semantic version string and is greater than any version before this one. This script lives in [SCOT4 Pipeline Support Repo](https://baltig.sandia.gov/scot/scot4/pipeline-support/-/blob/main/scripts/tag_validate.py?ref_type=heads) and is bundled into a container image for use in pipelines. It utilizes the gitlab release api to check all of the repo's releases and the git tags associated with them
-
-#### Initial Setup 
+## Initial Setup 
 
 Create a .env
 
@@ -32,7 +22,7 @@ export PYTHONPATH=$PWD/src
 python src/app/main.py
 ```
 
-#### Running
+## Running
 
 Using main
 ```shell
@@ -66,20 +56,3 @@ To run pytest normally
 export PYTHONPATH=$PWD/src:$PWD/tests
 pytest tests/
 ```
-
-What needs to be done/thought about 
-
-Roles & Permissions
-* Administrator - Full Access
-* Incident Commander - View Edit Events, Alerts
-* Observer - View Events 
-
-schemas need:
-* PositiveInt
-* EmailStr
-* AnyUrl
-* None
-* Fix for 
-
-DB models
-* need to be pluralized 

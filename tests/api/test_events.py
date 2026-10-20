@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import TlpEnum, StatusEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, StatusEnum, TargetTypeEnum, EntryClassEnum
 
 from tests.utils.event import create_random_event
 from tests.utils.user import create_random_user
@@ -48,6 +48,7 @@ def test_create_event(client: TestClient, normal_user_token_headers: dict, faker
     data = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence(),
         "view_count": faker.pyint()
@@ -77,12 +78,14 @@ def test_create_events(client: TestClient, normal_user_token_headers: dict, fake
     data = [{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence(),
         "view_count": faker.pyint()
     },{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence(),
         "view_count": faker.pyint()

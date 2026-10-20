@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import TlpEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, TargetTypeEnum
 from tests.utils.dispatch import create_random_dispatch
 from tests.utils.user import create_random_user
 from tests.utils.tag import create_random_tag
@@ -46,6 +46,7 @@ def test_create_dispatch(client: TestClient, normal_user_token_headers: dict, su
     data = {
         "owner": faker.word(),
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence(12),
         "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
         "dispatch_data": faker.pydict(value_types=[int, str, float]),
@@ -87,12 +88,14 @@ def test_create_dispatches(client: TestClient, normal_user_token_headers: dict, 
     data = [{
         "owner": faker.word(),
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence(12),
         "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
         "dispatch_data": faker.pydict(value_types=[int, str, float]),
     },{
         "owner": faker.word(),
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence(12),
         "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
         "dispatch_data": faker.pydict(value_types=[int, str, float]),
@@ -143,6 +146,7 @@ def test_update_dispatch(client: TestClient, normal_user_token_headers: dict, su
     dispatch = create_random_dispatch(db, faker, user, False)
     data = {
         "tlp": TlpEnum.white.value,
+        "alf": AlfEnum.white.value,
         "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
     }
 
@@ -157,6 +161,8 @@ def test_update_dispatch(client: TestClient, normal_user_token_headers: dict, su
     assert get_dispatch is not None
     assert get_dispatch["tlp"] != dispatch.tlp
     assert get_dispatch["tlp"] == data["tlp"]
+    assert get_dispatch["alf"] != dispatch.alf
+    assert get_dispatch["alf"] == data["alf"]
 
     r = client.put(
         f"{settings.API_V1_STR}/dispatch/-1",
@@ -179,6 +185,7 @@ def test_update_dispatches(client: TestClient, normal_user_token_headers: dict, 
     dispatch2 = create_random_dispatch(db, faker, user, False)
     data = {
         "tlp": TlpEnum.white.value,
+        "alf": AlfEnum.white.value,
         "dispatch_data_ver": str(faker.pyfloat(1, 1, True)),
     }
 
@@ -194,8 +201,10 @@ def test_update_dispatches(client: TestClient, normal_user_token_headers: dict, 
     assert len(get_dispatch) == 2
     assert get_dispatch[0]["id"] == dispatch1.id
     assert get_dispatch[0]["tlp"] == data["tlp"]
+    assert get_dispatch[0]["alf"] == data["alf"]
     assert get_dispatch[1]["id"] == dispatch2.id
     assert get_dispatch[1]["tlp"] == data["tlp"]
+    assert get_dispatch[1]["alf"] == data["tlp"]
 
     r = client.put(
         f"{settings.API_V1_STR}/dispatch/many/?ids=-1",
@@ -690,6 +699,22 @@ def test_search_dispatch(client: TestClient, superuser_token_headers: dict, norm
 
     r = client.get(
         f"{settings.API_V1_STR}/dispatch/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/dispatch/?alf={random_dispatch.alf.name}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_dispatch.id for i in r.json()["result"])
+
+
+    r = client.get(
+        f"{settings.API_V1_STR}/dispatch/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers
     )
 

@@ -4,7 +4,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.incident import IncidentCreate
 
 try:
@@ -30,6 +30,7 @@ def create_random_incident(db: Session, faker: Faker, owner: schemas.User | None
     incident_create = IncidentCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=faker.date_time_between_dates(discovered_date, datetime.now()),

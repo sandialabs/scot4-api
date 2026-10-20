@@ -5,7 +5,7 @@ from pydantic import BaseModel, field_validator, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.schemas.alertgroupschema import AlertGroupSchemaColumn
 from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
@@ -57,6 +57,7 @@ class AlertData(AlertDataBase, FavoriteLink):
 class AlertBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     status: Annotated[StatusEnum, Field(..., examples=[a.value for a in list(StatusEnum)])] = StatusEnum.open
     parsed: Annotated[bool, Field(...)] = False
 
@@ -128,6 +129,7 @@ class Alert(PopularityVoted, FavoriteLink, AlertBase, ResultBase):
 class AlertSearch(SearchBase):
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alf: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     parsed: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     alertgroup_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     entry_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
@@ -139,6 +141,8 @@ class AlertSearch(SearchBase):
             return value
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         elif attr == "parsed":
             return is_bool(value)
         elif attr == "alertgroup_id" or attr == "entry_count":

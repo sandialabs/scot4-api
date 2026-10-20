@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum, StatusEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum, StatusEnum
 from app.models import VulnFeed
 from app.schemas.vuln_feed import VulnFeedCreate, VulnFeedUpdate
 
@@ -55,6 +55,7 @@ def test_create_vuln_feed(db: Session, faker: Faker) -> None:
     vuln_feed = VulnFeedCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -65,6 +66,7 @@ def test_create_vuln_feed(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == vuln_feed.owner
     assert db_obj.tlp == vuln_feed.tlp
+    assert db_obj.alf == vuln_feed.alf
     assert db_obj.status == vuln_feed.status
     assert db_obj.subject == vuln_feed.subject
     assert db_obj.view_count == vuln_feed.view_count
@@ -77,6 +79,7 @@ def test_update_vuln_feed(db: Session, faker: Faker) -> None:
     update = VulnFeedUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -108,6 +111,7 @@ def test_update_vuln_feed(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "status": random.choice(list(StatusEnum)),
         "subject": faker.sentence(),
         "view_count": faker.pyint(),
@@ -119,6 +123,7 @@ def test_update_vuln_feed(db: Session, faker: Faker) -> None:
     assert db_obj.id == vuln_feed.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.status == update["status"]
     assert db_obj.status == update["status"]
     assert db_obj.view_count == update["view_count"]
@@ -146,6 +151,7 @@ def test_get_or_create_vuln_feed(db: Session, faker: Faker) -> None:
     vuln_feed = VulnFeedCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -229,6 +235,7 @@ def test_get_with_roles_vuln_feed(db: Session, faker: Faker) -> None:
         vuln_feed = VulnFeedCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
             view_count=faker.pyint(),
@@ -253,6 +260,7 @@ def test_query_objects_with_roles_vuln_feed(db: Session, faker: Faker) -> None:
         vuln_feed = VulnFeedCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
             view_count=faker.pyint(),
@@ -271,6 +279,7 @@ def test_query_objects_with_roles_vuln_feed(db: Session, faker: Faker) -> None:
 def test_create_with_owner_vuln_feed(db: Session, faker: Faker) -> None:
     vuln_feed = VulnFeedCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -293,6 +302,7 @@ def test_create_with_permissions_vuln_feed(db: Session, faker: Faker) -> None:
     vuln_feed = VulnFeedCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -304,6 +314,7 @@ def test_create_with_permissions_vuln_feed(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == vuln_feed.owner
     assert db_obj.tlp == vuln_feed.tlp
+    assert db_obj.alf == vuln_feed.alf
     assert db_obj.status == vuln_feed.status
     assert db_obj.subject == vuln_feed.subject
     assert db_obj.view_count == vuln_feed.view_count
@@ -320,6 +331,7 @@ def test_create_in_object_vuln_feed(db: Session, faker: Faker) -> None:
     vuln_feed = VulnFeedCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -344,6 +356,7 @@ def test_get_history_vuln_feed(db: Session, faker: Faker) -> None:
     vuln_feed = VulnFeedCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),

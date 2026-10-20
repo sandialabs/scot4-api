@@ -2,7 +2,7 @@ from typing import Any, Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, Body
 from sqlalchemy.orm import Session
 
-from app import crud, schemas
+from app import crud, schemas, models
 from app.api import deps
 from app.enums import TargetTypeEnum
 from app.utils import create_schema_details
@@ -43,6 +43,7 @@ description, examples = create_schema_details(schemas.pivot.PivotAddEntityClasse
 def add_entity_classes(
     *,
     db: Session = Depends(deps.get_db),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     id: Annotated[int, Path(...)],
     request: Annotated[schemas.pivot.PivotAddEntityClasses, Body(..., openapi_examples=examples)]
@@ -74,6 +75,7 @@ description, examples = create_schema_details(schemas.pivot.PivotAddEntityTypes,
 def add_entity_types(
     *,
     db: Session = Depends(deps.get_db),
+    _: models.User = Depends(deps.get_current_active_user),
     audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
     id: Annotated[int, Path(...)],
     request: Annotated[schemas.pivot.PivotAddEntityTypes, Body(..., openapi_examples=examples)],

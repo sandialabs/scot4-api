@@ -118,12 +118,12 @@ class AzureAdAuthentication(BaseAuthentication):
         auth_result = self.app.acquire_token_by_auth_code_flow(flow, token)
         # Clean up all old flows older than an hour
         if len(self.storage) > 0:
-            expiry = (datetime.now(timezone.utc) + timedelta(hours=1)).isoformat()
+            expiry = (datetime.now(timezone.utc) + timedelta(hours=-1)).isoformat()
             for key, value in list(self.storage.items()):
                 item = json.loads(value)
                 if (
-                    not item.get("_scot_datetime")
-                    or item.get("_scot_datetime") < expiry
+                    item.get("_scot_datetime")
+                    and item.get("_scot_datetime") < expiry
                 ):
                     del self.storage[key]
 

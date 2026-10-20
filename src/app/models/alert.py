@@ -5,7 +5,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.orm.collections import attribute_mapped_collection
 
 from app.db.base_class import Base
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.models.mixins import PromotionToMixin, TimestampMixin, PopularityMixin
 from app.models.permission import Permission
 
@@ -18,6 +18,7 @@ class Alert(Base, TimestampMixin, PromotionToMixin, PopularityMixin):
     id = Column("alert_id", Integer, primary_key=True)
     owner = Column("owner", VARCHAR(length=320), nullable=False, server_default="scot-admin")
     tlp = Column("tlp", Enum(TlpEnum), nullable=False, server_default="unset")
+    alf = Column("alf", Enum(AlfEnum), nullable=False, server_default="unset")
     status = Column("status", Enum(StatusEnum), nullable=False, server_default="open")
     parsed = Column("parsed", Boolean, nullable=False, server_default=text("FALSE"))
     alertgroup_id = Column(

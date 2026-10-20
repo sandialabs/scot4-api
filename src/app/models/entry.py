@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.ext.hybrid import hybrid_property
 
 from app.db.base_class import Base
-from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.models.mixins import TimestampMixin, SourceMixin, TagMixin, PopularityMixin, UserLinksMixin
 
 
@@ -13,6 +13,7 @@ class Entry(Base, TimestampMixin, SourceMixin, TagMixin, PopularityMixin, UserLi
     id = Column("entry_id", Integer, primary_key=True)
     owner = Column("owner", Text, nullable=False)
     tlp = Column("tlp", Enum(TlpEnum), nullable=False)
+    alf = Column("alf", Enum(AlfEnum), nullable=False)
     parent_entry_id = Column("parent_entry_id", Integer, ForeignKey("entries.entry_id"))
     parent_entry = relationship(
         "Entry", back_populates="child_entries", uselist=False, remote_side=[id]

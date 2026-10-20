@@ -8,7 +8,7 @@ from app import crud
 from app.core.config import settings
 from app.object_storage.disk import DiskStorageProvider
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum
 from app.models import File
 from app.schemas.file import FileCreate, FileUpdate
 
@@ -59,6 +59,7 @@ def test_create_file(db: Session, faker: Faker) -> None:
     file = FileCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         file_pointer=faker.uuid4(),
         filename=faker.file_name(),
         filesize=faker.pyint(),
@@ -71,6 +72,7 @@ def test_create_file(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == file.owner
     assert db_obj.tlp == file.tlp
+    assert db_obj.alf == file.alf
     assert db_obj.file_pointer == file.file_pointer
     assert db_obj.filename == file.filename
     assert db_obj.filesize == file.filesize
@@ -85,12 +87,9 @@ def test_update_file(db: Session, faker: Faker) -> None:
     update = FileUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
-        file_pointer=faker.uuid4(),
+        alf=random.choice(list(AlfEnum)),
         filename=faker.file_name(),
-        filesize=faker.pyint(),
-        sha256=faker.sha256(),
         description=faker.sentence(),
-        content_type=faker.mime_type()
     )
 
     db_obj = crud.file.update(db, db_obj=file, obj_in=update)
@@ -98,12 +97,9 @@ def test_update_file(db: Session, faker: Faker) -> None:
     assert db_obj.id == file.id
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
-    assert db_obj.file_pointer == update.file_pointer
+    assert db_obj.alf == update.alf
     assert db_obj.filename == update.filename
-    assert db_obj.filesize == update.filesize
-    assert db_obj.sha256 == update.sha256
     assert db_obj.description == update.description
-    assert db_obj.content_type == update.content_type
 
     update = {}
 
@@ -124,24 +120,17 @@ def test_update_file(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
-        "file_pointer": faker.uuid4(),
+        "alf": random.choice(list(AlfEnum)),
         "filename": faker.file_name(),
-        "filesize": faker.pyint(),
-        "sha256": faker.sha256(),
         "description": faker.sentence(),
-        "content_type": faker.mime_type()
     }
 
-    db_obj = crud.file.update(db, db_obj=File(), obj_in=update)
+    db_obj = crud.file.update(db, db_obj=File(file_pointer=faker.uuid4()), obj_in=update)
 
     assert db_obj.id == file.id + 1
     assert db_obj.owner == update["owner"]
-    assert db_obj.file_pointer == update["file_pointer"]
     assert db_obj.filename == update["filename"]
-    assert db_obj.filesize == update["filesize"]
-    assert db_obj.sha256 == update["sha256"]
     assert db_obj.description == update["description"]
-    assert db_obj.content_type == update["content_type"]
 
 
 def test_remove_file(db: Session, faker: Faker) -> None:
@@ -168,6 +157,7 @@ def test_get_or_create_file(db: Session, faker: Faker) -> None:
     file = FileCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         file_pointer=faker.uuid4(),
         filename=faker.file_name(),
         filesize=faker.pyint(),
@@ -268,6 +258,7 @@ def test_get_with_roles_file(db: Session, faker: Faker) -> None:
         file = FileCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             file_pointer=faker.uuid4(),
             filename=faker.file_name(),
             filesize=faker.pyint(),
@@ -294,6 +285,7 @@ def test_query_objects_with_roles_file(db: Session, faker: Faker) -> None:
         file = FileCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             file_pointer=faker.uuid4(),
             filename=faker.file_name(),
             filesize=faker.pyint(),
@@ -314,6 +306,7 @@ def test_query_objects_with_roles_file(db: Session, faker: Faker) -> None:
 def test_create_with_owner_file(db: Session, faker: Faker) -> None:
     file = FileCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         file_pointer=faker.uuid4(),
         filename=faker.file_name(),
         filesize=faker.pyint(),
@@ -338,6 +331,7 @@ def test_create_with_permissions_file(db: Session, faker: Faker) -> None:
     file = FileCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         file_pointer=faker.uuid4(),
         filename=faker.file_name(),
         filesize=faker.pyint(),
@@ -351,6 +345,7 @@ def test_create_with_permissions_file(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == file.owner
     assert db_obj.tlp == file.tlp
+    assert db_obj.alf == file.alf
     assert db_obj.file_pointer == file.file_pointer
     assert db_obj.filename == file.filename
     assert db_obj.filesize == file.filesize
@@ -369,6 +364,7 @@ def test_create_in_object_file(db: Session, faker: Faker) -> None:
     file = FileCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         file_pointer=faker.uuid4(),
         filename=faker.file_name(),
         filesize=faker.pyint(),
@@ -395,6 +391,7 @@ def test_get_history_file(db: Session, faker: Faker) -> None:
     file = FileCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         file_pointer=faker.uuid4(),
         filename=faker.file_name(),
         filesize=faker.pyint(),

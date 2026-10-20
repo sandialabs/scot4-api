@@ -155,5 +155,11 @@ def create_entry(
         )
 
     background_tasks.add_task(send_flair_entry_request, TargetTypeEnum.entry, _obj)
-    crud.notification.send_create_notifications(db, _obj, current_user)
+    crud.notification.send_create_notifications(
+        db,
+        _obj,
+        current_user,
+        background_tasks=background_tasks,
+        publisher=audit_logger.publisher,
+    )
     return _obj

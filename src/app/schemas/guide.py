@@ -4,7 +4,7 @@ from pydantic import BaseModel, Json, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
-from app.enums import GuideStatusEnum, TlpEnum
+from app.enums import GuideStatusEnum, TlpEnum, AlfEnum
 from app.schemas.response import SearchBase, ResultBase
 from app.schemas.popularity import PopularityVoted
 from app.schemas.user_links import FavoriteLink
@@ -15,6 +15,7 @@ from app.schemas.tag import Tag
 class GuideBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     subject: Annotated[str | None, Field(...)] = None
     status: Annotated[GuideStatusEnum | None, Field(..., examples=[a.value for a in list(GuideStatusEnum)])] = GuideStatusEnum.current
     application: Annotated[dict | None, Field(..., examples=[{}])] = None
@@ -29,6 +30,7 @@ class GuideCreate(GuideBase):
 class GuideUpdate(GuideBase):
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
 
 
 # pretty
@@ -43,6 +45,7 @@ class Guide(PopularityVoted, FavoriteLink, GuideBase, ResultBase):
 class GuideSearch(SearchBase):
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alf: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     subject: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     status: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     entry_count: Annotated[str | SkipJsonSchema[None], Field(...)] = None
@@ -52,6 +55,8 @@ class GuideSearch(SearchBase):
             return value
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         elif attr == "status":
             return GuideStatusEnum(value)
         elif attr == "entry_count":

@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Enum, Integer, Text, VARCHAR
 
 from app.db.base_class import Base
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.models.mixins import SourceMixin, TagMixin, TimestampMixin
 
 
@@ -11,6 +11,7 @@ class File(Base, TimestampMixin, TagMixin, SourceMixin):
     file_pointer = Column("file_pointer", VARCHAR(length=70), unique=True, nullable=False)
     owner = Column("owner", Text, nullable=False)
     tlp = Column("tlp", Enum(TlpEnum), nullable=False)
+    alf = Column("alf", Enum(AlfEnum), nullable=False)
     filename = Column("filename", Text)
     filesize = Column("filesize", Integer)
     sha256 = Column("sha256", Text)

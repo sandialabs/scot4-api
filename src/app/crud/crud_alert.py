@@ -75,6 +75,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
             owner=obj_in.owner,
             status=obj_in.status,
             tlp=obj_in.tlp,
+            alf=obj_in.alf,
             alertgroup_id=obj_in.alertgroup_id,
             parsed=obj_in.parsed,
         )
@@ -203,6 +204,7 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
             owner=obj_in.owner,
             status=obj_in.status,
             tlp=obj_in.tlp,
+            alf=obj_in.alf,
             alertgroup_id=obj_in.alertgroup_id,
             parsed=obj_in.parsed,
         )
@@ -284,17 +286,23 @@ class CRUDAlert(CRUDBase[Alert, AlertCreate, AlertUpdate]):
 
         alert = self.get(db_session, alert_id)
         if alert is not None:
+            alert_update = None
             if flair_result.flair_data is not None:
                 for k, v in flair_result.flair_data.items():
                     flair_result.flair_data[k] = json.dumps(v)
-                alert_update = AlertUpdate(data_flaired=flair_result.flair_data)
-            else:
-                alert_update = AlertUpdate()
 
             if flair_result.text_data is not None:
                 for k, v in flair_result.text_data.items():
                     flair_result.text_data[k] = json.dumps(v)
-                alert_update.data = flair_result.text_data
+
+            if flair_result.flair_data is not None and flair_result.text_data is not None:
+                alert_update = AlertUpdate(data=flair_result.text_data, data_flaired=flair_result.flair_data)
+            elif flair_result.text_data is None:
+                alert_update = AlertUpdate(data_flaired=flair_result.flair_data)
+            elif flair_result.flair_data is None:
+                alert_update = AlertUpdate(data=flair_result.text_data)
+            else:
+                alert_update = AlertUpdate()
             self.update(db_session, alert, alert_update, audit_logger=audit_logger)
             if flair_result.entities is not None:
                 entity_values = []

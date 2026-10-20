@@ -5,7 +5,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.enums import TargetTypeEnum, StatusEnum, TlpEnum
+from app.enums import TargetTypeEnum, StatusEnum, TlpEnum, AlfEnum
 from app.core.config import settings
 
 from tests.utils.alert import create_random_alert
@@ -239,11 +239,25 @@ def test_search_alertgroups(client: TestClient, superuser_token_headers: dict, n
     )
 
     assert r.status_code == 200
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/?alf={random_alertgroup.alf.name}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
     api_alert = r.json()
     assert any(i["id"] == random_alertgroup.id for i in api_alert["result"])
 
     r = client.get(
         f"{settings.API_V1_STR}/alertgroup/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alertgroup/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers
     )
 
@@ -380,8 +394,8 @@ def test_create_alertgroups(client: TestClient, normal_user_token_headers: dict,
     user = create_random_user(db, faker)
 
     data = [
-        {"owner": user.username, "tlp": random.choice(list(TlpEnum)).value},
-        {"owner": user.username, "tlp": random.choice(list(TlpEnum)).value},
+        {"owner": user.username, "tlp": random.choice(list(TlpEnum)).value, "alf": random.choice(list(AlfEnum)).value},
+        {"owner": user.username, "tlp": random.choice(list(TlpEnum)).value, "alf": random.choice(list(AlfEnum)).value},
     ]
 
     r = client.post(

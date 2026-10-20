@@ -18,7 +18,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
     link_csv_writer.writerow(['v0_type', 'v0_id', 'v1_type', 'v1_id'])
     with open(f'{staging_directory}/products.csv','w+') as product_csv:
         writer = csv.writer(product_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['products_id', 'tlp', 'owner', 'subject', 'created_date', 'modified_date'])
+        writer.writerow(['products_id', 'tlp', 'alf', 'owner', 'subject', 'created_date', 'modified_date'])
         with tqdm.tqdm(total=scot3_product_count) as pbar:
             for product in scot3_products:
                 tlp = product.get('tlp')
@@ -26,7 +26,10 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     tlp = 'unset'
                 elif tlp =='amber+strict':
                     tlp = 'amber_strict'
-                new_product = [product['id'], tlp, product['owner'], product['subject'], datetime.fromtimestamp(product['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(product['updated']).astimezone(timezone.utc).replace(tzinfo=None)]
+                alf = product.get('alf')
+                if alf is None:
+                    alf = 'unset'
+                new_product = [product['id'], tlp, alf, product['owner'], product['subject'], datetime.fromtimestamp(product['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(product['updated']).astimezone(timezone.utc).replace(tzinfo=None)]
                 writer.writerow(new_product)
                 write_permission(thing=product, thing_type='product', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)
                 write_tag_source_links(thing=product, thing_type='product', tag_lookup=tag_lookup, source_lookup=source_lookup, link_csv_writer=link_csv_writer)               

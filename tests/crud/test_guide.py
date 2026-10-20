@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum, GuideStatusEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum, GuideStatusEnum
 from app.models import Guide
 from app.schemas.guide import GuideCreate, GuideUpdate
 
@@ -57,6 +57,7 @@ def test_create_guide(db: Session, faker: Faker) -> None:
     guide = GuideCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),
@@ -68,6 +69,7 @@ def test_create_guide(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == guide.owner
     assert db_obj.tlp == guide.tlp
+    assert db_obj.alf == guide.alf
     assert db_obj.subject == guide.subject
     assert db_obj.status == guide.status
     assert db_obj.application == guide.application
@@ -81,6 +83,7 @@ def test_update_guide(db: Session, faker: Faker) -> None:
     update = GuideUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),
@@ -93,6 +96,7 @@ def test_update_guide(db: Session, faker: Faker) -> None:
     assert db_obj.id == guide.id
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
+    assert db_obj.alf == update.alf
     assert db_obj.subject == update.subject
     assert db_obj.status == update.status
     assert db_obj.application == update.application
@@ -117,6 +121,7 @@ def test_update_guide(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "subject": faker.sentence(),
         "status": random.choice(list(GuideStatusEnum)),
         "application": jsonable_encoder(faker.pydict()),
@@ -129,6 +134,7 @@ def test_update_guide(db: Session, faker: Faker) -> None:
     assert db_obj.id == guide.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.subject == update["subject"]
     assert db_obj.status == update["status"]
     assert db_obj.application == update["application"]
@@ -157,6 +163,7 @@ def test_get_or_create_guide(db: Session, faker: Faker) -> None:
     guide = GuideCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),
@@ -229,6 +236,7 @@ def test_get_with_roles_guide(db: Session, faker: Faker) -> None:
         guide = GuideCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             subject=faker.sentence(),
             status=random.choice(list(GuideStatusEnum)),
             application=jsonable_encoder(faker.pydict()),
@@ -254,6 +262,7 @@ def test_query_objects_with_roles_guide(db: Session, faker: Faker) -> None:
         guide = GuideCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             subject=faker.sentence(),
             status=random.choice(list(GuideStatusEnum)),
             application=jsonable_encoder(faker.pydict()),
@@ -273,6 +282,7 @@ def test_query_objects_with_roles_guide(db: Session, faker: Faker) -> None:
 def test_create_with_owner_guide(db: Session, faker: Faker) -> None:
     guide = GuideCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),
@@ -296,6 +306,7 @@ def test_create_with_permissions_guide(db: Session, faker: Faker) -> None:
     guide = GuideCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),
@@ -308,6 +319,7 @@ def test_create_with_permissions_guide(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == guide.owner
     assert db_obj.tlp == guide.tlp
+    assert db_obj.alf == guide.alf
     assert db_obj.subject == guide.subject
     assert db_obj.status == guide.status
     assert db_obj.application == guide.application
@@ -324,6 +336,7 @@ def test_create_in_object_guide(db: Session, faker: Faker) -> None:
     guide = GuideCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),
@@ -349,6 +362,7 @@ def test_get_history_guide(db: Session, faker: Faker) -> None:
     guide = GuideCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         status=random.choice(list(GuideStatusEnum)),
         application=jsonable_encoder(faker.pydict()),

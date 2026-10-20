@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.models.mixins import (
     EntryMixin,
     SourceMixin,
@@ -22,6 +22,7 @@ class Incident(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, FileCoun
     id = Column("incident_id", Integer, primary_key=True)
     owner = Column("owner", Text, nullable=False)
     tlp = Column("tlp", Enum(TlpEnum), nullable=False)
+    alf = Column("alf", Enum(AlfEnum), nullable=False)
     occurred_date = Column(
         "occurred_date", UTCDateTime, nullable=True
     )

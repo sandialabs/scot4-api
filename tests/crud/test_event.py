@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum, StatusEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum, StatusEnum
 from app.models import Event
 from app.schemas.event import EventCreate, EventUpdate
 
@@ -54,6 +54,7 @@ def test_create_event(db: Session, faker: Faker) -> None:
     event = EventCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -64,6 +65,7 @@ def test_create_event(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == event.owner
     assert db_obj.tlp == event.tlp
+    assert db_obj.alf == event.alf
     assert db_obj.status == event.status
     assert db_obj.subject == event.subject
     assert db_obj.view_count == event.view_count
@@ -76,6 +78,7 @@ def test_update_event(db: Session, faker: Faker) -> None:
     update = EventUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -107,6 +110,7 @@ def test_update_event(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "status": random.choice(list(StatusEnum)),
         "subject": faker.sentence(),
         "view_count": faker.pyint(),
@@ -118,6 +122,7 @@ def test_update_event(db: Session, faker: Faker) -> None:
     assert db_obj.id == event.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.status == update["status"]
     assert db_obj.status == update["status"]
     assert db_obj.view_count == update["view_count"]
@@ -145,6 +150,7 @@ def test_get_or_create_event(db: Session, faker: Faker) -> None:
     event = EventCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -228,6 +234,7 @@ def test_get_with_roles_event(db: Session, faker: Faker) -> None:
         event = EventCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
             view_count=faker.pyint(),
@@ -252,6 +259,7 @@ def test_query_objects_with_roles_event(db: Session, faker: Faker) -> None:
         event = EventCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
             view_count=faker.pyint(),
@@ -270,6 +278,7 @@ def test_query_objects_with_roles_event(db: Session, faker: Faker) -> None:
 def test_create_with_owner_event(db: Session, faker: Faker) -> None:
     event = EventCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -292,6 +301,7 @@ def test_create_with_permissions_event(db: Session, faker: Faker) -> None:
     event = EventCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -303,6 +313,7 @@ def test_create_with_permissions_event(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == event.owner
     assert db_obj.tlp == event.tlp
+    assert db_obj.alf == event.alf
     assert db_obj.status == event.status
     assert db_obj.subject == event.subject
     assert db_obj.view_count == event.view_count
@@ -319,6 +330,7 @@ def test_create_in_object_event(db: Session, faker: Faker) -> None:
     event = EventCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),
@@ -343,6 +355,7 @@ def test_get_history_event(db: Session, faker: Faker) -> None:
     event = EventCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
         view_count=faker.pyint(),

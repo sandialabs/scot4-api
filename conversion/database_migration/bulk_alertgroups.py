@@ -18,7 +18,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
     scot3_alertgroups = mongo_db.alertgroup.find()
     with open(f'{staging_directory}/alertgroups.csv', 'w+') as alertgroup_schema_keys_csv:
         writer = csv.writer(alertgroup_schema_keys_csv, dialect='unix', delimiter="\t", quotechar="'")
-        writer.writerow(['alertgroup_id', 'tlp', 'subject', 'created_date', 'modified_date', 'view_count'])
+        writer.writerow(['alertgroup_id', 'tlp', 'alf', 'subject', 'created_date', 'modified_date', 'view_count'])
         with tqdm.tqdm(total=scot3_alertgroup_count) as pbar:
             for alertgroup in scot3_alertgroups:
                 view_count = alertgroup.get('views')

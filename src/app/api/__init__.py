@@ -1,4 +1,6 @@
 import logging
+import socket
+import time
 from logging.config import dictConfig
 
 from fastapi import FastAPI, Request
@@ -15,10 +17,54 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import PlainTextResponse
 from starlette.exceptions import HTTPException
 from sqlalchemy.exc import TimeoutError, OperationalError
+import nats
+from contextlib import asynccontextmanager
 
 from app.api.endpoints import router
 from app.core.config import settings
+from app.core.publisher import NatsPublisher
 from app.db.session import SessionLocal
+
+request_log = logging.getLogger("app.request")
+
+
+async def request_debug_middleware(request: Request, call_next):
+    start = time.perf_counter()
+    pod_name = socket.gethostname()
+    request_id = f"{id(request)}"
+    request_log.info(
+        "request start id=%s pod=%s method=%s path=%s query=%s",
+        request_id,
+        pod_name,
+        request.method,
+        request.url.path,
+        request.url.query,
+    )
+    try:
+        response = await call_next(request)
+    except Exception:
+        elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+        request_log.exception(
+            "request exception id=%s pod=%s method=%s path=%s latency_ms=%s",
+            request_id,
+            pod_name,
+            request.method,
+            request.url.path,
+            elapsed_ms,
+        )
+        raise
+
+    elapsed_ms = round((time.perf_counter() - start) * 1000, 2)
+    request_log.info(
+        "request finish id=%s pod=%s method=%s path=%s status=%s latency_ms=%s",
+        request_id,
+        pod_name,
+        request.method,
+        request.url.path,
+        response.status_code,
+        elapsed_ms,
+    )
+    return response
 
 
 async def db_middleware(request: Request, call_next) -> None:
@@ -53,6 +99,24 @@ async def db_middleware(request: Request, call_next) -> None:
     return response
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    nats_server = f"{settings.NATS_PROTOCOL}://{settings.NATS_HOST}:{settings.NATS_PORT}"
+    app.state.publisher = NatsPublisher(
+        servers=[nats_server],
+        name="scot-api",
+        max_reconnect_attempts=-1,
+        reconnect_time_wait=2,
+        connect_timeout=5,
+        enabled=settings.NATS_HOST is not None,  # could be settings.NATS_ENABLED
+    )
+    await app.state.publisher.start()
+    try:
+        yield
+    finally:
+        await app.state.publisher.stop()
+
+
 def create_app() -> FastAPI:
     """
     :return:
@@ -62,6 +126,9 @@ def create_app() -> FastAPI:
        "version": 1,
        "disable_existing_loggers": False,
        "formatters": {
+           "default": {
+               "format": "%(levelname)s:%(name)s:%(message)s",
+           },
            "access": {
                "()": "uvicorn.logging.AccessFormatter",
                "fmt": "%(levelprefix)s %(asctime)s.%(msecs)03d - %(client_addr)s - \"%(request_line)s\" %(status_code)s",
@@ -70,6 +137,11 @@ def create_app() -> FastAPI:
            },
        },
        "handlers": {
+           "default": {
+               "formatter": "default",
+               "class": "logging.StreamHandler",
+               "stream": "ext://sys.stdout",
+           },
            "access": {
                "formatter": "access",
                "class": "logging.StreamHandler",
@@ -82,6 +154,11 @@ def create_app() -> FastAPI:
                "level": "INFO",
                "propagate": False
            },
+           "app.request": {
+               "handlers": ["default"],
+               "level": "INFO",
+               "propagate": False,
+           },
        },
     })
 
@@ -89,7 +166,8 @@ def create_app() -> FastAPI:
         debug=settings.DEBUG,
         docs_url=None,
         redoc_url=None,
-        openapi_url=settings.OPENAPI_URL
+        openapi_url=settings.OPENAPI_URL,
+        lifespan=lifespan,
     )
 
     base_app.mount('/api/static', StaticFiles(packages=[('app.api', 'static')]), name='static')
@@ -111,31 +189,38 @@ def create_app() -> FastAPI:
         minimum_size=500,
         compresslevel=5)
 
+    if settings.ENV == "Development":
+        base_app.add_middleware(BaseHTTPMiddleware, dispatch=request_debug_middleware)
+
     base_app.add_middleware(BaseHTTPMiddleware, dispatch=db_middleware)
 
-    if not base_app.openapi_schema:
-        # will need to update all links for open source stuff
-        openapi_schema = get_openapi(
-            title="SCOT",
-            version="4.6.0",
-            summary="Sandia Cyber Omni Tracker Server",
-            description="The Sandia Cyber Omni Tracker (SCOT) is a cyber security incident response management system and knowledge base. Designed by cyber security incident responders, SCOT provides a new approach to manage security alerts, analyze data for deeper patterns, coordinate team efforts, and capture team knowledge. SCOT integrates with existing security applications to provide a consistent, easy to use interface that enhances analyst effectiveness.",
-            routes=base_app.routes,
-            # terms_of_service?
-            contact={
-                "name": "SCOT Development Team",
-                "url": "http://getscot.sandia.gov",
-                "email": "scot-dev@sandia.gov"
-            },
-            license_info={
-                "name": "LICENSE",
-                "identifier": "Apache-2.0",
-            },
-        )
-        openapi_schema["info"]["x-logo"] = {
-            "url": "https://sandialabs.github.io/scot4-docs/images/scot.png"
-        }
-        base_app.openapi_schema = openapi_schema
+    def custom_openapi():
+        if not base_app.openapi_schema:
+            # will need to update all links for open source stuff
+            openapi_schema = get_openapi(
+                title="SCOT",
+                version="4.7.3",
+                summary="Sandia Cyber Omni Tracker Server",
+                description="The Sandia Cyber Omni Tracker (SCOT) is a cyber security incident response management system and knowledge base. Designed by cyber security incident responders, SCOT provides a new approach to manage security alerts, analyze data for deeper patterns, coordinate team efforts, and capture team knowledge. SCOT integrates with existing security applications to provide a consistent, easy to use interface that enhances analyst effectiveness.",
+                routes=base_app.routes,
+                # terms_of_service?
+                contact={
+                    "name": "SCOT Development Team",
+                    "url": "http://getscot.sandia.gov",
+                    "email": "scot-dev@sandia.gov"
+                },
+                license_info={
+                    "name": "LICENSE",
+                    "identifier": "Apache-2.0",
+                },
+            )
+            openapi_schema["info"]["x-logo"] = {
+                "url": "https://sandialabs.github.io/scot4-docs/images/scot.png"
+            }
+            base_app.openapi_schema = openapi_schema
+        return base_app.openapi_schema
+
+    base_app.openapi = custom_openapi
 
     @base_app.get(settings.DOCS_URL, include_in_schema=False)
     async def custom_swagger_ui_html():
@@ -169,11 +254,55 @@ def create_app() -> FastAPI:
 
             mcp_app = create_mcp_server(base_app)
 
+            # Dummy lifespan combiner because it's not in fastmcp until version 3
+            @asynccontextmanager
+            async def combined_lifespan(app: FastAPI):
+                # Note that you have to pass base_app. Change this if we move
+                # away from sub-application mount later
+                async with lifespan(base_app):
+                    async with mcp_app.lifespan(app):
+                        yield
+
+            mcp_routes = [
+                route for route in mcp_app.routes
+                if getattr(route, "name", None) not in {
+                    "openapi",
+                    "swagger_ui_html",
+                    "swagger_ui_redirect",
+                    "redoc_html",
+                }
+                and getattr(route, "path", None) not in {
+                    settings.OPENAPI_URL,
+                    settings.DOCS_URL,
+                    settings.REDOC_URL,
+                    "/openapi.json",
+                    "/docs",
+                    "/redoc",
+                }
+            ]
             app = FastAPI(
-                routes=[*mcp_app.routes],
-                lifespan=mcp_app.lifespan,
+                debug=settings.DEBUG,
+                docs_url=None,
+                redoc_url=None,
+                openapi_url=None,
+                routes=mcp_routes,
+                lifespan=combined_lifespan,
                 middleware=mcp_app.user_middleware
             )
+
+            @app.get(settings.OPENAPI_URL, include_in_schema=False)
+            async def outer_openapi():
+                return base_app.openapi()
+
+            @app.get(settings.DOCS_URL, include_in_schema=False)
+            async def outer_custom_swagger_ui_html():
+                return await custom_swagger_ui_html()
+
+            @app.get(settings.REDOC_URL, include_in_schema=False)
+            async def outer_redoc_html():
+                return await redoc_html()
+
+            # Note that original application is mounted as a sub-application
             app.mount("/", base_app)
     else:
         app = base_app

@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.event import EventCreate
 
 try:
@@ -25,6 +25,7 @@ except ImportError:
 
 def create_random_event(db: Session, faker: Faker, owner: schemas.User | None = None, create_extras: bool | None = True):
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice(list(StatusEnum))
     subject = faker.sentence()
 
@@ -34,6 +35,7 @@ def create_random_event(db: Session, faker: Faker, owner: schemas.User | None = 
     event_create = EventCreate(
         owner=owner.username,
         tlp=tlp,
+        alf=alf,
         status=status,
         subject=subject,
     )

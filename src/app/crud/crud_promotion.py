@@ -54,14 +54,14 @@ class CRUDPromotion(CRUDBase[Promotion, PromotionCreate, PromotionUpdate]):
         new_attributes = {}
         if destination_id is None:
             # Pull info from first source object
-            # Promoted object gets its attributes (subject, tlp, etc.) from the
+            # Promoted object gets its attributes (subject, tlp, alf, etc.) from the
             # first source object in the list
             first_object_type = TargetTypeEnum(source[0].get("type"))
             first_object_id = source[0].get("id")
             first_object_crud = self.target_crud_mapping[first_object_type]
             first_object = db_session.get(first_object_crud.model, first_object_id)
             # These are the only attributes copied. Make more?
-            ATTRIBUTES_TO_COPY = ["subject", "tlp", "owner"]
+            ATTRIBUTES_TO_COPY = ["subject", "tlp", "alf", "owner"]
             for a in ATTRIBUTES_TO_COPY:
                 if not hasattr(new_object_crud.model, a):
                     continue

@@ -4,7 +4,7 @@ from typing import Any, Annotated
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.config import settings
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.schemas.tag import Tag
 from app.schemas.response import SearchBase
 from app.schemas.popularity import PopularityVoted
@@ -14,6 +14,7 @@ from app.schemas.user_links import FavoriteLink
 class ChecklistBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     subject: Annotated[str, Field(...)]
     checklist_data_ver: Annotated[str, Field(...)]
     checklist_data: Annotated[dict | None, Field(...)] = None
@@ -42,6 +43,7 @@ class ChecklistSearch(SearchBase):
     owner: Annotated[str | None, Field(...)] = None
     subject: Annotated[str | None, Field(...)] = None
     tlp: Annotated[str | None, Field(...)] = None
+    alf: Annotated[str | None, Field(...)] = None
     checklist_data_ver: Annotated[str | None, Field(...)] = None
     tag: Annotated[str | None, Field(...)] = None
 
@@ -50,5 +52,7 @@ class ChecklistSearch(SearchBase):
             return value
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         else:
             return super().type_mapping(attr, value)

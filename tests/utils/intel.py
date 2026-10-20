@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.intel import IntelCreate
 
 try:
@@ -26,6 +26,7 @@ def create_random_intel(db: Session, faker: Faker, owner: schemas.User | None = 
     intel_create = IntelCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )

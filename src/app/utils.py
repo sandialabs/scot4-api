@@ -342,11 +342,11 @@ def sanitize_attribute_filter(element: str, attribute: str, value: str) -> str:
     if (attribute == 'href' or attribute == 'src') and value.startswith('data:'):
         if attribute != 'src' or element != 'img' or not value.startswith('data:image/'):
             return None
-    if element == 'span' and attribute == 'class' and 'entity' in value:
-        return 'entity'
-    elif element == 'span' and attribute == 'class' and 'noflair' in value:
-        return 'noflair'
-    elif element == 'span' and attribute == 'class':
+    if element == 'span' and attribute == 'class' and "entity" in value:
+        return "entity"
+    elif element == 'span' and attribute == 'class' and "noflair" in value:
+        return "noflair"
+    elif element == 'span' and attribute == 'class' and "entity" not in value:
         return None
     elif element == 'span' and (attribute == 'data-entity-type' or attribute == 'data-entity-value'):
         return value

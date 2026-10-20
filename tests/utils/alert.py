@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.schemas.alert import AlertAdd, AlertCreate, AlertDataCreate, AlertGroupSchemaColumn
 
 try:
@@ -86,11 +86,12 @@ def create_random_alert_object(schema: list, db: Session, faker: Faker, owner: s
     if owner is None:
         owner = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice([StatusEnum.open, StatusEnum.closed])
     if parsed is None:
         parsed = faker.pybool()
     alert_create = AlertCreate(
-        owner=owner.username, tlp=tlp, status=status, parsed=parsed, data=data
+        owner=owner.username, tlp=tlp, alf=alf, status=status, parsed=parsed, data=data
     )
     return alert_create, entity_ids
 
@@ -109,11 +110,12 @@ def create_random_alert_addition(db: Session, faker: Faker, owner: schemas.User 
     if owner is None:
         owner = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     location = faker.city()
     status = random.choice(list(StatusEnum))
     parsed = faker.pybool()
     alert_create = AlertAdd(
-        owner=owner.username, tlp=tlp, location=location, status=status, parsed=parsed, data=data
+        owner=owner.username, tlp=tlp, alf=alf, location=location, status=status, parsed=parsed, data=data
     )
 
     return crud.alert.create(db, obj_in=alert_create)

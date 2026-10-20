@@ -1,5 +1,6 @@
 from ldap3 import MOCK_SYNC, OFFLINE_SLAPD_2_4, Connection, Server
 from ldap3.utils.dn import safe_rdn
+from ldap3.utils.conv import escape_filter_chars
 
 from app import crud
 from app.schemas.role import RoleCreate
@@ -175,7 +176,7 @@ class LdapAuthentication(BaseAuthentication):
         if self.user_name_attribute:
             search_attributes.append(self.user_name_attribute)
         # Use custom search filter if given
-        search_filter = "(%s=%s)" % (self.username_attribute, username)
+        search_filter = "(%s=%s)" % (self.username_attribute, escape_filter_chars(username))
         if self.user_filter:
             search_filter = "(&%s%s)" % (search_filter, self.user_filter)
         conn.search(self.user_base_dn, search_filter, attributes=search_attributes)
