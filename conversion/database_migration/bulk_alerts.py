@@ -15,13 +15,16 @@ def main(mongo_db=None, role_lookup=None):
     with tqdm.tqdm(total=scot3_alert_count) as pbar:
         with open(f'{staging_directory}/alerts.csv','w+') as alert_meta_data_csv:
             writer = csv.writer(alert_meta_data_csv, dialect='unix', delimiter='\t', quotechar="'")
-            writer.writerow(['created_date', 'modified_date', 'alert_id', 'owner', 'tlp', 'status', 'parsed', 'alertgroup_id'])
+            writer.writerow(['created_date', 'modified_date', 'alert_id', 'owner', 'tlp', 'alf', 'status', 'parsed', 'alertgroup_id'])
             for alert in scot3_alerts:
                 tlp = alert.get('tlp')
                 if tlp is None:
                     tlp = 'unset'
                 elif tlp =='amber+strict':
                     tlp = 'amber_strict'
+                alf = alert.get('alf')
+                if alf is None:
+                    alf = 'unset'
                 new_alert = [datetime.fromtimestamp(alert['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(alert['updated']).astimezone(timezone.utc).replace(tzinfo=None), alert['id'], 'scot-admin', tlp, alert['status'], 1, alert['alertgroup']]
                 writer.writerow(new_alert)
                 write_permission(thing=alert, thing_type='alert', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)

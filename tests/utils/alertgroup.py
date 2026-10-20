@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import TargetTypeEnum, TlpEnum
+from app.enums import TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.alertgroup import AlertGroupDetailedCreate
 
 try:
@@ -30,6 +30,7 @@ def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, fak
         owner = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     alert_count = faker.pyint(2, 5)
     closed_count = faker.pyint(0, alert_count)
     open_count = alert_count - closed_count
@@ -63,6 +64,7 @@ def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, fak
         alertgroup_create = AlertGroupDetailedCreate(
             owner=owner.username,
             tlp=tlp,
+            alf=alf,
             alert_count=alert_count,
             open_count=open_count,
             closed_count=closed_count,
@@ -77,6 +79,7 @@ def create_random_alertgroup(db: Session, sig_names_types, unique_sig_types, fak
         alertgroup_create = AlertGroupDetailedCreate(
             owner=owner.username,
             tlp=tlp,
+            alf=alf,
             alert_count=alert_count,
             open_count=open_count,
             closed_count=closed_count,
@@ -125,6 +128,7 @@ def create_random_alertgroup_no_sig(db: Session, faker: Faker, owner: schemas.Us
     alertgroup_create = AlertGroupDetailedCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         alert_count=alert_count,
         open_count=alert_count - closed_count,
         closed_count=closed_count,

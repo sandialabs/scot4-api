@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.enums import TlpEnum, StatusEnum, PermissionEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, StatusEnum, PermissionEnum, TargetTypeEnum
 from app.api.deps import AuditLogger
 from app.models import Dispatch
 from app.schemas.dispatch import DispatchCreate, DispatchUpdate
@@ -57,6 +57,7 @@ def test_create_dispatch(db: Session, faker: Faker) -> None:
     dispatch = DispatchCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -65,6 +66,7 @@ def test_create_dispatch(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == dispatch.owner
     assert db_obj.tlp == dispatch.tlp
+    assert db_obj.alf == dispatch.alf
     assert db_obj.status == dispatch.status
     assert db_obj.subject == dispatch.subject
 
@@ -75,6 +77,7 @@ def test_update_dispatch(db: Session, faker: Faker) -> None:
     update = DispatchUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -84,6 +87,7 @@ def test_update_dispatch(db: Session, faker: Faker) -> None:
     assert db_obj.id == dispatch.id
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
+    assert db_obj.alf == update.alf
     assert db_obj.status == update.status
     assert db_obj.subject == update.subject
 
@@ -106,6 +110,7 @@ def test_update_dispatch(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "status": random.choice(list(StatusEnum)),
         "subject": faker.sentence(),
     }
@@ -115,6 +120,7 @@ def test_update_dispatch(db: Session, faker: Faker) -> None:
     assert db_obj.id == dispatch.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.status == update["status"]
     assert db_obj.subject == update["subject"]
 
@@ -141,6 +147,7 @@ def test_get_or_create_dispatch(db: Session, faker: Faker) -> None:
     dispatch = DispatchCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -221,6 +228,7 @@ def test_get_with_roles_dispatch(db: Session, faker: Faker) -> None:
         dispatch = DispatchCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
         )
@@ -243,6 +251,7 @@ def test_query_objects_with_roles_dispatch(db: Session, faker: Faker) -> None:
         dispatch = DispatchCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
         )
@@ -259,6 +268,7 @@ def test_query_objects_with_roles_dispatch(db: Session, faker: Faker) -> None:
 def test_create_with_owner_dispatch(db: Session, faker: Faker) -> None:
     dispatch = DispatchCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -279,6 +289,7 @@ def test_create_with_permissions_dispatch(db: Session, faker: Faker) -> None:
     dispatch = DispatchCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -288,6 +299,7 @@ def test_create_with_permissions_dispatch(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == dispatch.owner
     assert db_obj.tlp == dispatch.tlp
+    assert db_obj.alf == dispatch.alf
     assert db_obj.status == dispatch.status
     assert db_obj.subject == dispatch.subject
 
@@ -302,6 +314,7 @@ def test_create_in_object_dispatch(db: Session, faker: Faker) -> None:
     dispatch = DispatchCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -324,6 +337,7 @@ def test_get_history_dispatch(db: Session, faker: Faker) -> None:
     dispatch = DispatchCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )

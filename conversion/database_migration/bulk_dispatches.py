@@ -18,7 +18,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
     link_csv_writer.writerow(['v0_type', 'v0_id', 'v1_type', 'v1_id'])
     with open(f'{staging_directory}/dispatch.csv','w+') as dispatch_csv:
         writer = csv.writer(dispatch_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['dispatch_id', 'tlp', 'owner', 'status', 'subject', 'created_date', 'modified_date'])
+        writer.writerow(['dispatch_id', 'tlp', 'alf', 'owner', 'status', 'subject', 'created_date', 'modified_date'])
         with tqdm.tqdm(total=scot3_dispatch_count) as pbar:
             for dispatch in scot3_dispatchs:
                 tlp = dispatch.get('tlp')
@@ -26,6 +26,9 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     tlp = 'unset'
                 elif tlp == 'amber+strict':
                     tlp = 'amber_strict'
+                alf = dispatch.get('alf')
+                if alf is None:
+                    alf = 'unset'
                 new_dispatch = [dispatch['id'], tlp, dispatch['owner'], dispatch['status'], dispatch['subject'], datetime.fromtimestamp(dispatch['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(dispatch['updated']).astimezone(timezone.utc).replace(tzinfo=None)]
                 writer.writerow(new_dispatch)
                 write_permission(thing=dispatch, thing_type='dispatch', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)

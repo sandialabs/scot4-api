@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum
 from app.models import Checklist
 from app.schemas.checklist import ChecklistCreate, ChecklistUpdate
 
@@ -99,7 +99,8 @@ def test_update_checklist(db: Session, faker: Faker) -> None:
         "owner": owner.username,
         "subject": faker.sentence(),
         "checklist_data_ver": "1.0.0",
-        "tlp": random.choice(list(TlpEnum))
+        "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum))
     }
 
     db_obj = crud.checklist.update(db, db_obj=Checklist(), obj_in=update)
@@ -131,6 +132,7 @@ def test_get_or_create_checklist(db: Session, faker: Faker) -> None:
     checklist = ChecklistCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         subject=faker.sentence(),
         checklist_data_ver=str(faker.pyfloat(1, 1, True))
     )

@@ -126,7 +126,12 @@ class CRUDEntry(CRUDBase[Entry, EntryCreate, EntryUpdate]):
                 new_entry_data["plain_text"] = text_plain
             new_entry_data["flaired_html"] = text_flaired
             new_entry_data["flaired"] = True
-            entry_update = EntryUpdate(entry_data=new_entry_data, parsed=True)
+            entry_update = EntryUpdate(
+                target_type=entry.target_type, 
+                target_id=entry.target_id, 
+                entry_data=new_entry_data, 
+                parsed=True
+            )
             entry = self.update(
                 db_session, db_obj=entry, obj_in=entry_update, audit_logger=audit_logger
             )

@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.product import ProductCreate
 
 try:
@@ -22,11 +22,13 @@ def create_random_product(db: Session, faker: Faker, owner: schemas.User | None 
         owner = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     subject = faker.sentence()
 
     product_create = ProductCreate(
         owner=owner.username,
         tlp=tlp,
+        alf=alf,
         subject=subject,
     )
     product = crud.product.create(db, obj_in=product_create)

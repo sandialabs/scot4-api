@@ -1,6 +1,6 @@
 from typing import Any, Annotated
 from datetime import datetime, timezone, timedelta
-from fastapi import APIRouter, Depends, Body, Query, HTTPException, Response
+from fastapi import APIRouter, BackgroundTasks, Depends, Body, Query, HTTPException, Request, Response
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
@@ -37,14 +37,20 @@ def ack_notifications(
     db: Session = Depends(deps.get_db),
     ack: Annotated[schemas.NotificationAck, Body(...)],
     current_user: models.User = Depends(deps.get_current_active_user),
-    audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger)
+    audit_logger: deps.AuditLogger = Depends(deps.get_audit_logger),
+    background_tasks: BackgroundTasks,
 ) -> list[int]:
     """
     Acknowledges notifications by ID
     """
     try:
         return crud.notification.ack_notifications(
-            db, ack.notification_ids, current_user.id, audit_logger
+            db,
+            ack.notification_ids,
+            current_user.id,
+            audit_logger,
+            background_tasks=background_tasks,
+            publisher=audit_logger.publisher,
         )
     except Exception as e:
         raise HTTPException(422, "Error: " + str(e))
@@ -55,6 +61,8 @@ def ack_notifications(
 )
 def broadcast_notification(
     *,
+    request: Request,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(deps.get_db),
     broadcast: Annotated[schemas.NotificationBroadcast, Body(...)],
     current_user: models.User = Depends(deps.get_current_active_user)
@@ -66,10 +74,15 @@ def broadcast_notification(
         broadcast.expires = datetime.now(timezone.utc) + timedelta(hours=12)
     try:
         crud.notification.broadcast_notification(
-            db, broadcast.message, broadcast.priority, broadcast.expires
+            db,
+            broadcast.message,
+            broadcast.priority,
+            broadcast.expires,
+            background_tasks=background_tasks,
+            publisher=request.app.state.publisher,
         )
     except Exception as e:
-        raise HTTPException(422, "Error: " + e)
+        raise HTTPException(422, "Error: " + str(e))
 
 
 @router.post("/subscribe", summary="Subscribe to an object", response_model=schemas.UserLinks)

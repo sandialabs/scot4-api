@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.core.config import settings
-from app.enums import TlpEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, TargetTypeEnum, EntryClassEnum
 
 from tests.utils.alert import create_random_alert
 from tests.utils.user import create_random_user
@@ -34,6 +34,7 @@ def test_get_alert(client: TestClient, superuser_token_headers: dict, normal_use
     api_alert = r.json()
     assert api_alert["owner"] == alert.owner
     assert api_alert["tlp"] == alert.tlp.value
+    assert api_alert["alf"] == alert.alf.value
     assert api_alert["status"] == alert.status.value
     assert api_alert["parsed"] == alert.parsed
     assert api_alert["data"] == alert.data
@@ -108,8 +109,11 @@ def test_update_alert(client: TestClient, superuser_token_headers: dict, normal_
 
     tlp_list = [a.value for a in list(TlpEnum)]
     tlp_list.remove(alert.tlp.value)
+    alf_list = [a.value for a in list(AlfEnum)]
+    alf_list.remove(alert.alf.value)
     data = {
-        "tlp": random.choice(tlp_list)
+        "tlp": random.choice(tlp_list),
+        "alf": random.choice(alf_list)
     }
 
     r = client.put(
@@ -140,6 +144,8 @@ def test_update_alert(client: TestClient, superuser_token_headers: dict, normal_
     assert alert_data["id"] == alert.id
     assert alert_data["tlp"] == data["tlp"]
     assert alert_data["tlp"] != alert.tlp
+    assert alert_data["alf"] == data["alf"]
+    assert alert_data["alf"] != alert.alf
 
 
 def test_update_alerts(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -148,7 +154,8 @@ def test_update_alerts(client: TestClient, superuser_token_headers: dict, normal
     alert2 = create_random_alert(db, faker, owner)
 
     data = {
-        "tlp": random.choice(list(TlpEnum)).value
+        "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value
     }
 
     r = client.put(
@@ -179,8 +186,10 @@ def test_update_alerts(client: TestClient, superuser_token_headers: dict, normal
     assert len(alert_data) == 2
     assert alert_data[0]["id"] == alert1.id
     assert alert_data[0]["tlp"] == data["tlp"]
+    assert alert_data[0]["alf"] == data["alf"]
     assert alert_data[1]["id"] == alert2.id
     assert alert_data[1]["tlp"] == data["tlp"]
+    assert alert_data[1]["alf"] == data["alf"]
 
 
 def test_delete_alert(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -500,11 +509,25 @@ def test_search_alerts(client: TestClient, superuser_token_headers: dict, normal
     )
 
     assert r.status_code == 200
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alert/?alf={random_alert.alf.name}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 200
     api_alert = r.json()
     assert any(i["id"] == random_alert.id for i in api_alert["result"])
 
     r = client.get(
         f"{settings.API_V1_STR}/alert/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/alert/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers
     )
 

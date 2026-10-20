@@ -3,7 +3,7 @@ from faker import Faker
 from sqlalchemy.orm import Session
 
 from app import crud, schemas
-from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, StatusEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.dispatch import DispatchCreate
 
 try:
@@ -24,12 +24,14 @@ def create_random_dispatch(db: Session, faker: Faker, owner: schemas.User | None
         owner = create_random_user(db, faker)
 
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     status = random.choice(list(StatusEnum))
     subject = faker.sentence()
 
     dispatch_create = DispatchCreate(
         owner=owner.username,
         tlp=tlp,
+        alf=alf,
         status=status,
         subject=subject,
     )

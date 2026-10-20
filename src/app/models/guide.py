@@ -1,7 +1,7 @@
 from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
-from app.enums import GuideStatusEnum, TlpEnum
+from app.enums import GuideStatusEnum, TlpEnum, AlfEnum
 from app.models.mixins import EntryMixin, TimestampMixin, PopularityMixin, UserLinksMixin, TagMixin, SourceMixin
 
 
@@ -11,6 +11,7 @@ class Guide(Base, TimestampMixin, EntryMixin, PopularityMixin, UserLinksMixin, T
     id = Column("guide_id", Integer, primary_key=True)
     owner = Column("owner", Text, nullable=False, default="scot-admin")
     tlp = Column("tlp", Enum(TlpEnum), nullable=False, default="unset")
+    alf = Column("alf", Enum(AlfEnum), nullable=False, default="unset")
     subject = Column("subject", Text)
     status = Column(
         "status", Enum(GuideStatusEnum), nullable=False, default=GuideStatusEnum.current

@@ -172,7 +172,7 @@ def add_tag(
     target_type: Annotated[TargetTypeEnum, Body(...)],
     target_id: Annotated[int, Body(...)],
     tag_name: Annotated[str, Body(...)],
-    tag_description: Annotated[str, Body(...)],
+    tag_description: Annotated[str | None, Body(...)] = None,
     user: models.User = Depends(deps.get_current_active_user),
     roles: list[models.Role] = Depends(deps.get_current_roles),
     db: Session = Depends(deps.get_db),

@@ -4,7 +4,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.enums import TlpEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, TargetTypeEnum, EntryClassEnum
 from app.core.config import settings
 
 from tests.utils.product import create_random_product
@@ -51,6 +51,7 @@ def test_create_product(client: TestClient, normal_user_token_headers: dict, db:
     data = {
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence()
     }
 
@@ -79,10 +80,12 @@ def test_create_products(client: TestClient, normal_user_token_headers: dict, db
     data = [{
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence()
     },{
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "subject": faker.sentence()
     }]
 
@@ -734,6 +737,21 @@ def test_search_product(client: TestClient, superuser_token_headers: dict, norma
 
     r = client.get(
         f"{settings.API_V1_STR}/product/?tlp={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/product/?alf={random_product.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_product.id for i in r.json()["result"])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/product/?alf={faker.word()}_{faker.word()}",
         headers=superuser_token_headers,
     )
 

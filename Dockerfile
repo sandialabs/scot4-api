@@ -1,4 +1,4 @@
-FROM python:3.11-bullseye
+FROM python:3.11-trixie
 
 WORKDIR /code
 
@@ -24,6 +24,7 @@ RUN chown -R scot4api /var/scot_files
 # Copy over the required files
 COPY requirements.txt /code/requirements.txt
 COPY ./src/app /code/app
+COPY ./scripts /code/scripts
 
 # Install requirements and upgrade pip
 RUN pip install --upgrade pip && pip install -r requirements.txt

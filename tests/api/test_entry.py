@@ -4,7 +4,7 @@ from faker import Faker
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.enums import TlpEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, TargetTypeEnum, EntryClassEnum
 from app.core.config import settings
 
 from tests.utils.alert import create_random_alert
@@ -504,6 +504,7 @@ def test_create_entry(client: TestClient, superuser_token_headers: dict, normal_
     data = {
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "target_type": TargetTypeEnum.alert.value,
         "target_id": alert.id,
         "entry_class": EntryClassEnum.entry.value,
@@ -540,6 +541,7 @@ def test_create_entry(client: TestClient, superuser_token_headers: dict, normal_
     assert entry_data is not None
     assert entry_data["id"] > 0
     assert entry_data["tlp"] == data["tlp"]
+    assert entry_data["alf"] == data["alf"]
 
 
 def test_create_entries(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -550,6 +552,7 @@ def test_create_entries(client: TestClient, superuser_token_headers: dict, norma
     data = [{
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "target_type": TargetTypeEnum.alert.value,
         "target_id": alert.id,
         "entry_class": EntryClassEnum.entry.value,
@@ -561,6 +564,7 @@ def test_create_entries(client: TestClient, superuser_token_headers: dict, norma
     },{
         "owner": user.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "target_type": TargetTypeEnum.alert.value,
         "target_id": alert.id,
         "entry_class": EntryClassEnum.entry.value,
@@ -598,8 +602,10 @@ def test_create_entries(client: TestClient, superuser_token_headers: dict, norma
     assert len(entry_data) == 2
     assert entry_data[0]["id"] > 0
     assert entry_data[0]["tlp"] == data[0]["tlp"]
+    assert entry_data[0]["alf"] == data[0]["alf"]
     assert entry_data[1]["id"] > 0
     assert entry_data[1]["tlp"] == data[1]["tlp"]
+    assert entry_data[1]["alf"] == data[1]["alf"]
     assert entry_data[0]["id"] < entry_data[1]["id"]
 
 
@@ -756,6 +762,21 @@ def test_search_entry(client: TestClient, superuser_token_headers: dict, normal_
 
     r = client.get(
         f"{settings.API_V1_STR}/entry/?tlp={faker.word}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
+        f"{settings.API_V1_STR}/entry/?alf={random_entry.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_entry.id for i in r.json()["result"])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/entry/?alf={faker.word}",
         headers=superuser_token_headers,
     )
 

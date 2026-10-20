@@ -47,6 +47,8 @@ class Settings(BaseSettings):
     DB_CONNECTION_POOL_OVERFLOW: int = 10
     # How long to wait to get connection from pool before timeout
     DB_CONNECTION_POOL_TIMEOUT: int = 5
+    # Recycle pooled DB connections before upstream idle timeouts can kill them
+    DB_CONNECTION_POOL_RECYCLE: int = 1800
     # Will be set to True when running unit tests
     TEST: bool = False
     # The key used to sign JWT tokens (required)
@@ -68,7 +70,7 @@ class Settings(BaseSettings):
     # Starting superuser info (only matters on first database creation)
     FIRST_SUPERUSER: str = "scot-admin@example.com"
     FIRST_SUPERUSER_USERNAME: str = "scot-admin"
-    FIRST_SUPERUSER_PASSWORD: str = "EHPVNY9YrQjB8VwD7Gu6H4ebCf"
+    FIRST_SUPERUSER_PASSWORD: str = "admin-password-here"
     FIRST_SUPERUSER_APIKEY: str = ""
     # Settings for emailing users (disabled by default)
     USERS_OPEN_REGISTRATION: bool = False
@@ -94,6 +96,14 @@ class Settings(BaseSettings):
     FLAIR_API_FLAIR_ENDPOINT: str | None = "/api/v1/flair"
     FLAIR_API_REGEX_ENDPOINT: str | None = "/api/v1/regex"
     FLAIR_API_KEY: str | None = None
+
+    # NATS configuration 
+    NATS_PROTOCOL: str | None = "nats"  # could be 'nats' or 'tls'
+    NATS_HOST: str | None = None
+    NATS_PORT: str | None = "4222"
+    NATS_USERNAME: str | None = None
+    NATS_PASSWORD: str | None = None
+    NATS_SUBJECT_ROOT: str = "scot"
 
     # Airflow enrichment configuration
     ENRICHMENT_API_JOB_ENDPOINT: str | None = None

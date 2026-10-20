@@ -61,6 +61,7 @@ def test_promote_new(client: TestClient, superuser_token_headers: dict, normal_u
     assert intel_data["id"] == promote_data["id"]
     assert intel_data["subject"] == promote_data["subject"]
     assert intel_data["tlp"] == promote_data["tlp"]
+    assert intel_data["alf"] == promote_data["alf"]
 
 
 def test_promote_existing(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
@@ -115,3 +116,4 @@ def test_promote_existing(client: TestClient, superuser_token_headers: dict, nor
     assert incident_data["id"] == promote_data["id"]
     assert incident_data["subject"] == promote_data["subject"]
     assert incident_data["tlp"] == promote_data["tlp"]
+    assert incident_data["alf"] == promote_data["alf"]

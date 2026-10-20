@@ -1,8 +1,17 @@
 from sqlalchemy import JSON, Column, Enum, Integer, Text
 
 from app.db.base_class import Base
-from app.enums import TlpEnum
-from app.models.mixins import EntryMixin, GuidesForMixin, SourceMixin, TagMixin, TimestampMixin, PopularityMixin, UserLinksMixin, ThreatModelForMixin
+from app.enums import TlpEnum, AlfEnum
+from app.models.mixins import (
+    EntryMixin,
+    GuidesForMixin,
+    SourceMixin,
+    TagMixin,
+    TimestampMixin,
+    PopularityMixin,
+    UserLinksMixin,
+    ThreatModelForMixin
+)
 
 
 class Signature(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, GuidesForMixin, PopularityMixin, UserLinksMixin, ThreatModelForMixin):
@@ -11,6 +20,7 @@ class Signature(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, GuidesF
     id = Column("signature_id", Integer, primary_key=True)
     owner = Column("owner", Text, nullable=False, default="scot-admin")
     tlp = Column("tlp_enum", Enum(TlpEnum), nullable=False, default="unset")
+    alf = Column("alf_enum", Enum(AlfEnum), nullable=False, default="unset")
     latest_revision = Column("latest_revision", Integer, default=0)
     name = Column("signature_name", Text)
     description = Column("signature_description", Text)

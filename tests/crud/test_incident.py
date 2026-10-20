@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum, StatusEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum, StatusEnum
 from app.models import Incident
 from app.schemas.incident import IncidentCreate, IncidentUpdate
 
@@ -59,6 +59,7 @@ def test_create_incident(db: Session, faker: Faker) -> None:
     incident = IncidentCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -73,6 +74,7 @@ def test_create_incident(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == incident.owner
     assert db_obj.tlp == incident.tlp
+    assert db_obj.alf == incident.alf
     assert db_obj.occurred_date.replace(tzinfo=None) == incident.occurred_date
     assert db_obj.discovered_date.replace(tzinfo=None) == incident.discovered_date
     assert db_obj.reported_date.replace(tzinfo=None) == incident.reported_date
@@ -91,6 +93,7 @@ def test_update_incident(db: Session, faker: Faker) -> None:
     update = IncidentUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -106,6 +109,7 @@ def test_update_incident(db: Session, faker: Faker) -> None:
     assert db_obj.id == incident.id
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
+    assert db_obj.alf == update.alf
     assert db_obj.occurred_date.replace(tzinfo=None) == update.occurred_date
     assert db_obj.discovered_date.replace(tzinfo=None) == update.discovered_date
     assert db_obj.reported_date.replace(tzinfo=None) == update.reported_date
@@ -136,6 +140,7 @@ def test_update_incident(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "occurred_date": occurred_date,
         "discovered_date": discovered_date,
         "reported_date": discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -151,6 +156,7 @@ def test_update_incident(db: Session, faker: Faker) -> None:
     assert db_obj.id == incident.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.occurred_date.replace(tzinfo=None) == update["occurred_date"]
     assert db_obj.discovered_date.replace(tzinfo=None) == update["discovered_date"]
     assert db_obj.reported_date.replace(tzinfo=None) == update["reported_date"]
@@ -184,6 +190,7 @@ def test_get_or_create_incident(db: Session, faker: Faker) -> None:
     incident = IncidentCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -268,6 +275,7 @@ def test_get_with_roles_incident(db: Session, faker: Faker) -> None:
         incident = IncidentCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             occurred_date=occurred_date,
             discovered_date=discovered_date,
             reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -298,6 +306,7 @@ def test_query_objects_with_roles_incident(db: Session, faker: Faker) -> None:
         incident = IncidentCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             occurred_date=occurred_date,
             discovered_date=discovered_date,
             reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -322,6 +331,7 @@ def test_create_with_owner_incident(db: Session, faker: Faker) -> None:
     discovered_date = occurred_date + timedelta(days=faker.pyint(1, 10))
     incident = IncidentCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -350,6 +360,7 @@ def test_create_with_permissions_incident(db: Session, faker: Faker) -> None:
     incident = IncidentCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -365,6 +376,7 @@ def test_create_with_permissions_incident(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == incident.owner
     assert db_obj.tlp == incident.tlp
+    assert db_obj.alf == incident.alf
     assert db_obj.occurred_date.replace(tzinfo=None) == incident.occurred_date
     assert db_obj.discovered_date.replace(tzinfo=None) == incident.discovered_date
     assert db_obj.reported_date.replace(tzinfo=None) == incident.reported_date
@@ -387,6 +399,7 @@ def test_create_in_object_incident(db: Session, faker: Faker) -> None:
     incident = IncidentCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),
@@ -417,6 +430,7 @@ def test_get_history_incident(db: Session, faker: Faker) -> None:
     incident = IncidentCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         occurred_date=occurred_date,
         discovered_date=discovered_date,
         reported_date=discovered_date + timedelta(days=faker.pyint(1, 10)),

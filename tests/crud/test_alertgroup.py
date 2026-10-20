@@ -5,7 +5,7 @@ from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app import crud
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.schemas import AlertGroupDetailed, AlertGroupDetailedCreate, AlertGroupUpdate
 
 from tests.utils.alertgroup_schema import create_random_schema
@@ -32,6 +32,7 @@ def test_get_alertgroup_no_sig(db: Session, faker: Faker) -> None:
 def test_create_alertgroup(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     view_count = faker.pyint(0, 10)
     first_view = datetime.now(tz=timezone.utc)
     message_id = str(faker.pyint(0, 10))
@@ -41,6 +42,7 @@ def test_create_alertgroup(db: Session, faker: Faker) -> None:
     alertgroup = AlertGroupDetailedCreate(
         owner=user.email,
         tlp=tlp,
+        alf=alf,
         view_count=view_count,
         first_view=first_view,
         message_id=message_id,
@@ -53,6 +55,7 @@ def test_create_alertgroup(db: Session, faker: Faker) -> None:
     assert alertgroup_in
     assert alertgroup_in.owner == user.email
     assert alertgroup_in.tlp == tlp
+    assert alertgroup_in.alf == alf
     assert alertgroup_in.view_count == view_count
     assert alertgroup_in.first_view == first_view
     assert alertgroup_in.message_id == message_id
@@ -69,6 +72,7 @@ def test_create_alertgroup(db: Session, faker: Faker) -> None:
 def test_get_alertgroup(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     view_count = faker.pyint(0, 10)
     first_view = datetime.now(timezone.utc)
     message_id = str(faker.pyint(0, 10))
@@ -78,6 +82,7 @@ def test_get_alertgroup(db: Session, faker: Faker) -> None:
     alertgroup = AlertGroupDetailedCreate(
         owner=user.email,
         tlp=tlp,
+        alf=alf,
         view_count=view_count,
         first_view=first_view,
         message_id=message_id,
@@ -91,6 +96,7 @@ def test_get_alertgroup(db: Session, faker: Faker) -> None:
     assert alertgroup_2
     assert alertgroup_in.owner == alertgroup_2.owner
     assert alertgroup_in.tlp == alertgroup_2.tlp
+    assert alertgroup_in.alf == alertgroup_2.alf
     assert alertgroup_in.alert_count == alertgroup_2.alert_count
     assert alertgroup_in.closed_count == alertgroup_2.closed_count
     assert alertgroup_in.open_count == alertgroup_2.open_count
@@ -107,6 +113,7 @@ def test_get_alertgroups(db: Session, faker: Faker) -> None:
     for _ in range(5):
         user = create_random_user(db, faker)
         tlp = random.choice(list(TlpEnum))
+        alf = random.choice(list(AlfEnum))
         view_count = faker.pyint(0, 10)
         first_view = datetime.now(timezone.utc)
         message_id = str(faker.pyint(0, 10))
@@ -116,6 +123,7 @@ def test_get_alertgroups(db: Session, faker: Faker) -> None:
         alertgroup = AlertGroupDetailedCreate(
             owner=user.email,
             tlp=tlp,
+            alf=alf,
             view_count=view_count,
             first_view=first_view,
             message_id=message_id,
@@ -134,6 +142,7 @@ def test_get_alertgroups(db: Session, faker: Faker) -> None:
 def test_update_alertgroup(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     view_count = faker.pyint(0, 10)
     first_view = datetime.now(timezone.utc)
     message_id = str(faker.pyint(0, 10))
@@ -143,6 +152,7 @@ def test_update_alertgroup(db: Session, faker: Faker) -> None:
     alertgroup = AlertGroupDetailedCreate(
         owner=user.email,
         tlp=tlp,
+        alf=alf,
         view_count=view_count,
         first_view=first_view,
         message_id=message_id,
@@ -168,6 +178,7 @@ def test_update_alertgroup(db: Session, faker: Faker) -> None:
 def test_delete_alertgroup(db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     tlp = random.choice(list(TlpEnum))
+    alf = random.choice(list(AlfEnum))
     view_count = faker.pyint(0, 10)
     first_view = datetime.now(timezone.utc)
     message_id = str(faker.pyint(0, 10))
@@ -177,6 +188,7 @@ def test_delete_alertgroup(db: Session, faker: Faker) -> None:
     alertgroup = AlertGroupDetailedCreate(
         owner=user.email,
         tlp=tlp,
+        alf=alf,
         view_count=view_count,
         first_view=first_view,
         message_id=message_id,

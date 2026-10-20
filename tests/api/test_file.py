@@ -706,6 +706,21 @@ def test_search_files(client: TestClient, superuser_token_headers: dict, normal_
     assert r.status_code == 422
 
     r = client.get(
+        f"{settings.API_V1_STR}/file/?alf={random_file.alf.name}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 200
+    assert any(i["id"] == random_file.id for i in r.json()["result"])
+
+    r = client.get(
+        f"{settings.API_V1_STR}/file/?alf={faker.word()}_{faker.word()}",
+        headers=superuser_token_headers,
+    )
+
+    assert r.status_code == 422
+
+    r = client.get(
         f"{settings.API_V1_STR}/file/?filename={random_file.filename}",
         headers=superuser_token_headers,
     )

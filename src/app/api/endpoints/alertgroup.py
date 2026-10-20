@@ -73,7 +73,7 @@ description, examples = create_schema_details(schemas.AlertAdd)
     "/{id}/alerts",
     response_model=schemas.Alert,
     summary="Add an alert to an alertgroup",
-    dependencies=[alertgroup_read_dep],
+    dependencies=[alertgroup_modify_dep],
     description=description
 )
 def add_alertgroup_alert(

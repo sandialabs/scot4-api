@@ -146,9 +146,9 @@ source_read_dep = Depends(deps.PermissionCheckId(TargetTypeEnum.source, Permissi
 @router.post("/source_by_name", response_model=schemas.Source, summary="Assign source by name")
 def add_source(
     target_type: Annotated[TargetTypeEnum, Body(...)],
-    source_name: Annotated[str, Body(...)],
-    source_description: Annotated[str, Body(...)],
     target_id: Annotated[int, Body(...)],
+    source_name: Annotated[str, Body(...)],
+    source_description: Annotated[str | None, Body(...)] = None,
     user: models.User = Depends(deps.get_current_active_user),
     db: Session = Depends(deps.get_db),
     roles: list[models.Role] = Depends(deps.get_current_roles),

@@ -69,7 +69,7 @@ def main(mongo_db=None, role_lookup=None):
     permission_csv_writer.writerow(['role_id', 'target_type', 'target_id', 'permission'])
     with open(f'{staging_directory}/entries.csv','w+') as entry_csv:
         writer = csv.writer(entry_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['entry_id', 'parent_entry_id', 'tlp', 'owner', 'created_date', 'modified_date', 'target_type', 'target_id', 'entryclass', 'parsed',  'entry_data'])
+        writer.writerow(['entry_id', 'parent_entry_id', 'tlp', 'alf', 'owner', 'created_date', 'modified_date', 'target_type', 'target_id', 'entryclass', 'parsed',  'entry_data'])
         with tqdm.tqdm(total=scot3_entry_count) as pbar:
             bulk_array = []
             for entry in scot3_entries:
@@ -87,6 +87,9 @@ def main(mongo_db=None, role_lookup=None):
                     tlp = 'unset'
                 elif tlp =='amber+strict':
                     tlp = 'amber_strict'
+                alf = entry.get('alf')
+                if alf is None:
+                    alf = 'unset'
                 if entry['class'] == 'entry' or entry['class'] == 'summary' or entry['class'] == 'task':
                     parent_id = "NULL"
                     if entry.get('parent') != 0 and entry.get('parent') is not None:
@@ -95,7 +98,7 @@ def main(mongo_db=None, role_lookup=None):
                         entry_data = json.dumps({'html':sanitize_html(entry['body']), 'flaired_html':sanitize_html(entry['body_flair']), 'plain_text':sanitize_html(entry['body_plain']), 'status':entry['metadata']['task'].get('status'), 'task_time':entry['metadata']['task'].get('when'), 'assignee':entry['metadata']['task'].get('who')})
                     else:
                         entry_data = json.dumps({'html':sanitize_html(entry['body']), 'flaired_html':sanitize_html(entry['body_flair']), 'plain_text':sanitize_html(entry['body_plain'])})
-                    new_entry = [ entry['id'], parent_id, tlp, entry['owner'], datetime.fromtimestamp(entry['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(entry['updated']).astimezone(timezone.utc).replace(tzinfo=None), entry['target']['type'], entry['target']['id'], entry['class'], 1, entry_data ]
+                    new_entry = [ entry['id'], parent_id, tlp, alf, entry['owner'], datetime.fromtimestamp(entry['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(entry['updated']).astimezone(timezone.utc).replace(tzinfo=None), entry['target']['type'], entry['target']['id'], entry['class'], 1, entry_data ]
                     last_entry_id = entry['id']
                     writer.writerow(new_entry)
                     write_permission(thing=entry, thing_type='entry', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)

@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum
 from app.models import Feed, Feed
 from app.schemas.feed import FeedCreate, FeedUpdate
 
@@ -55,6 +55,7 @@ def test_create_feed(db: Session, faker: Faker) -> None:
         name=faker.word(),
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),
@@ -67,6 +68,7 @@ def test_create_feed(db: Session, faker: Faker) -> None:
     assert db_obj.name == feed.name
     assert db_obj.owner == feed.owner
     assert db_obj.tlp == feed.tlp
+    assert db_obj.alf == feed.alf
     assert db_obj.status == feed.status
     assert db_obj.type == feed.type
     assert db_obj.uri == feed.uri
@@ -81,6 +83,7 @@ def test_update_feed(db: Session, faker: Faker) -> None:
         name=faker.word(),
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),
@@ -94,6 +97,7 @@ def test_update_feed(db: Session, faker: Faker) -> None:
     assert db_obj.name == update.name
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
+    assert db_obj.alf == update.alf
     assert db_obj.status == update.status
     assert db_obj.type == update.type
     assert db_obj.uri == update.uri
@@ -120,6 +124,7 @@ def test_update_feed(db: Session, faker: Faker) -> None:
         "name": faker.word(),
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "status": faker.word(),
         "type": faker.word(),
         "uri": faker.uri(),
@@ -132,6 +137,7 @@ def test_update_feed(db: Session, faker: Faker) -> None:
     assert db_obj.name == update["name"]
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.status == update["status"]
     assert db_obj.type == update["type"]
     assert db_obj.uri == update["uri"]
@@ -161,6 +167,7 @@ def test_get_or_create_feed(db: Session, faker: Faker) -> None:
         name=faker.word(),
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),
@@ -229,6 +236,7 @@ def test_get_with_roles_feed(db: Session, faker: Faker) -> None:
             name=faker.word(),
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=faker.word(),
             type=faker.word(),
             uri=faker.uri(),
@@ -255,6 +263,7 @@ def test_query_objects_with_roles_feed(db: Session, faker: Faker) -> None:
             name=faker.word(),
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=faker.word(),
             type=faker.word(),
             uri=faker.uri(),
@@ -275,6 +284,7 @@ def test_create_with_owner_feed(db: Session, faker: Faker) -> None:
     feed = FeedCreate(
         name=faker.word(),
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),
@@ -289,6 +299,7 @@ def test_create_with_owner_feed(db: Session, faker: Faker) -> None:
     assert db_obj is not None
     assert db_obj.name == feed.name
     assert db_obj.tlp == feed.tlp
+    assert db_obj.alf == feed.alf
     assert db_obj.status == feed.status
     assert db_obj.type == feed.type
     assert db_obj.uri == feed.uri
@@ -305,6 +316,7 @@ def test_create_with_permissions_feed(db: Session, faker: Faker) -> None:
         name=faker.word(),
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),
@@ -318,6 +330,7 @@ def test_create_with_permissions_feed(db: Session, faker: Faker) -> None:
     assert db_obj.name == feed.name
     assert db_obj.owner == feed.owner
     assert db_obj.tlp == feed.tlp
+    assert db_obj.alf == feed.alf
     assert db_obj.status == feed.status
     assert db_obj.type == feed.type
     assert db_obj.uri == feed.uri
@@ -336,6 +349,7 @@ def test_create_in_object_feed(db: Session, faker: Faker) -> None:
         name=faker.word(),
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),
@@ -362,6 +376,7 @@ def test_get_history_feed(db: Session, faker: Faker) -> None:
         name=faker.word(),
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=faker.word(),
         type=faker.word(),
         uri=faker.uri(),

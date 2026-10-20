@@ -15,7 +15,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
     permission_csv_writer.writerow(['role_id', 'target_type', 'target_id', 'permission'])
     with open(f'{staging_directory}/guides.csv','w+') as guide_csv:
         writer = csv.writer(guide_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['guide_id', 'owner', 'tlp', 'subject', 'created_date', 'modified_date', 'guide_data'])
+        writer.writerow(['guide_id', 'owner', 'tlp', 'alf', 'subject', 'created_date', 'modified_date', 'guide_data'])
         with tqdm.tqdm(total=scot3_guide_count) as pbar:
             for guide in scot3_guides:
                 tlp = guide.get('tlp')
@@ -23,10 +23,13 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     tlp = 'unset'
                 elif tlp == 'amber+strict':
                     tlp = 'amber_strict'
+                alf = guide.get('alf')
+                if alf is None:
+                    alf = 'unset'
                 if guide.get('subject') is not None:
-                    new_guide = [guide['id'], 'scot-admin', tlp, guide['subject'], datetime.fromtimestamp(guide['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(guide['updated']).astimezone(timezone.utc).replace(tzinfo=None), json.dumps(guide.get('data')) ]
+                    new_guide = [guide['id'], 'scot-admin', tlp, alf, guide['subject'], datetime.fromtimestamp(guide['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(guide['updated']).astimezone(timezone.utc).replace(tzinfo=None), json.dumps(guide.get('data')) ]
                 else:
-                    new_guide = [ guide['id'], 'scot-admin', tlp, "NO SUBJECT", datetime.fromtimestamp(guide['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(guide['updated']).astimezone(timezone.utc).replace(tzinfo=None), json.dumps(guide.get('data'))]
+                    new_guide = [ guide['id'], 'scot-admin', tlp, alf, "NO SUBJECT", datetime.fromtimestamp(guide['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(guide['updated']).astimezone(timezone.utc).replace(tzinfo=None), json.dumps(guide.get('data'))]
                 writer.writerow(new_guide)
                 write_permission(thing=guide, thing_type='guide', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)
                 pbar.update(1)

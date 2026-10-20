@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.enums import TlpEnum, StatusEnum, TargetTypeEnum, EntryClassEnum
+from app.enums import TlpEnum, AlfEnum, StatusEnum, TargetTypeEnum, EntryClassEnum
 
 from tests.utils.vuln_feed import create_random_vuln_feed
 from tests.utils.user import create_random_user
@@ -47,6 +47,7 @@ def test_create_vuln_feed(client: TestClient, normal_user_token_headers: dict, f
     data = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence(),
         "view_count": faker.pyint()
@@ -76,12 +77,14 @@ def test_create_vuln_feeds(client: TestClient, normal_user_token_headers: dict, 
     data = [{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence(),
         "view_count": faker.pyint()
     },{
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)).value,
+        "alf": random.choice(list(AlfEnum)).value,
         "status": random.choice(list(StatusEnum)).value,
         "subject": faker.sentence(),
         "view_count": faker.pyint()

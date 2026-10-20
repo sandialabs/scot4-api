@@ -5,7 +5,7 @@ from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy.orm import relationship, column_property
 
 from app.db.base_class import Base
-from app.enums import StatusEnum, TlpEnum
+from app.enums import StatusEnum, TlpEnum, AlfEnum
 from app.models.alert import Alert
 from app.models.alertgroupschema import AlertGroupSchemaKeys
 from app.models.mixins import (
@@ -25,6 +25,7 @@ class AlertGroup(Base, TimestampMixin, SourceMixin, TagMixin, SignatureForMixin,
     id = Column("alertgroup_id", Integer, primary_key=True)
     owner = Column("owner", Text, nullable=False, default="scot-admin")
     tlp = Column("tlp", Enum(TlpEnum), default=TlpEnum.unset)
+    alf = Column("alf", Enum(AlfEnum), default=AlfEnum.unset)
     view_count = Column("view_count", Integer, default=0)
     first_view = Column("firstview_date", UTCDateTime)
     message_id = Column("message_id", Text)

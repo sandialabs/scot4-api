@@ -18,6 +18,16 @@ class TlpEnum(enum.Enum):
     amber_strict = "amber_strict"
 
 
+class AlfEnum(enum.Enum):
+    unset = "unset"
+    white = "white"
+    green = "green"
+    yellow = "yellow"
+    amber = "amber"
+    orange = "orange"
+    red = "red"
+
+
 class EnrichmentClassEnum(enum.Enum):
     markdown = "markdown"
     linechart = "linechart"

@@ -16,6 +16,14 @@ HTML_REMOVE_TAGS = re.compile("<.*?>")
 
 
 class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUpdate]):
+    def _queue_user_refresh(self, background_tasks, publisher, user_id: int, notification_id: int, what: str, data: any = None) -> None:
+        if background_tasks is not None and publisher is not None:
+            background_tasks.add_task(publisher.publish_user_notification_refresh, user_id, notification_id, what, data)
+
+    def _queue_broadcast_refresh(self, background_tasks, publisher, what: str, data: any = None) -> None:
+        if background_tasks is not None and publisher is not None:
+            background_tasks.add_task(publisher.publish_broadcast_notification_refresh, what, data)
+
     def get_subscribed_users(self, db_session: Session, target_type: TargetTypeEnum, target_id: int):
         query = db_session.query(User).join(UserLinks).filter(
             (UserLinks.link_type == UserLinkEnum.subscription)
@@ -56,7 +64,9 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
         db_session: Session,
         notification_ids: list[int],
         user_id: int,
-        audit_logger=None
+        audit_logger=None,
+        background_tasks=None,
+        publisher=None
     ):
         updated = []
         for notification_id in notification_ids:
@@ -76,6 +86,9 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
                         thing_pk=notification_id
                     )
         db_session.flush()
+        if updated:
+            for notification_id in updated:
+                self._queue_user_refresh(background_tasks, publisher, user_id, notification_id, "update", {'ack': True})
         return updated
 
     def broadcast_notification(
@@ -83,8 +96,10 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
         db_session: Session,
         message: str,
         priority: PriorityEnum = PriorityEnum.medium,
-        expires: datetime | None = None
-    ) -> Notification:
+        expires: datetime | None = None,
+        background_tasks=None,
+        publisher=None
+    ) -> None:
         """
         Sends a notification to all users
         """
@@ -103,6 +118,7 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
                 break
             skip += limit
             users = db_session.query(User).offset(skip).limit(limit).all()
+        self._queue_broadcast_refresh(background_tasks, publisher, "create")
 
     def ellipsis_message(self, message: str, length: int = 128) -> str:
         if len(message) > length:
@@ -114,7 +130,9 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
         db_session: Session,
         obj: Base,
         creating_user: User,
-        extra_data={}
+        extra_data=None,
+        background_tasks=None,
+        publisher=None
     ):
         if obj.target_type_enum() == TargetTypeEnum.entry:
             # Notify when someone replies to a subscribed entry
@@ -149,7 +167,8 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
                     user_id=user.id, message=message, priority=PriorityEnum.low,
                     ref_id=entry_ref_id
                 )
-                self.create(db_session, obj_in=notification_create)
+                new_notification = self.create(db_session, obj_in=notification_create)
+                self._queue_user_refresh(background_tasks, publisher, user.id, new_notification.id, "create")
         else:
             pass  # Only entry creations can generate notifications for now
 
@@ -158,8 +177,11 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
         db_session: Session,
         obj: Base,
         creating_user: User,
-        extra_data={}
+        extra_data=None,
+        background_tasks=None,
+        publisher=None
     ):
+        extra_data = extra_data or {}
         # Notify when someone updates a subscribed object
         target_type = obj.target_type_enum()
         users = self.get_subscribed_users(
@@ -192,7 +214,8 @@ class CRUDNotification(CRUDBase[Notification, NotificationCreate, NotificationUp
                 user_id=user.id, message=message, priority=PriorityEnum.low,
                 ref_id=obj_ref_id
             )
-            self.create(db_session, obj_in=notification_create)
+            new_notification = self.create(db_session, obj_in=notification_create)
+            self._queue_user_refresh(background_tasks, publisher, user.id, new_notification.id, "create")
 
 
 notification = CRUDNotification(Notification)

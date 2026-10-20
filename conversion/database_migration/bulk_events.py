@@ -18,7 +18,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
     scot3_events = mongo_db.event.find()
     with open(f'{staging_directory}/events.csv','w+') as events_csv:
         writer = csv.writer(events_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['event_id', 'owner', 'status', 'subject', 'created_date', 'modified_date', 'tlp', 'view_count'])
+        writer.writerow(['event_id', 'owner', 'status', 'subject', 'created_date', 'modified_date', 'tlp', 'alf', 'view_count'])
         with tqdm.tqdm(total=scot3_event_count) as pbar:
             for event in scot3_events:
                 tlp = event.get('tlp')
@@ -26,7 +26,10 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     tlp = 'unset'
                 elif tlp == 'amber+strict':
                     tlp = 'amber_strict'
-                new_event = [event['id'], event['owner'], event['status'], event['subject'], datetime.fromtimestamp(event['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(event['updated']).astimezone(timezone.utc).replace(tzinfo=None), tlp, event['views']]
+                alf = event.get('alf')
+                if alf is None:
+                    alf = 'unset'
+                new_event = [event['id'], event['owner'], event['status'], event['subject'], datetime.fromtimestamp(event['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(event['updated']).astimezone(timezone.utc).replace(tzinfo=None), tlp, alf, event['views']]
                 writer.writerow(new_event)
                 write_permission(thing=event, thing_type='event', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)
                 write_tag_source_links(thing=event, thing_type='event', tag_lookup=tag_lookup, source_lookup=source_lookup, link_csv_writer=link_csv_writer)               

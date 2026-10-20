@@ -53,7 +53,7 @@ class AuthHelp(BaseModel):
 
 class StorageProviderSettingsBase(BaseModel):
     provider: Annotated[StorageProviderEnum, Field(..., description="The type of storage to configure", examples=[a.value for a in list(StorageProviderEnum)])]
-    config: Annotated[dict, Field(..., description="The configuration options of your chosen storage method", examples=[storage_provider_classes.get(a, BaseStorageProvider).config_help for a in list(StorageProviderEnum)])] = {}
+    config: Annotated[dict, Field(..., description="The configuration options of your chosen storage method", examples=[storage_provider_classes.get(a, BaseStorageProvider).config_help for a in list(StorageProviderEnum)])] = None
     enabled: Annotated[bool, Field(..., description="Whether this storage method is what is used to store files (only one method should be active at a time)")] = False
 
 

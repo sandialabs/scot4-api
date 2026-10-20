@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Enum, Integer, Text
 
 from app.db.base_class import Base
-from app.enums import TlpEnum
+from app.enums import TlpEnum, AlfEnum
 from app.models.mixins import (
     EntryMixin,
     SourceMixin,
@@ -20,4 +20,5 @@ class Product(Base, TimestampMixin, EntryMixin, TagMixin, SourceMixin, FileCount
     id = Column("products_id", Integer, primary_key=True, index=True)
     owner = Column("owner", Text, nullable=False, default="scot-admin")
     tlp = Column("tlp", Enum(TlpEnum), nullable=False, default="unset")
+    alf = Column("alf", Enum(AlfEnum), nullable=False, default="unset")
     subject = Column("subject", Text)

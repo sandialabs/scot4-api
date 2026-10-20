@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum
 from app.models import Sigbody
 from app.schemas.sigbody import SigbodyCreate, SigbodyUpdate
 

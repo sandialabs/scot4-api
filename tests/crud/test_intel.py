@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app import crud
 from app.api.deps import AuditLogger
-from app.enums import TlpEnum, PermissionEnum, TargetTypeEnum, StatusEnum
+from app.enums import TlpEnum, AlfEnum, PermissionEnum, TargetTypeEnum, StatusEnum
 from app.models import Intel
 from app.schemas.intel import IntelCreate, IntelUpdate
 
@@ -55,6 +55,7 @@ def test_create_intel(db: Session, faker: Faker) -> None:
     intel = IntelCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -63,6 +64,7 @@ def test_create_intel(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == intel.owner
     assert db_obj.tlp == intel.tlp
+    assert db_obj.alf == intel.alf
     assert db_obj.status == intel.status
     assert db_obj.subject == intel.subject
 
@@ -73,6 +75,7 @@ def test_update_intel(db: Session, faker: Faker) -> None:
     update = IntelUpdate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -82,6 +85,7 @@ def test_update_intel(db: Session, faker: Faker) -> None:
     assert db_obj.id == intel.id
     assert db_obj.owner == update.owner
     assert db_obj.tlp == update.tlp
+    assert db_obj.alf == update.alf
     assert db_obj.status == update.status
     assert db_obj.subject == update.subject
 
@@ -104,6 +108,7 @@ def test_update_intel(db: Session, faker: Faker) -> None:
     update = {
         "owner": owner.username,
         "tlp": random.choice(list(TlpEnum)),
+        "alf": random.choice(list(AlfEnum)),
         "status": random.choice(list(StatusEnum)),
         "subject": faker.sentence(),
     }
@@ -113,6 +118,7 @@ def test_update_intel(db: Session, faker: Faker) -> None:
     assert db_obj.id == intel.id + 1
     assert db_obj.owner == update["owner"]
     assert db_obj.tlp == update["tlp"]
+    assert db_obj.alf == update["alf"]
     assert db_obj.status == update["status"]
     assert db_obj.subject == update["subject"]
 
@@ -138,6 +144,7 @@ def test_get_or_create_intel(db: Session, faker: Faker) -> None:
     intel = IntelCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -217,6 +224,7 @@ def test_get_with_roles_intel(db: Session, faker: Faker) -> None:
         intel = IntelCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
         )
@@ -239,6 +247,7 @@ def test_query_objects_with_roles_intel(db: Session, faker: Faker) -> None:
         intel = IntelCreate(
             owner=owner.username,
             tlp=random.choice(list(TlpEnum)),
+            alf=random.choice(list(AlfEnum)),
             status=random.choice(list(StatusEnum)),
             subject=faker.sentence(),
         )
@@ -255,6 +264,7 @@ def test_query_objects_with_roles_intel(db: Session, faker: Faker) -> None:
 def test_create_with_owner_intel(db: Session, faker: Faker) -> None:
     intel = IntelCreate(
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -275,6 +285,7 @@ def test_create_with_permissions_intel(db: Session, faker: Faker) -> None:
     intel = IntelCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -284,6 +295,7 @@ def test_create_with_permissions_intel(db: Session, faker: Faker) -> None:
     assert db_obj.id is not None
     assert db_obj.owner == intel.owner
     assert db_obj.tlp == intel.tlp
+    assert db_obj.alf == intel.alf
     assert db_obj.status == intel.status
     assert db_obj.subject == intel.subject
 
@@ -298,6 +310,7 @@ def test_create_in_object_intel(db: Session, faker: Faker) -> None:
     intel = IntelCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )
@@ -320,6 +333,7 @@ def test_get_history_intel(db: Session, faker: Faker) -> None:
     intel = IntelCreate(
         owner=owner.username,
         tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum)),
         status=random.choice(list(StatusEnum)),
         subject=faker.sentence(),
     )

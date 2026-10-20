@@ -5,7 +5,7 @@ from typing import Any, Annotated
 from pydantic import BaseModel, field_validator, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
 
-from app.enums import TlpEnum, StatusEnum
+from app.enums import TlpEnum, AlfEnum, StatusEnum
 from app.core.config import settings
 from app.schemas.alert import AlertCreate
 from app.schemas.alertgroupschema import AlertGroupSchemaColumnCreate
@@ -20,6 +20,7 @@ from app.utils import is_bool
 class AlertGroupBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     view_count: Annotated[int, Field(...)] = 0
     first_view: Annotated[datetime | None, Field(...)] = None
     message_id: Annotated[str | None, Field(...)] = None
@@ -98,6 +99,7 @@ class AlertGroupSearch(SearchBase):
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     subject: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alf: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     message_id: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     source: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tag: Annotated[str | SkipJsonSchema[None], Field(...)] = None
@@ -116,6 +118,8 @@ class AlertGroupSearch(SearchBase):
             return value
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         elif attr == "alert_count" or attr == "promoted_count" or attr == "open_count" or attr == "closed_count" or attr == "view_count":
             return int(value)
         elif attr == "first_view":

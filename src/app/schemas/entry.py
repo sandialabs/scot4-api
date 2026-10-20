@@ -7,7 +7,7 @@ from pydantic import BaseModel, Json, field_validator, ConfigDict, Field
 from pydantic.json_schema import SkipJsonSchema
 
 from app.core.config import settings
-from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum
+from app.enums import EntryClassEnum, TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.source import Source
 from app.schemas.tag import Tag
 from app.utils import sanitize_html
@@ -19,6 +19,7 @@ from app.schemas.user_links import FavoriteLink
 class EntryBase(BaseModel):
     owner: Annotated[str, Field(...)]
     tlp: Annotated[TlpEnum, Field(..., examples=[a.value for a in list(TlpEnum)])] = TlpEnum.unset
+    alf: Annotated[AlfEnum, Field(..., examples=[a.value for a in list(AlfEnum)])] = AlfEnum.unset
     parent_entry_id: Annotated[int | None, Field(...)] = None
     target_type: Annotated[TargetTypeEnum, Field(..., examples=[a.value for a in list(TargetTypeEnum)])] = None
     target_id: Annotated[int | None, Field(...)] = None
@@ -81,6 +82,7 @@ class EntryWithParent(Entry):
 class EntrySearch(SearchBase):
     owner: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tlp: Annotated[str | SkipJsonSchema[None], Field(...)] = None
+    alf: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     tag: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     source: Annotated[str | SkipJsonSchema[None], Field(...)] = None
     target_type: Annotated[str | SkipJsonSchema[None], Field(...)] = None
@@ -102,6 +104,8 @@ class EntrySearch(SearchBase):
                 raise ValueError(f"{value} is not a valid {TargetTypeEnum}")
         elif attr == "tlp":
             return TlpEnum(value)
+        elif attr == "alf":
+            return AlfEnum(value)
         elif attr == "entry_class":
             return EntryClassEnum(value)
         elif attr == "target_id":

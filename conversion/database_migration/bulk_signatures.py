@@ -21,7 +21,7 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
         
     with open(f'{staging_directory}/signatures.csv','w+') as signatures_csv:
         writer = csv.writer(signatures_csv, dialect='unix', delimiter='\t', quotechar="'")
-        writer.writerow(['signature_id', 'owner', 'status', 'name', 'created_date', 'modified_date', 'tlp', 'signature_data', 'latest_revision', 'signature_type','signature_description'])
+        writer.writerow(['signature_id', 'owner', 'status', 'name', 'created_date', 'modified_date', 'tlp', 'alf', 'signature_data', 'latest_revision', 'signature_type','signature_description'])
         with tqdm.tqdm(total=scot3_signature_count) as pbar:
             for signature in scot3_signatures:
                 sig_bodies = mongo_db.sigbody.find({'signature_id': signature['id']})
@@ -36,12 +36,15 @@ def main(mongo_db=None, role_lookup=None, tag_lookup=None, source_lookup=None):
                     tlp = 'unset'
                 elif tlp == 'amber+strict':
                     tlp = 'amber_strict'
+                alf = signature.get('alf')
+                if alf is None:
+                    alf = 'unset'
                 sig_type = signature.get('data').get('type')
                 if sig_type is None:
                     sig_type = "unknown"
                 sig_data = {'signature_body': latest_sig_body['body'], 'signature_bodyb64': latest_sig_body['bodyb64']}
                 sig_data.update(signature['data'])
-                new_signature = [signature['id'], signature['owner'], signature['status'], signature['name'], datetime.fromtimestamp(signature['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(signature['updated']).astimezone(timezone.utc).replace(tzinfo=None), tlp, json.dumps(sig_data), 1, sig_type, description]
+                new_signature = [signature['id'], signature['owner'], signature['status'], signature['name'], datetime.fromtimestamp(signature['created']).astimezone(timezone.utc).replace(tzinfo=None), datetime.fromtimestamp(signature['updated']).astimezone(timezone.utc).replace(tzinfo=None), tlp, alf, json.dumps(sig_data), 1, sig_type, description]
                 writer.writerow(new_signature)
                 write_permission(thing=signature, thing_type='signature', role_lookup=role_lookup, permission_csv_writer=permission_csv_writer)
                 write_tag_source_links(thing=signature, thing_type='signature', tag_lookup=tag_lookup, source_lookup=source_lookup, link_csv_writer=link_csv_writer)               

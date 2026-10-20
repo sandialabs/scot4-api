@@ -16,12 +16,25 @@ from tests.utils.entity import create_random_entity
 from tests.utils.flair import create_remote_flair_html, create_random_remote_flair
 
 
-def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
+def test_flair_update(client: TestClient, superuser_token_headers: dict, normal_user_token_headers: dict, db: Session, faker: Faker) -> None:
     user = create_random_user(db, faker)
     alert = create_random_alert(db, faker, user)
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
         headers=normal_user_token_headers,
+        json={
+            "target": {
+                "id": alert.id,
+                "type": TargetTypeEnum.alert.value
+            }
+        }
+    )
+
+    assert r.status_code == 403
+
+    r = client.post(
+        f"{settings.API_V1_STR}/flair/flairupdate",
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": alert.id,
@@ -36,7 +49,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": alertgroup.id,
@@ -49,7 +62,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": alertgroup.id,
@@ -70,7 +83,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
     entry = create_random_entry(db, faker, owner)
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": entry.id,
@@ -83,7 +96,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": -1,
@@ -98,7 +111,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": -1,
@@ -113,7 +126,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": entry.id,
@@ -137,7 +150,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": remote_flair.id,
@@ -163,7 +176,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": remote_flair.id,
@@ -176,7 +189,7 @@ def test_flair_update(client: TestClient, normal_user_token_headers: dict, db: S
 
     r = client.post(
         f"{settings.API_V1_STR}/flair/flairupdate",
-        headers=normal_user_token_headers,
+        headers=superuser_token_headers,
         json={
             "target": {
                 "id": -1,

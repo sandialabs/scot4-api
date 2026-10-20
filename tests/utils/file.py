@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app import crud, schemas
-from app.enums import TargetTypeEnum, TlpEnum
+from app.enums import TargetTypeEnum, TlpEnum, AlfEnum
 from app.schemas.file import FileCreate
 
 try:
@@ -34,7 +34,8 @@ def create_random_file(db: Session, faker: Faker, owner: schemas.User | None = N
         sha256=file_hash,
         file_pointer=file_hash,
         description=faker.sentence(),
-        tlp=random.choice(list(TlpEnum))
+        tlp=random.choice(list(TlpEnum)),
+        alf=random.choice(list(AlfEnum))
     )
 
     if target_enum is None and target_id is None:

@@ -1,4 +1,4 @@
-FROM python:3.11-bullseye 
+FROM python:3.11-trixie
 
 WORKDIR /code
 
@@ -26,6 +26,7 @@ COPY requirements.txt /code/requirements.txt
 COPY requirements-test.txt /code/requirements-test.txt
 
 COPY ./src/app /code/app
+COPY ./scripts /code/scripts
 COPY ./tests  /code/tests
 COPY ./conversion /code/conversion
 
